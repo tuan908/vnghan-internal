@@ -1,5 +1,4 @@
-import { neon } from "@neondatabase/serverless"
-import { drizzle } from "drizzle-orm/neon-http"
+import { drizzle } from "drizzle-orm/postgres-js"
 import { env } from "hono/adapter"
 import { jstack } from "jstack"
 
@@ -11,14 +10,16 @@ export const j = jstack.init<Env>()
 
 /**
  * Type-safely injects database into all procedures
- * 
+ *
  * @see https://jstack.app/docs/backend/middleware
  */
 const databaseMiddleware = j.middleware(async ({ c, next }) => {
   const { DATABASE_URL } = env(c)
-
-  const sql = neon(DATABASE_URL)
-  const db = drizzle(sql)
+  const db = drizzle({
+    connection: {
+      url: DATABASE_URL,
+    }
+  })
 
   return await next({ db })
 })

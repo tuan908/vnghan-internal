@@ -1,7 +1,8 @@
-import { API_VERSION } from "@/constants"
-import { j } from "./jstack"
-import { fileRouter } from "./routers/file-router"
-import { screwRouter } from "./routers/screw-router"
+import { ErrorCodes } from "@/constants";
+import json from "@/i18n/locales/vi.json";
+import { createErrorResponse } from "@/lib/api-response";
+import { dynamic } from "jstack";
+import { j } from "./jstack";
 
 /**
  * This is your base API.
@@ -11,19 +12,27 @@ import { screwRouter } from "./routers/screw-router"
  */
 const api = j
   .router()
-  .basePath(API_VERSION)
+  .basePath("/api")
   .use(j.defaults.cors)
-  .onError(j.defaults.errorHandler)
+  .onError((_, c) => {
+    return c.json(
+      createErrorResponse({
+        code: ErrorCodes.INTERNAL_SERVER_ERROR,
+        message: json.error.internalServerError,
+        statusCode: 500,
+      })
+    );
+  });
 
 /**
  * This is the main router for your server.
  * All routers in /server/routers should be added here manually.
  */
 const appRouter = j.mergeRouters(api, {
-  screw: screwRouter,
-  file: fileRouter
-})
+  screw: dynamic(() => import("./routers/screw-router")),
+  file: dynamic(() => import("./routers/file-router")),
+});
 
-export type AppRouter = typeof appRouter
+export type AppRouter = typeof appRouter;
 
-export default appRouter
+export default appRouter;

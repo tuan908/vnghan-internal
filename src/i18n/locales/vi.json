@@ -1,0 +1,10 @@
+{
+    "error": {
+        "invalidFile": "File không hợp lệ",
+        "invalidFileType": "Loại file không hợp lệ",
+        "invalidFileSize": "Kích thước file không hợp lệ",
+        "invalidFileExtension": "Phần mở rộng file không hợp lệ",
+        "unknownError": "Đã xảy ra lỗi không xác định",
+        "internalServerError": "Lỗi máy chủ"
+    }
+}
