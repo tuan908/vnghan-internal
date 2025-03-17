@@ -23,7 +23,7 @@ export const RecentPost = () => {
   const { data: recentPost, isPending: isLoadingPosts } = useQuery({
     queryKey: ["get-recent-post"],
     queryFn: async () => {
-      const res = await client.screw.getAll.$get();
+      const res = await client.screw.getAll.$get({pageNumber: 1});
       return await res.json();
     },
   });

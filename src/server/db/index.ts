@@ -4,8 +4,8 @@ import { screwSizes } from "./schema/size";
 import { screwTypes } from "./schema/type";
 
 export default {
-  screws,
-  screwTypes,
-  screwSizes,
-  screwMaterials
+  screw: screws,
+  screwType: screwTypes,
+  screwSize: screwSizes,
+  screwMaterial: screwMaterials
 }

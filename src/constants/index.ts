@@ -29,3 +29,10 @@ export const ErrorCodes = {
 
 // Type-safe error code union type
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
+
+export const PAGE_SIZE = 10;
+
+/**
+ * text-overflow classes
+ */
+export const CSS_TEXT_ELLIPSIS = `whitespace-nowrap overflow-hidden text-ellipsis`;

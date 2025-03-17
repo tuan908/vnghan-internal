@@ -1,12 +1,11 @@
 import type { Metadata } from "next"
-import { Providers } from "./components/providers"
+import { Providers } from "./_components/providers"
 
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "JStack App",
-  description: "Created using JStack",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  title: "Promo",
+  description: "Made with love by tuanna",
 }
 
 export default function RootLayout({
