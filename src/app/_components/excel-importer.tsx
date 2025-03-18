@@ -2,25 +2,21 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import json from "@/i18n/locales/vi.json";
 import { client } from "@/lib/client";
 import { ApiResponse } from "@/types";
+import { Check, CircleX } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface ExcelRow {
   id: string;
   [key: string]: any;
 }
 
-interface ImportResult {
-  headers: string[];
-  rows: ExcelRow[];
-  totalRows: number;
-}
-
 export default function ExcelImporter() {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,11 +33,10 @@ export default function ExcelImporter() {
     }
 
     setIsLoading(true);
-    setError(null);
 
     const formData = new FormData();
     formData.append("file", file);
-
+    let msg;
     try {
       const response = await fetch(client.file.importExcel.$url(), {
         method: "POST",
@@ -51,16 +46,27 @@ export default function ExcelImporter() {
       const data = await response.json<ApiResponse>();
 
       if (!data.success) {
-        throw new Error(data.error instanceof Object ? data.error.message : "");
+        msg =
+          data.error instanceof Object
+            ? data.error.message
+            : json.error.unknownError;
+        toast(msg, {
+          action: <CircleX className="text-red-500" />,
+        });
+        return;
       }
 
-      setResult(data.data as ImportResult);
+      toast("Dữ liệu đã nhập thành công", {
+        action: <Check className="text-green-500" />,
+      });
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
+      msg = err instanceof Error ? err.message : json.error.unknownError;
+      toast(msg, {
+        action: <CircleX className="text-red-500" />,
+      });
     } finally {
       setIsLoading(false);
+      msg = "";
     }
   };
 
@@ -77,19 +83,10 @@ export default function ExcelImporter() {
           />
         </label>
 
-        <Button
-          onClick={handleUpload}
-          disabled={!file || isLoading}
-        >
+        <Button onClick={handleUpload} disabled={!file || isLoading}>
           {isLoading ? "Đang thực hiện..." : "Import"}
         </Button>
       </div>
-
-      {error && (
-        <div className="p-4 mb-4 bg-red-100 text-red-700 rounded">{error}</div>
-      )}
-
-
     </div>
   );
 }

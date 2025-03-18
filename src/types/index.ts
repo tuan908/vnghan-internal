@@ -1,4 +1,3 @@
-
 export interface ApiResponse<T = unknown> {
   success: boolean;
   status: {
@@ -58,7 +57,7 @@ export interface ScrewData {
   images: ImageData[];
   note: string;
   size: number;
-  data?: ScrewJsonData
+  data?: ScrewJsonData;
 }
 
 export type ScrewJsonData = Pick<ScrewData, "videos" | "images" | "others">;
@@ -97,11 +96,25 @@ export interface NoteData {
 }
 
 export type RecursivelyReplaceNullWithUndefined<T> = T extends null
-    ? undefined
-    : T extends Date
-      ? T
-      : {
-            [K in keyof T]: T[K] extends (infer U)[]
-                ? RecursivelyReplaceNullWithUndefined<U>[]
-                : RecursivelyReplaceNullWithUndefined<T[K]>;
-        };
+  ? undefined
+  : T extends Date
+  ? T
+  : {
+      [K in keyof T]: T[K] extends (infer U)[]
+        ? RecursivelyReplaceNullWithUndefined<U>[]
+        : RecursivelyReplaceNullWithUndefined<T[K]>;
+    };
+
+export type ImportResult = {
+  rowsCount: number;
+};
+
+export type ScrewTypeDto = {
+  id: number;
+  name?: string;
+}
+
+export type ScrewMaterialDto = {
+  id: number;
+  name?: string;
+}

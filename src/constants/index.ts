@@ -36,3 +36,9 @@ export const PAGE_SIZE = 10;
  * text-overflow classes
  */
 export const CSS_TEXT_ELLIPSIS = `whitespace-nowrap overflow-hidden text-ellipsis`;
+
+export const DEFAULT_MATERIAL_ID = 9999;
+
+export const DEFAULT_TYPE_ID = 9999;
+
+export const DEFAULT_SIZE_ID = 9999;

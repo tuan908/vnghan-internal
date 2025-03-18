@@ -1,12 +1,14 @@
-import { ErrorCodes } from "@/constants";
+import { DEFAULT_MATERIAL_ID, DEFAULT_SIZE_ID, ErrorCodes } from "@/constants";
 import json from "@/i18n/locales/vi.json";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-response";
-import { ScrewData } from "@/types";
-import ExcelJS from "exceljs";
-import { v4 as uuidv4 } from "uuid";
+import { ImportResult } from "@/types";
+import { eq, sql } from "drizzle-orm";
+import { Row, Workbook } from "exceljs";
 import { z } from "zod";
-import { screws } from "../db/schema/screw";
+import SCHEMA from "../db";
+import { ScrewEntity } from "../db/schema/screw";
 import { j, publicProcedure } from "../jstack";
+("@/server/db");
 
 interface ExcelRow {
   id: string;
@@ -20,131 +22,175 @@ export const fileRouter = j.router({
       const { name } = input;
       const { db } = ctx;
 
-      const post = await db
-        .insert(screws)
-        .values({
-          material: 1,
-          name: name,
-          price: "0",
-          size: 1,
-          type: 1,
-          stock: "",
-        })
-        .execute();
+      const file = new Workbook();
 
-      return c.superjson(createSuccessResponse(post), 200);
+      return c.superjson(createSuccessResponse({ data: file }), 200);
     }),
 
   importExcel: publicProcedure.mutation(async ({ ctx, c }) => {
     const { db } = ctx;
-    const formData = await c.req.parseBody();
-    const file = formData["file"]! as File;
 
-    if (!file) {
-      return c.superjson(
-        createErrorResponse({
-          code: ErrorCodes.BAD_REQUEST,
-          statusCode: 400,
-          message: json.error.invalidFile,
-        }),
-        400
-      );
-    }
+    try {
+      // Parse form data and validate file existence in one step
+      const formData = await c.req.parseBody();
+      const file = formData["file"] as File | undefined;
 
-    // Check if file is Excel
-    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
-      return c.superjson(
-        createErrorResponse({
-          code: ErrorCodes.BAD_REQUEST,
-          statusCode: 400,
-          message: json.error.invalidFileExtension,
-          errors: [
-            {
-              code: ErrorCodes.BAD_REQUEST,
-              message: json.error.invalidFileExtension,
-              field: "file",
-            },
-          ],
-        }),
-        400
-      );
-    }
-
-    // Convert file to buffer
-    const arrayBuffer = await file.arrayBuffer();
-
-    // Load workbook from buffer
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(arrayBuffer);
-
-    const rows: ScrewData[] = [];
-
-    // Process the first worksheet
-    workbook.worksheets.forEach(async (worksheet) => {
-      if (!worksheet) {
-        return c.superjson(
+      if (!file || !/\.(xlsx|xls)$/i.test(file.name)) {
+        return c.json(
           createErrorResponse({
             code: ErrorCodes.BAD_REQUEST,
             statusCode: 400,
-            message: json.error.invalidFile,
-            errors: [
-              {
-                code: ErrorCodes.BAD_REQUEST,
-                message: json.error.invalidFile,
-                field: "file",
-              },
-            ],
+            message: !file
+              ? json.error.invalidFile
+              : json.error.invalidFileExtension,
           }),
           400
         );
       }
 
+      // Process Excel file
+      const workbook = new Workbook();
+      await workbook.xlsx.load(await file.arrayBuffer());
 
+      // Prepare data structures
+      const rows: ScrewEntity[] = [];
+      const errors: string[] = [];
 
-      // Process data rows
-      for (let i = 8; i < 11; i++) {
-        const row: ScrewData = {
-          name: "",
-          description: "",
-          videos: [],
-          type: 1,
-          material: 1,
-          stock: "",
-          others: [],
-          price: "",
-          images: [],
-          note: "",
-          size: 1,
-        };
-        const excelJsRow = worksheet.getRow(i);
-        row.name = excelJsRow.getCell(1).value?.toString()!;
-        row.description = excelJsRow.getCell(2).value?.toString()!;
-        row.material = 1;
-        row.stock = excelJsRow.getCell(4).value?.toString()!;
-        row.note = excelJsRow.getCell(5).value?.toString()!;
-        row.price = excelJsRow.getCell(6).value?.toString()!;
-        rows.push(row);
+      // Cache screw types to minimize DB queries
+      const screwTypeCache = new Map();
+
+      // Extract unique worksheet names
+      const worksheetNames = workbook.worksheets.map((ws) => ws.name);
+
+      // Batch fetch all needed screw types in a single query
+      const screwTypes = await db
+        .select({ name: SCHEMA.SCREW_TYPE.name, id: SCHEMA.SCREW_TYPE.id })
+        .from(SCHEMA.SCREW_TYPE)
+        .where(sql`${SCHEMA.SCREW_TYPE.name} in ${worksheetNames}`);
+
+      // Populate cache for quick lookup
+      screwTypes.forEach((type) => screwTypeCache.set(type.name, type.id));
+
+      // Process each worksheet
+      for (const worksheet of workbook.worksheets) {
+        const typeId = screwTypeCache.get(worksheet.name);
+
+        if (!typeId) {
+          errors.push(`Unknown screw type: ${worksheet.name}`);
+          continue;
+        }
+
+        // Get used range for efficiency
+        const startRow = 8;
+        const usedRowCount =
+          worksheet.actualRowCount || worksheet.rowCount || 100;
+        const endRow = Math.min(usedRowCount, 1000); // Safety limit
+
+        // Process rows in batch
+        const worksheetRows: ScrewEntity[] = [];
+
+        for (let i = startRow; i <= endRow; i++) {
+          const row = worksheet.getRow(i);
+
+          // Fast path for empty rows
+          if (row.cellCount === 0) continue;
+
+          const name = getCellValue(row, 1);
+          if (!name) continue;
+
+          const quantity = getCellValue(row, 4);
+          const price = getCellValue(row, 6);
+
+          if (!quantity || !price) {
+            errors.push(
+              `Row ${i} in "${worksheet.name}": missing required data`
+            );
+            continue;
+          }
+          const materialName = getCellValue(row, 3)!;
+
+          let id;
+
+          if (!materialName) {
+            id = DEFAULT_MATERIAL_ID;
+          } else {
+            const [material] = await db
+              .select({ id: SCHEMA.SCREW_MATERIAL.id })
+              .from(SCHEMA.SCREW_MATERIAL)
+              .where(eq(SCHEMA.SCREW_MATERIAL.name, materialName))
+              .limit(1);
+            id = material?.id ?? DEFAULT_MATERIAL_ID;
+          }
+
+          let images = [];
+
+          let url = getCellValue(row, 7);
+
+          if (url) images.push({ id: i.toString(), url });
+
+          worksheetRows.push({
+            sizeId: DEFAULT_SIZE_ID,
+            name,
+            description: getCellValue(row, 2) || "",
+            componentTypeId: typeId,
+            materialId: id,
+            quantity,
+            price,
+            note: getCellValue(row, 5) || "",
+          });
+        }
+
+        rows.push(...worksheetRows);
       }
-    });
 
-    const result = await db.insert(screws).values(rows).execute();
+      // Handle empty result
+      if (rows.length === 0) {
+        return c.json(
+          createErrorResponse({
+            code: ErrorCodes.BAD_REQUEST,
+            message:
+              errors.length > 0
+                ? `Import failed: ${errors.slice(0, 5).join("; ")}${
+                    errors.length > 5 ? "..." : ""
+                  }`
+                : json.error.noValidRows,
+          }),
+          400
+        );
+      }
 
-    return c.superjson(
-      createSuccessResponse({
-        success: true,
-      }),
-      200
-    );
+      // Batch insert all data
+      const result = await db.insert(SCHEMA.SCREW).values(rows).execute();
+
+      return c.json(
+        createSuccessResponse<ImportResult>({
+          rowsCount: result.length || rows.length,
+        }),
+        200
+      );
+    } catch (error: any) {
+      console.error("Excel import error:", error);
+      return c.json(
+        createErrorResponse({
+          code: ErrorCodes.INTERNAL_SERVER_ERROR,
+          statusCode: 500,
+          message: `Import error: ${
+            error.message?.substring(0, 200) || "Unknown error"
+          }`,
+        }),
+        500
+      );
+    }
   }),
 });
 
-function createId(): string {
-  return uuidv4();
-}
+function getCellValue(row: Row, cellIndex: number): string | undefined {
+  const cell = row.getCell(cellIndex);
+  const value = cell.value;
 
-function getUrl(cell: ExcelJS.Cell) {
-  if (cell.isHyperlink) {
-    return cell.hyperlink;
-  }
-  return cell.value?.toString()!;
+  if (value === null || value === undefined) return undefined;
+
+  if (cell.isHyperlink) return cell.hyperlink;
+
+  return value.toString().trim();
 }
