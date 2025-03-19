@@ -1,5 +1,3 @@
-import SCHEMA from "@/server/db";
-
 export interface ApiResponse<T = unknown> {
   success: boolean;
   status: {
@@ -74,13 +72,13 @@ export interface VideoData {
   url: string;
 }
 
-export interface CategoryData {
+export interface CategoryDto {
   id: string;
   name: string;
   description: string;
 }
 
-export interface MaterialData {
+export interface MaterialDto {
   id: string;
   name: string;
   description: string;
@@ -90,11 +88,6 @@ export interface OthersData {
   id: string;
   name: string;
   description: string;
-}
-
-export interface NoteData {
-  id: string;
-  descruption: string;
 }
 
 export type RecursivelyReplaceNullWithUndefined<T> = T extends null
@@ -107,10 +100,6 @@ export type RecursivelyReplaceNullWithUndefined<T> = T extends null
         : RecursivelyReplaceNullWithUndefined<T[K]>;
     };
 
-export type ImportResult = {
-  rowsCount: number;
-};
-
 export type ScrewTypeDto = {
   id: number;
   name?: string;
@@ -120,6 +109,3 @@ export type ScrewMaterialDto = {
   id: number;
   name?: string;
 }
-
-export type ScrewEntity = typeof SCHEMA.SCREW.$inferSelect
-export type ServerCreateScrewDto = RecursivelyReplaceNullWithUndefined<typeof SCHEMA.SCREW.$inferInsert>

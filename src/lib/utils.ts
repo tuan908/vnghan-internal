@@ -21,3 +21,9 @@ export function nullsToUndefined<T>(
   }
   return obj as any;
 }
+
+export function getApiUrl() {
+  if (process.env.NODE_ENV === "production")
+    return `https://${process.env.DEPLOYMENT_ID}.workers.dev/api/v1`;
+  return "http://localhost:8787/api/v1";
+}

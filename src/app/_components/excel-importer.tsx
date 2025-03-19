@@ -3,11 +3,10 @@
 
 import { Button } from "@/components/ui/button";
 import json from "@/i18n/locales/vi.json";
-import { client } from "@/lib/client";
-import { ApiResponse } from "@/types";
 import { Check, CircleX } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { importExcel } from "../actions/file";
 
 interface ExcelRow {
   id: string;
@@ -38,12 +37,7 @@ export default function ExcelImporter() {
     formData.append("file", file);
     let msg;
     try {
-      const response = await fetch(client.file.importExcel.$url(), {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json<ApiResponse>();
+      const data = await importExcel(formData);
 
       if (!data.success) {
         msg =

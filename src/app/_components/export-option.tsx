@@ -1,7 +1,5 @@
 "use client";
 
-import { DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu";
-import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,13 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FileText, Sheet } from "lucide-react";
 
-type Checked = DropdownMenuCheckboxItemProps["checked"];
-
 export function ExportOptionDropdown() {
-  const [showStatusBar, setShowStatusBar] = React.useState<Checked>(true);
-  const [showActivityBar, setShowActivityBar] = React.useState<Checked>(false);
-  const [showPanel, setShowPanel] = React.useState<Checked>(false);
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

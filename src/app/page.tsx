@@ -5,7 +5,7 @@ import { Sheet } from "lucide-react";
 import Link from "next/link";
 import { AddOptionDropdown } from "./_components/dialog/add-option";
 import { ExportOptionDropdown } from "./_components/export-option";
-import { getScrewMaterials, getScrewTypes } from "./actions/getScrewProps";
+import { getScrewMaterials, getScrewTypes } from "./actions/screw";
 import HomeContent from "./home-content";
 
 export default async function Home() {
@@ -13,6 +13,7 @@ export default async function Home() {
     getScrewTypes(),
     getScrewMaterials(),
   ]);
+
   return (
     <main className="flex min-h-screen max-w-7xl m-auto flex-col py-12">
       <Label className="text-3xl font-bold">Danh sách phụ kiện</Label>
@@ -30,7 +31,10 @@ export default async function Home() {
         />
         <ExportOptionDropdown />
       </div>
-      <HomeContent screwTypes={screwTypes?.data ?? []} screwMaterials={screwMaterials?.data ?? []} />
+      <HomeContent
+        screwTypes={screwTypes?.data ?? []}
+        screwMaterials={screwMaterials?.data ?? []}
+      />
     </main>
   );
 }

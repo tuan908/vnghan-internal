@@ -1,5 +1,6 @@
 "use client";
 
+import { createScrew } from "@/app/actions/screw";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { errorToast, successToast } from "@/components/ui/toast";
-import { client } from "@/lib/client";
 import {
   type CreateInstructionDto,
   createInstructionSchema,
@@ -27,12 +27,7 @@ import type { ScrewMaterialDto, ScrewTypeDto } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
-import {
-  FileText,
-  HelpCircle,
-  Plus,
-  Settings
-} from "lucide-react";
+import { FileText, HelpCircle, Plus, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { InstructionForm } from "../form/instruction";
@@ -116,18 +111,19 @@ export function AddOptionDropdown({
   }, [questionForm, activeDialog]);
 
   // Mutation for creating a screw
-  const { mutate: createScrew, isPending: isCreatingScrew } = useMutation({
-    mutationFn: async (data: ScrewDto) => {
-      const res = await client.screw.create.$post(data);
-      return await res.json();
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["get-screws"] });
-      handleCloseDialog();
-      successToast();
-    },
-    onError: (error) => errorToast(error.message),
-  });
+  const { mutate: handleCreateScrew, isPending: isCreatingScrew } = useMutation(
+    {
+      mutationFn: async (data: ScrewDto) => {
+        return await createScrew(data);
+      },
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({ queryKey: ["get-screws"] });
+        handleCloseDialog();
+        successToast();
+      },
+      onError: (error) => errorToast(error.message),
+    }
+  );
 
   // Mutation for creating an instruction
   const { mutate: createInstruction, isPending: isCreatingInstruction } =
@@ -170,7 +166,7 @@ export function AddOptionDropdown({
 
   // Form submission handlers
   const handleSubmitScrew = createScrewForm.handleSubmit((data) => {
-    createScrew(data);
+    handleCreateScrew(data);
   });
 
   const handleSubmitInstruction = instructionForm.handleSubmit((data) => {
