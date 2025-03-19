@@ -1,7 +1,7 @@
-import { drizzle } from "drizzle-orm/postgres-js";
+import { Pool } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
 import { env } from "hono/adapter";
 import { jstack } from "jstack";
-import postgres from "postgres";
 
 interface Env {
   Bindings: { DATABASE_URL: string };
@@ -9,7 +9,7 @@ interface Env {
 
 export const j = jstack.init<Env>();
 
-let sql: ReturnType<typeof postgres> | null = null;
+let sql: Pool | null = null;
 
 /**
  * Type-safely injects database into all procedures
@@ -20,12 +20,13 @@ const databaseMiddleware = j.middleware(async ({ c, next }) => {
   const { DATABASE_URL } = env(c);
 
   if (!sql) {
-    sql = postgres(DATABASE_URL, {
-      max: 20, // Adjust based on your needs and database limits
-      idle_timeout: 20, // Close connections after 20 seconds of inactivity
+    sql = new Pool({
+      connectionString: DATABASE_URL,
+      max: 20,
+      idleTimeoutMillis: 15000,
     });
   }
-  const db = drizzle(sql);
+  const db = drizzle({ client: sql });
 
   return await next({ db });
 });
