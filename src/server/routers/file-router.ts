@@ -163,7 +163,7 @@ export const fileRouter = j.router({
       }
 
       // Batch insert all data
-      const result = await db.insert(SCHEMA.SCREW).values(rows).execute();
+      const result = await db.insert(SCHEMA.SCREW).values(rows).returning();
 
       return c.json(
         createSuccessResponse<ImportResult>({

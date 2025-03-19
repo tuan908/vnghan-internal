@@ -79,42 +79,39 @@ export const screwRouter = j.router({
     .mutation(async ({ ctx, c, input: newScrew }) => {
       const { db } = ctx;
 
-      const result = await db.transaction(async (tx) => {
-        const entity: ServerCreateScrewDto = {
-          description: newScrew.category,
-          name: newScrew.name,
-          note: newScrew.note,
-          price: newScrew.price.toString(),
-          quantity: newScrew.quantity.toString(),
-          componentTypeId: 0,
-          sizeId: 0,
-          materialId: 0,
-        };
-        const [screwType] = await tx
-          .select({ id: SCHEMA.SCREW_TYPE.id })
-          .from(SCHEMA.SCREW_TYPE)
-          .where(eq(SCHEMA.SCREW_TYPE.name, newScrew.name));
+      const entity: ServerCreateScrewDto = {
+        description: newScrew.category,
+        name: newScrew.name,
+        note: newScrew.note,
+        price: newScrew.price.toString(),
+        quantity: newScrew.quantity.toString(),
+        componentTypeId: 0,
+        sizeId: 0,
+        materialId: 0,
+      };
+      const [screwType] = await db
+        .select({ id: SCHEMA.SCREW_TYPE.id })
+        .from(SCHEMA.SCREW_TYPE)
+        .where(eq(SCHEMA.SCREW_TYPE.name, newScrew.name));
 
-        if (!screwType) {
-          entity.componentTypeId = DEFAULT_TYPE_ID;
-        } else {
-          entity.componentTypeId = screwType.id;
-        }
+      if (!screwType) {
+        entity.componentTypeId = DEFAULT_TYPE_ID;
+      } else {
+        entity.componentTypeId = screwType.id;
+      }
 
-        const [screwMaterial] = await tx
-          .select({ id: SCHEMA.SCREW_MATERIAL.id })
-          .from(SCHEMA.SCREW_MATERIAL)
-          .where(eq(SCHEMA.SCREW_MATERIAL.name, newScrew.material));
+      const [screwMaterial] = await db
+        .select({ id: SCHEMA.SCREW_MATERIAL.id })
+        .from(SCHEMA.SCREW_MATERIAL)
+        .where(eq(SCHEMA.SCREW_MATERIAL.name, newScrew.material));
 
-        if (!screwMaterial) {
-          entity.materialId = DEFAULT_MATERIAL_ID;
-        } else {
-          entity.materialId = screwMaterial.id;
-        }
+      if (!screwMaterial) {
+        entity.materialId = DEFAULT_MATERIAL_ID;
+      } else {
+        entity.materialId = screwMaterial.id;
+      }
 
-        return await tx.insert(SCHEMA.SCREW).values(entity).execute();
-      });
-
+      const result = await db.insert(SCHEMA.SCREW).values(entity).execute();
       return c.superjson(createSuccessResponse({ data: result }), 200);
     }),
 
@@ -140,28 +137,27 @@ export const screwRouter = j.router({
         );
       }
 
-      const result = await db.transaction(async (tx) => {
-        screw.name = input.body.name!;
-        screw.note = input.body.note!;
-        screw.price = input.body.price!;
-        screw.quantity = input.body.quantity!;
+      screw.name = input.body.name!;
+      screw.note = input.body.note!;
+      screw.price = input.body.price!;
+      screw.quantity = input.body.quantity!;
 
-        const [material] = await tx
-          .select()
-          .from(SCHEMA.SCREW_MATERIAL)
-          .where(eq(SCHEMA.SCREW_MATERIAL.name, input.body.material!))
-          .limit(1);
+      const [material] = await db
+        .select()
+        .from(SCHEMA.SCREW_MATERIAL)
+        .where(eq(SCHEMA.SCREW_MATERIAL.name, input.body.material!))
+        .limit(1);
 
-        if (!material) {
-          return;
-        }
-        screw.materialId = material.id;
+      if (!material) {
+        return;
+      }
+      screw.materialId = material.id;
 
-        return await tx
-          .update(SCHEMA.SCREW)
-          .set(screw)
-          .where(eq(SCHEMA.SCREW.id, screw.id));
-      });
+      const result = await db
+        .update(SCHEMA.SCREW)
+        .set(screw)
+        .where(eq(SCHEMA.SCREW.id, screw.id));
+
       if (!result) {
         return c.superjson(
           createErrorResponse({
@@ -198,12 +194,10 @@ export const screwRouter = j.router({
         );
       }
 
-      const result = await db.transaction(async (tx) => {
-        return await tx
-          .update(SCHEMA.SCREW)
-          .set({ isDeleted: true })
-          .where(eq(SCHEMA.SCREW.id, screw.id));
-      });
+      const result = await db
+        .update(SCHEMA.SCREW)
+        .set({ isDeleted: true })
+        .where(eq(SCHEMA.SCREW.id, screw.id));
 
       if (!result) {
         return c.superjson(
