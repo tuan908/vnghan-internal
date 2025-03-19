@@ -11,6 +11,6 @@ export const client = createClient<AppRouter>({
 
 function getBaseUrl() {
   // 👇 Adjust for wherever you deploy
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  if (process.env.NODE_ENV === "production") return `https://${process.env.DEPLOYMENT_ID}.workers.dev`;
   return `http://localhost:3000`;
 }
