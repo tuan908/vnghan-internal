@@ -1,3 +1,5 @@
+import SCHEMA from "@/server/db";
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   status: {
@@ -118,3 +120,6 @@ export type ScrewMaterialDto = {
   id: number;
   name?: string;
 }
+
+export type ScrewEntity = typeof SCHEMA.SCREW.$inferSelect
+export type ServerCreateScrewDto = RecursivelyReplaceNullWithUndefined<typeof SCHEMA.SCREW.$inferInsert>

@@ -13,31 +13,28 @@ import {
   DropdownMenuItemWithIcon,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import json from "@/i18n/locales/vi.json";
+import { errorToast, successToast } from "@/components/ui/toast";
 import { client } from "@/lib/client";
 import {
   type CreateInstructionDto,
   createInstructionSchema,
   type CreateQuestionDto,
   createQuestionSchema,
-  type CreateScrewDto,
-  createScrewSchema,
+  ScrewDto,
+  ScrewSchema,
 } from "@/lib/validations";
 import type { ScrewMaterialDto, ScrewTypeDto } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import {
-  Check,
-  CircleX,
   FileText,
   HelpCircle,
   Plus,
-  Settings,
+  Settings
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { InstructionForm } from "../form/instruction";
 import { QuestionForm } from "../form/question";
 import { ScrewForm } from "../form/screw";
@@ -58,16 +55,16 @@ export function AddOptionDropdown({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Create form methods
-  const screwForm = useForm<CreateScrewDto>({
-    resolver: zodResolver(createScrewSchema),
+  const createScrewForm = useForm<ScrewDto>({
+    resolver: zodResolver(ScrewSchema),
     mode: "onChange",
     defaultValues: {
       name: "",
-      quantity: 0,
-      price: 0,
+      quantity: "",
+      price: "",
       componentType: "",
       material: "",
-      notes: "",
+      note: "",
     },
   });
 
@@ -92,13 +89,13 @@ export function AddOptionDropdown({
 
   // Track form changes
   useEffect(() => {
-    const subscription = screwForm.watch(() => {
+    const subscription = createScrewForm.watch(() => {
       if (activeDialog === "screw") {
-        setHasUnsavedChanges(screwForm.formState.isDirty);
+        setHasUnsavedChanges(createScrewForm.formState.isDirty);
       }
     });
     return () => subscription.unsubscribe();
-  }, [screwForm, activeDialog]);
+  }, [createScrewForm, activeDialog]);
 
   useEffect(() => {
     const subscription = instructionForm.watch(() => {
@@ -120,24 +117,16 @@ export function AddOptionDropdown({
 
   // Mutation for creating a screw
   const { mutate: createScrew, isPending: isCreatingScrew } = useMutation({
-    mutationFn: async (data: CreateScrewDto) => {
+    mutationFn: async (data: ScrewDto) => {
       const res = await client.screw.create.$post(data);
       return await res.json();
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["get-screws"] });
       handleCloseDialog();
-      toast.success(json.success.operation, {
-        description: "Linh kiện đã được thêm thành công",
-        action: <Check className="text-green-500" />,
-      });
+      successToast();
     },
-    onError: (error) => {
-      toast.error(error.message, {
-        description: "Có lỗi xảy ra khi thêm linh kiện",
-        action: <CircleX className="text-red-500" />,
-      });
-    },
+    onError: (error) => errorToast(error.message),
   });
 
   // Mutation for creating an instruction
@@ -154,17 +143,9 @@ export function AddOptionDropdown({
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: ["get-instructions"] });
         handleCloseDialog();
-        toast.success(json.success.operation, {
-          description: "Hướng dẫn đã được thêm thành công",
-          action: <Check className="text-green-500" />,
-        });
+        successToast();
       },
-      onError: (error) => {
-        toast.error(error.message, {
-          description: "Có lỗi xảy ra khi thêm hướng dẫn",
-          action: <CircleX className="text-red-500" />,
-        });
-      },
+      onError: (error) => errorToast(error.message),
     });
 
   // Mutation for creating a question
@@ -181,22 +162,14 @@ export function AddOptionDropdown({
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: ["get-questions"] });
         handleCloseDialog();
-        toast.success(json.success.operation, {
-          description: "Câu hỏi đã được thêm thành công",
-          action: <Check className="text-green-500" />,
-        });
+        successToast();
       },
-      onError: (error) => {
-        toast.error(error.message, {
-          description: "Có lỗi xảy ra khi thêm câu hỏi",
-          action: <CircleX className="text-red-500" />,
-        });
-      },
+      onError: (error) => errorToast(error.message),
     }
   );
 
   // Form submission handlers
-  const handleSubmitScrew = screwForm.handleSubmit((data) => {
+  const handleSubmitScrew = createScrewForm.handleSubmit((data) => {
     createScrew(data);
   });
 
@@ -215,7 +188,7 @@ export function AddOptionDropdown({
 
     // Reset the appropriate form
     if (type === "screw") {
-      screwForm.reset();
+      createScrewForm.reset();
     } else if (type === "instruction") {
       instructionForm.reset();
     } else if (type === "question") {
@@ -225,15 +198,10 @@ export function AddOptionDropdown({
 
   const handleCloseDialog = () => {
     if (hasUnsavedChanges) {
-      if (
-        confirm("Bạn có chắc chắn muốn đóng? Dữ liệu chưa được lưu sẽ bị mất.")
-      ) {
-        setActiveDialog(null);
-        setHasUnsavedChanges(false);
-      }
-    } else {
-      setActiveDialog(null);
+      setHasUnsavedChanges(false);
     }
+
+    setActiveDialog(null);
   };
 
   // Render dialog content based on active dialog
@@ -241,8 +209,9 @@ export function AddOptionDropdown({
     switch (activeDialog) {
       case "screw":
         return (
-          <FormProvider {...screwForm}>
+          <FormProvider {...createScrewForm}>
             <ScrewForm
+              mode="create"
               onSubmit={handleSubmitScrew}
               isSubmitting={isCreatingScrew}
               screwTypes={screwTypes}
@@ -326,7 +295,7 @@ export function AddOptionDropdown({
             }}
           >
             <DialogContent
-              className="sm:max-w-[500px] overflow-hidden"
+              className="sm:max-w-[48rem] overflow-hidden"
               onEscapeKeyDown={(e) => {
                 if (hasUnsavedChanges) {
                   e.preventDefault();

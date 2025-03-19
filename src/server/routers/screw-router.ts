@@ -1,4 +1,3 @@
-import { ScrewDto } from "@/app/home-content";
 import {
   DEFAULT_MATERIAL_ID,
   DEFAULT_TYPE_ID,
@@ -8,12 +7,11 @@ import {
 import json from "@/i18n/locales/vi.json";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-response";
 import { nullsToUndefined } from "@/lib/utils";
-import { createScrewSchema } from "@/lib/validations";
+import { ScrewDto, ScrewSchema } from "@/lib/validations";
 import SCHEMA from "@/server/db";
-import { ScrewTypeDto } from "@/types";
+import { ScrewTypeDto, ServerCreateScrewDto } from "@/types";
 import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { ScrewEntity } from "../db/schema/screw";
 import { j, publicProcedure } from "../jstack";
 
 export const screwRouter = j.router({
@@ -42,7 +40,7 @@ export const screwRouter = j.router({
           material: SCHEMA.SCREW_MATERIAL.name,
           category: SCHEMA.SCREW_TYPE.name,
           price: SCHEMA.SCREW.price,
-          notes: SCHEMA.SCREW.note,
+          note: SCHEMA.SCREW.note,
         })
         .from(SCHEMA.SCREW)
         .innerJoin(
@@ -77,15 +75,15 @@ export const screwRouter = j.router({
     }),
 
   create: publicProcedure
-    .input(createScrewSchema)
+    .input(ScrewSchema)
     .mutation(async ({ ctx, c, input: newScrew }) => {
       const { db } = ctx;
 
       const result = await db.transaction(async (tx) => {
-        const entity: ScrewEntity = {
+        const entity: ServerCreateScrewDto = {
           description: newScrew.category,
           name: newScrew.name,
-          note: newScrew.notes,
+          note: newScrew.note,
           price: newScrew.price.toString(),
           quantity: newScrew.quantity.toString(),
           componentTypeId: 0,
@@ -128,7 +126,7 @@ export const screwRouter = j.router({
       const [screw] = await db
         .select()
         .from(SCHEMA.SCREW)
-        .where(eq(SCHEMA.SCREW.id, input.body.id))
+        .where(eq(SCHEMA.SCREW.id, input.body.id!))
         .limit(1);
 
       if (!screw) {
@@ -144,7 +142,7 @@ export const screwRouter = j.router({
 
       const result = await db.transaction(async (tx) => {
         screw.name = input.body.name!;
-        screw.note = input.body.notes!;
+        screw.note = input.body.note!;
         screw.price = input.body.price!;
         screw.quantity = input.body.quantity!;
 

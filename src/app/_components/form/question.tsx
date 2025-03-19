@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
-import { FormField } from "@/components/ui/form-field";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -17,8 +21,8 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import { Loader2 } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 
-export // Question form component
-const QuestionForm = ({
+ // Question form component
+export const QuestionForm = ({
   onSubmit,
   isSubmitting,
   screwTypes,
@@ -27,50 +31,70 @@ const QuestionForm = ({
   isSubmitting: boolean;
   screwTypes: ScrewTypeDto[];
 }) => {
-  const { register, setValue, watch } = useFormContext<CreateQuestionDto>();
-  const componentType = watch("componentType");
+  const { control } = useFormContext<CreateQuestionDto>();
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-y-4">
-      <FormField label="Loại phụ kiện" name="componentType">
-        <Select
-          onValueChange={(value) => setValue("componentType", value)}
-          value={componentType}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Chọn loại phụ kiện" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Loại phụ kiện</SelectLabel>
-              {screwTypes.map((x) => (
-                <SelectItem key={x.id + "#" + x.name} value={x.name!}>
-                  {x.name}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </FormField>
+      <FormField
+        name="componentType"
+        control={control}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Loại phụ kiện</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Chọn loại phụ kiện" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {screwTypes.map((x) => (
+                  <SelectItem key={x.id + "#" + x.name} value={x.name!}>
+                    {x.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <FormField label="Câu hỏi" name="question">
-        <Textarea
-          {...register("question")}
-          cols={3}
-          className="resize-none"
-          placeholder="Nhập câu hỏi thường gặp"
-          autoFocus
-        />
-      </FormField>
+      <FormField
+        control={control}
+        name="question"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Lưu ý</FormLabel>
+            <FormControl>
+              <Textarea
+                {...field}
+                cols={3}
+                className="resize-none"
+                placeholder="Nhập câu hỏi thường gặp"
+                autoFocus
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
 
-      <FormField label="Câu trả lời" name="answer">
-        <Textarea
-          {...register("answer")}
-          cols={3}
-          className="resize-none min-h-24"
-          placeholder="Nhập câu trả lời"
-        />
-      </FormField>
+      <FormField
+        control={control}
+        name="answer"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Lưu ý</FormLabel>
+            <FormControl>
+              <Textarea
+                {...field}
+                className="resize-none min-h-24"
+                placeholder="Nhập câu trả lời"
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
 
       <DialogFooter className="mt-4">
         <DialogClose asChild>
