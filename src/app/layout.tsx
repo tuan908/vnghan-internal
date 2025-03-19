@@ -4,9 +4,11 @@ import { Providers } from "./_components/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Promo",
-  description: "Made with love by tuanna",
+  title: "VngHan's Tool",
+  description: "Made with love for vnghan by tuanna",
 };
+
+export const runtime = 'edge';
 
 export default function RootLayout({
   children,
