@@ -10,4 +10,4 @@ port = 8080
 enabled = true
 
 [vars]
-DATABASE_URL=postgresql://tuan908:ch4PFt5iGABb@ep-wandering-fog-71031792-pooler.ap-southeast-1.aws.neon.tech/vnghan-internal?sslmode=require
+DATABASE_URL='postgresql://tuan908:ch4PFt5iGABb@ep-wandering-fog-71031792-pooler.ap-southeast-1.aws.neon.tech/vnghan-internal?sslmode=require'
