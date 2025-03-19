@@ -1,6 +1,7 @@
 import { ErrorCodes } from "@/constants";
 import json from "@/i18n/locales/vi.json";
 import { createErrorResponse } from "@/lib/api-response";
+import { logger } from "hono/logger";
 import { dynamic } from "jstack";
 import { j } from "./jstack";
 
@@ -14,6 +15,7 @@ const api = j
   .router()
   .basePath("/api")
   .use(j.defaults.cors)
+  .use(logger())
   .onError((_, c) => {
     return c.json(
       createErrorResponse({

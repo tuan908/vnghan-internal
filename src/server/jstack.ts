@@ -26,7 +26,7 @@ const databaseMiddleware = j.middleware(async ({ c, next }) => {
       idleTimeoutMillis: 15000,
     });
   }
-  const db = drizzle({ client: sql });
+  const db = drizzle({ client: sql, logger: true });
 
   return await next({ db });
 });
