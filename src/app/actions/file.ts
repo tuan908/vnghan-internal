@@ -16,7 +16,7 @@ export async function importExcel(formData: FormData): Promise<ApiResponse> {
     });
   }
 
-  const response = await fetch(`${getApiUrl()}/file/import`, {
+  const response = await fetch(`${getApiUrl()}/files/importExcel`, {
     method: "post",
     body: formData,
   });

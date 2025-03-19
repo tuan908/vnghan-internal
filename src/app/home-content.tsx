@@ -15,7 +15,6 @@ import { Form } from "@/components/ui/form";
 import { errorToast, successToast } from "@/components/ui/toast";
 import { CSS_TEXT_ELLIPSIS, PAGE_SIZE } from "@/constants";
 import json from "@/i18n/locales/vi.json";
-import { client } from "@/lib/client";
 import { cn } from "@/lib/utils";
 import { ScrewDto, ScrewSchema } from "@/lib/validations";
 import { ScrewMaterialDto, ScrewTypeDto } from "@/types";
@@ -39,6 +38,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ScrewForm } from "./_components/form/screw";
+import { deleteScrew, editScrew, getAllScrews } from "./actions/screw";
 
 type HomeContentProps = {
   screwTypes: ScrewTypeDto[];
@@ -87,10 +87,9 @@ export default function HomeContent({
   const { data: rows, refetch } = useQuery({
     queryKey: ["get-screws", pagination.pageIndex],
     queryFn: async () => {
-      const res = await client.screw.getAll.$get({
-        pageNumber: pagination.pageIndex,
+      return await getAllScrews({
+        p: pagination.pageIndex,
       });
-      return await res.json();
     },
     placeholderData: keepPreviousData,
   });
@@ -105,10 +104,9 @@ export default function HomeContent({
   };
 
   // Mutation for editing a screw info:
-  const { mutate: editScrew, isPending: isEditingScrew } = useMutation({
+  const { mutate: handleEditScrewInfo, isPending: isEditingScrew } = useMutation({
     mutationFn: async (body: ScrewDto) => {
-      const res = await client.screw.update.$post({ body });
-      return await res.json();
+      return await editScrew(body)
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
@@ -142,8 +140,8 @@ export default function HomeContent({
 
   // Handle delete submit
   const handleDeleteSubmit = async () => {
-    const result = await client.screw.delete.$post({ body: currentItem! });
-    if (!result.ok) {
+    const result = await deleteScrew(currentItem!)
+    if (!result.success) {
       toast(json.error.operate);
       return;
     }
@@ -154,8 +152,8 @@ export default function HomeContent({
     refetch();
   };
 
-  const handleEditScrew = editScrewForm.handleSubmit((data) => {
-    editScrew(data);
+  const handleEditSubmit = editScrewForm.handleSubmit((data) => {
+    handleEditScrewInfo(data);
   });
 
   const columns: ColumnDef<ScrewDto>[] = useMemo(
@@ -260,8 +258,8 @@ export default function HomeContent({
     <>
       <DataTable
         columns={columns}
-        data={rows?.data?.data ?? []}
-        serverPagination={rows?.data?.pagination}
+        data={rows?.data ?? []}
+        serverPagination={rows?.pagination}
         pagination={pagination}
         setPagination={setPagination}
         sorting={sorting}
@@ -303,7 +301,7 @@ export default function HomeContent({
               <Form {...editScrewForm}>
                 <ScrewForm
                   mode="edit"
-                  onSubmit={handleEditScrew}
+                  onSubmit={handleEditSubmit}
                   isSubmitting={isEditingScrew}
                   screwTypes={screwTypes}
                   screwMaterials={screwMaterials}
