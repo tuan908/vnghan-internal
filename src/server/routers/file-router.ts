@@ -1,12 +1,11 @@
 import { DEFAULT_MATERIAL_ID, DEFAULT_SIZE_ID, ErrorCodes } from "@/constants";
 import json from "@/i18n/locales/vi.json";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-response";
-import { ImportResult } from "@/types";
+import { ImportResult, ScrewEntity } from "@/types";
 import { eq, sql } from "drizzle-orm";
 import { Row, Workbook } from "exceljs";
 import { z } from "zod";
 import SCHEMA from "../db";
-import { ScrewEntity } from "../db/schema/screw";
 import { j, publicProcedure } from "../jstack";
 ("@/server/db");
 
@@ -137,6 +136,10 @@ export const fileRouter = j.router({
             quantity,
             price,
             note: getCellValue(row, 5) || "",
+            id: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            isDeleted: false,
           });
         }
 
