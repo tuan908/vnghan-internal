@@ -49,8 +49,3 @@ export const screwRelations = relations(screws, ({ one, many }) => ({
     relationName: "material",
   }),
 }));
-
-export type ScrewEntity = Omit<
-  typeof screws.$inferInsert,
-  "id" | "createdAt" | "updatedAt" | "isDeleted"
->;

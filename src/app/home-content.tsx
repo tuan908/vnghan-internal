@@ -11,11 +11,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Form } from "@/components/ui/form";
+import { errorToast, successToast } from "@/components/ui/toast";
 import { CSS_TEXT_ELLIPSIS, PAGE_SIZE } from "@/constants";
 import json from "@/i18n/locales/vi.json";
 import { client } from "@/lib/client";
 import { cn } from "@/lib/utils";
-import { EditScrewDto, editScrewSchema } from "@/lib/validations";
+import { ScrewDto, ScrewSchema } from "@/lib/validations";
 import { ScrewMaterialDto, ScrewTypeDto } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -32,21 +34,11 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 import { AnimatePresence } from "framer-motion";
-import { Check, CircleX, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ScrewForm } from "./_components/form/screw";
-
-export type ScrewDto = { id: number } & Partial<{
-  name: string;
-  quantity: string;
-  componentType: string;
-  material: string;
-  category: string;
-  price: string;
-  notes: string;
-}>;
 
 type HomeContentProps = {
   screwTypes: ScrewTypeDto[];
@@ -64,13 +56,22 @@ export default function HomeContent({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
-
   const [activeDialog, setActiveDialog] = useState<TDialogType>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const editScrewForm = useForm<ScrewDto>({
-    resolver: zodResolver(editScrewSchema),
+    resolver: zodResolver(ScrewSchema),
     mode: "onChange",
+    defaultValues: {
+      category: "",
+      name: "",
+      note: "",
+      price: "",
+      quantity: "",
+      size: "",
+      componentType: "",
+      material: "",
+    },
   });
 
   // Track form changes
@@ -96,37 +97,27 @@ export default function HomeContent({
 
   const handleCloseDialog = () => {
     if (hasUnsavedChanges) {
-      if (
-        confirm("Bạn có chắc chắn muốn đóng? Dữ liệu chưa được lưu sẽ bị mất.")
-      ) {
-        setActiveDialog(null);
-        setHasUnsavedChanges(false);
-      }
+      setActiveDialog(null);
+      setHasUnsavedChanges(false);
     } else {
       setActiveDialog(null);
     }
   };
 
-  // Mutation for creating a screw
+  // Mutation for editing a screw info:
   const { mutate: editScrew, isPending: isEditingScrew } = useMutation({
-    mutationFn: async (body: EditScrewDto) => {
+    mutationFn: async (body: ScrewDto) => {
       const res = await client.screw.update.$post({ body });
       return await res.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["get-screws"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["get-screws", pagination.pageIndex],
+      });
       handleCloseDialog();
-      toast.success(json.success.operation, {
-        description: "Thông tin cập nhật thành công",
-        action: <Check className="text-green-500" />,
-      });
+      successToast();
     },
-    onError: (error) => {
-      toast.error(error.message, {
-        description: "Có lỗi xảy ra khi cập nhật",
-        action: <CircleX className="text-red-500" />,
-      });
-    },
+    onError: (error) => errorToast(error.message),
   });
 
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -163,13 +154,9 @@ export default function HomeContent({
     refetch();
   };
 
-  const handleSubmitScrew = (e: React.FormEvent) => {
-    e.preventDefault();
-    editScrewForm.handleSubmit((data) => {
-      console.log("Submitting data:", data);
-      editScrew(data);
-    })(e);
-  };
+  const handleEditScrew = editScrewForm.handleSubmit((data) => {
+    editScrew(data);
+  });
 
   const columns: ColumnDef<ScrewDto>[] = useMemo(
     () => [
@@ -212,12 +199,12 @@ export default function HomeContent({
         accessorKey: "quantity",
         header: "Số lượng",
         cell: ({ row }) => (
-          <div className="text-right">{row.original.quantity}</div>
+          <>{row.original.quantity}</>
         ),
       },
       {
-        accessorKey: "motoCategory",
-        header: "Loại xe",
+        accessorKey: "componentType",
+        header: "Loại phụ kiện",
         cell: ({ row }) => (
           <div className={cn("w-44", CSS_TEXT_ELLIPSIS)}>
             {row.original.componentType}
@@ -235,9 +222,9 @@ export default function HomeContent({
       },
       {
         accessorKey: "price",
-        header: "Giá tiền",
+        header: "Giá tham khảo",
         cell: ({ row }) => (
-          <div className={cn("w-32", CSS_TEXT_ELLIPSIS)}>
+          <div className={cn("w-32 text-right", CSS_TEXT_ELLIPSIS)}>
             {row.original.price} VND
           </div>
         ),
@@ -247,7 +234,7 @@ export default function HomeContent({
         header: "Lưu ý",
         cell: ({ row }) => (
           <div className={cn("w-44", CSS_TEXT_ELLIPSIS)}>
-            {row.original.notes}
+            {row.original.note}
           </div>
         ),
       },
@@ -257,10 +244,10 @@ export default function HomeContent({
         cell: ({ row }) => (
           <div className={cn("w-24 flex gap-x-6 items-center")}>
             <button onMouseDown={() => handleEditClick(row.original)}>
-              <Pencil className="h-5 w-5 text-blue-500 hover:text-blue-700" />
+              <Pencil className="h-5 w-5 text-blue-400 hover:text-blue-300" />
             </button>
             <button onMouseDown={() => handleDeleteClick(row.original)}>
-              <Trash2 className="h-5 w-5 text-red-500 hover:text-red-700" />
+              <Trash2 className="h-5 w-5 text-red-400 hover:text-red-300" />
             </button>
           </div>
         ),
@@ -297,7 +284,7 @@ export default function HomeContent({
             }}
           >
             <DialogContent
-              className="sm:max-w-[500px] overflow-hidden"
+              className="sm:max-w-[48rem] overflow-hidden"
               onEscapeKeyDown={(e) => {
                 if (hasUnsavedChanges) {
                   e.preventDefault();
@@ -313,15 +300,16 @@ export default function HomeContent({
               <DialogHeader>
                 <DialogTitle>Chỉnh sửa</DialogTitle>
               </DialogHeader>
-              <FormProvider {...editScrewForm}>
+              <Form {...editScrewForm}>
                 <ScrewForm
-                  onSubmit={handleSubmitScrew}
+                  mode="edit"
+                  onSubmit={handleEditScrew}
                   isSubmitting={isEditingScrew}
                   screwTypes={screwTypes}
                   screwMaterials={screwMaterials}
                   screw={currentItem!}
                 />
-              </FormProvider>
+              </Form>
             </DialogContent>
           </Dialog>
         ) : activeDialog === "delete" ? (

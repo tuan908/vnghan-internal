@@ -1,147 +1,193 @@
 import { Button } from "@/components/ui/button";
-import { VndCurrencyInput } from "@/components/ui/currency-input";
 import { DialogFooter } from "@/components/ui/dialog";
-import { FormField } from "@/components/ui/form-field";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { EditScrewDto } from "@/lib/validations";
+import { ScrewDto } from "@/lib/validations";
 import { ScrewMaterialDto, ScrewTypeDto } from "@/types";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { FC, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 
+type ScrewFormProps = {
+  mode: "create" | "edit";
+  onSubmit: (e: React.FormEvent) => void; // Updated type to accept event
+  isSubmitting: boolean;
+  screwTypes: ScrewTypeDto[];
+  screwMaterials: ScrewMaterialDto[];
+  screw?: ScrewDto;
+};
+
 // Screw form component
-export const ScrewForm = ({
+export const ScrewForm: FC<ScrewFormProps> = ({
+  mode,
   onSubmit,
   isSubmitting,
   screwTypes,
   screwMaterials,
   screw,
-}: {
-  onSubmit: (e: React.FormEvent) => void; // Updated type to accept event
-  isSubmitting: boolean;
-  screwTypes: ScrewTypeDto[];
-  screwMaterials: ScrewMaterialDto[];
-  screw?: EditScrewDto;
 }) => {
-  const { register, setValue, watch, reset } = useFormContext<EditScrewDto>();
+  const { register, reset, control, setValue } = useFormContext<ScrewDto>();
 
-  // Watch fields for real-time validation
-  const componentType = watch("componentType");
-  const material = watch("material");
-
-  // Initialize form with screw data when in edit mode
   useEffect(() => {
     if (screw) {
-      console.log("Initializing form with screw data:", screw);
-      // Pre-populate form fields with screw data
       reset({
-        id: screw.id, // Make sure to include the ID for editing
-        name: screw.name || "",
-        quantity: screw.quantity || "",
-        price: screw.price || "",
-        componentType: screw.componentType || "",
-        material: screw.material || "",
-        note: screw.note || "",
+        id: screw.id,
+        name: screw.name,
+        quantity: screw.quantity,
+        price: screw.price,
+        note: screw.note,
+        componentType: screw.componentType,
+        category: screw.category,
+        material: screw.material,
       });
     }
-  }, [screw, reset]);
+  }, [screw, reset, setValue]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent default form submission
-    console.log("Form submission triggered");
-    onSubmit(e); // Call the provided onSubmit handler
+    e.preventDefault();
+    onSubmit(e);
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
-      {/* If editing, include a hidden input for the ID */}
       {screw && <input type="hidden" {...register("id")} />}
 
-      <FormField label="Tên sản phẩm" name="name">
-        <Input
-          type="text"
-          {...register("name")}
-          autoFocus
-          placeholder="Nhập tên sản phẩm"
-        />
-      </FormField>
+      <FormField
+        control={control}
+        name="name"
+        render={({ field }) => (
+          <FormItem className="flex flex-col gap-y-2">
+            <FormLabel>Tên sản phẩm</FormLabel>
+            <FormControl>
+              <Input placeholder="Nhập tên sản phẩm" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="Số lượng" name="quantity">
-          <Input {...register("quantity")} placeholder="Nhập số lượng" />
-        </FormField>
+        <FormField
+          control={control}
+          name="quantity"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Số lượng</FormLabel>
+              <FormControl>
+                <Input placeholder="Nhập số lượng" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <FormField label="Giá tiền tham khảo" name="price">
-          <VndCurrencyInput
-            {...register("price")}
-            placeholder="Nhập giá tiền"
-          />
-        </FormField>
+        <FormField
+          control={control}
+          name="price"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Giá tham khảo</FormLabel>
+              <FormControl>
+                <div className="relative flex items-center">
+                  <Input placeholder="Nhập giá tiền tham khảo" {...field} />
+                  <div className="absolute right-3 text-gray-500 pointer-events-none">
+                    VND
+                  </div>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="Loại phụ kiện" name="componentType">
-          <Select
-            onValueChange={(value) => setValue("componentType", value)}
-            value={componentType}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Chọn loại phụ kiện" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Loại phụ kiện</SelectLabel>
-                {screwTypes.map((x) => (
-                  <SelectItem key={x.id + "#" + x.name} value={x.name!}>
-                    {x.name}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </FormField>
+        <FormField
+          control={control}
+          name="componentType"
+          render={({ field }) => (
+            <FormItem  key={field.value}>
+              <FormLabel>Loại phụ kiện</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Chọn loại phụ kiện" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {screwTypes.map((x) => (
+                    <SelectItem key={x.id + "#" + x.name} value={x.name!}>
+                      {x.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <FormField label="Chất liệu" name="material">
-          <Select
-            onValueChange={(value) => setValue("material", value)}
-            value={material}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Chọn chất liệu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Chất liệu</SelectLabel>
-                {screwMaterials.map((x) => (
-                  <SelectItem key={x.id + "#" + x.name} value={x.name!}>
-                    {x.name}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </FormField>
+        <FormField
+          control={control}
+          name="material"
+          render={({ field }) => (
+            <FormItem key={field.value}>
+              <FormLabel>Chất liệu</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Chọn chất liệu" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {screwMaterials.map((x) => (
+                    <SelectItem key={x.id + "#" + x.name} value={x.name!}>
+                      {x.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
-      <FormField label="Lưu ý" name="notes">
-        <Textarea
-          {...register("note")}
-          cols={3}
-          className="resize-none min-h-24"
-          placeholder="Nhập lưu ý (nếu có)"
-        />
-      </FormField>
+      <FormField
+        control={control}
+        name="note"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Lưu ý</FormLabel>
+            <FormControl>
+              <Textarea
+                {...field}
+                className="resize-none min-h-24"
+                placeholder="Nhập lưu ý (nếu có)"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       <DialogFooter className="mt-4">
         <DialogClose asChild>
@@ -155,7 +201,7 @@ export const ScrewForm = ({
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Đang lưu...
             </>
-          ) : screw ? (
+          ) : mode === "edit" ? (
             "Cập nhật"
           ) : (
             "Lưu"

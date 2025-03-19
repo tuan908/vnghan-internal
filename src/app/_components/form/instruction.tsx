@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
-import { FormField } from "@/components/ui/form-field";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -27,41 +31,51 @@ export const InstructionForm = ({
   isSubmitting: boolean;
   screwTypes: ScrewTypeDto[];
 }) => {
-  const { register, setValue, watch } = useFormContext<CreateInstructionDto>();
-  const componentType = watch("componentType");
+  const { control } = useFormContext<CreateInstructionDto>();
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-y-4">
-      <FormField label="Loại phụ kiện" name="componentType">
-        <Select
-          onValueChange={(value) => setValue("componentType", value)}
-          value={componentType}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Chọn loại phụ kiện" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Loại phụ kiện</SelectLabel>
-              {screwTypes.map((x) => (
-                <SelectItem key={x.id + "#" + x.name} value={x.name!}>
-                  {x.name}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </FormField>
+      <FormField
+        name="componentType"
+        control={control}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Loại phụ kiện</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Chọn loại phụ kiện" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {screwTypes.map((x) => (
+                  <SelectItem key={x.id + "#" + x.name} value={x.name!}>
+                    {x.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <FormField label="Hướng dẫn" name="instruction">
-        <Textarea
-          {...register("instruction")}
-          cols={3}
-          className="resize-none min-h-32"
-          placeholder="Nhập chi tiết hướng dẫn lắp đặt"
-          autoFocus
-        />
-      </FormField>
+      <FormField
+        control={control}
+        name="instruction"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Hướng dẫn</FormLabel>
+            <FormControl>
+              <Textarea
+                {...field}
+                className="resize-none min-h-24"
+                placeholder="Nhập chi tiết hướng dẫn lắp đặt"
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
 
       <DialogFooter className="mt-4">
         <DialogClose asChild>
