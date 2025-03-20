@@ -9,8 +9,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PaginationInfo } from "@/types";
+import { compareItems, rankItem } from "@tanstack/match-sorter-utils";
 import {
   ColumnFiltersState,
+  FilterFn,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -18,11 +20,15 @@ import {
   OnChangeFn,
   PaginationState,
   RowSelectionState,
+  SortingFn,
+  sortingFns,
   SortingState,
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
 import { Button } from "./button";
+import Filter from "./filter";
+import { Input } from "./input";
 import {
   Pagination,
   PaginationContent,
@@ -47,6 +53,8 @@ type DataTableProps<TData> = {
   setColumnVisibility: OnChangeFn<VisibilityState>;
   rowSelection: RowSelectionState;
   setRowSelection: OnChangeFn<RowSelectionState>;
+  globalFilter: string;
+  setGlobalFilter: OnChangeFn<string>;
 };
 
 export function DataTable<TData>({
@@ -64,6 +72,8 @@ export function DataTable<TData>({
   setRowSelection,
   sorting,
   setSorting,
+  globalFilter,
+  setGlobalFilter,
 }: DataTableProps<TData>) {
   const table = useReactTable({
     columns,
@@ -75,6 +85,7 @@ export function DataTable<TData>({
       pagination,
       sorting,
       columnFilters,
+      globalFilter,
       columnVisibility,
       rowSelection,
     },
@@ -85,6 +96,11 @@ export function DataTable<TData>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    filterFns: {
+      fuzzy: fuzzyFilter,
+    },
+    globalFilterFn: "fuzzy",
+    onGlobalFilterChange: setGlobalFilter,
     debugTable: process.env.NODE_ENV !== "production",
   });
 
@@ -190,34 +206,41 @@ export function DataTable<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
+                <TableHead key={header.id} className="w-8 text">
                   {header.isPlaceholder ? null : (
-                    <div
-                      className={
-                        header.column.getCanSort()
-                          ? "cursor-pointer select-none"
-                          : ""
-                      }
-                      onClick={header.column.getToggleSortingHandler()}
-                      title={
-                        header.column.getCanSort()
-                          ? header.column.getNextSortingOrder() === "asc"
-                            ? "Sort ascending"
-                            : header.column.getNextSortingOrder() === "desc"
-                            ? "Sort descending"
-                            : "Clear sort"
-                          : undefined
-                      }
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {{
-                        asc: " 🔼",
-                        desc: " 🔽",
-                      }[header.column.getIsSorted() as string] ?? null}
-                    </div>
+                    <>
+                      <div
+                        className={
+                          header.column.getCanSort()
+                            ? "cursor-pointer select-none"
+                            : ""
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                        title={
+                          header.column.getCanSort()
+                            ? header.column.getNextSortingOrder() === "asc"
+                              ? "Sort ascending"
+                              : header.column.getNextSortingOrder() === "desc"
+                              ? "Sort descending"
+                              : "Clear sort"
+                            : undefined
+                        }
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {{
+                          asc: " 🔼",
+                          desc: " 🔽",
+                        }[header.column.getIsSorted() as string] ?? null}
+                      </div>
+                      {header.column.getCanFilter() ? (
+                        <div>
+                          <Filter column={header.column} />
+                        </div>
+                      ) : null}
+                    </>
                   )}
                 </TableHead>
               ))}
@@ -249,7 +272,20 @@ export function DataTable<TData>({
           )}
         </TableBody>
       </Table>
-      <div className="w-full flex justify-end p-4">
+      <div className="w-full flex items-center justify-end p-4 gap-x-6">
+        <span className="flex items-center gap-x-3">
+          <span>Chuyển tới trang:</span>
+          <Input
+            className="w-12"
+            type="text"
+            defaultValue={table.getState().pagination.pageIndex + 1}
+            onChange={(e) => {
+              const page = e.target.value ? Number(e.target.value) - 1 : 0;
+              table.setPageIndex(page);
+            }}
+          />
+        </span>
+
         <div className="lg:w-1/3">
           <Pagination>
             <PaginationContent>
@@ -273,3 +309,33 @@ export function DataTable<TData>({
     </div>
   );
 }
+
+// Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
+const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+  // Rank the item
+  const itemRank = rankItem(row.getValue(columnId), value);
+
+  // Store the itemRank info
+  addMeta({
+    itemRank,
+  });
+
+  // Return if the item should be filtered in/out
+  return itemRank.passed;
+};
+
+// Define a custom fuzzy sort function that will sort by rank if the row has ranking information
+export const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
+  let dir = 0;
+
+  // Only sort by rank if the column has ranking information
+  if (rowA.columnFiltersMeta[columnId]) {
+    dir = compareItems(
+      rowA.columnFiltersMeta[columnId]?.itemRank!,
+      rowB.columnFiltersMeta[columnId]?.itemRank!
+    );
+  }
+
+  // Provide an alphanumeric fallback for when the item ranks are equal
+  return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir;
+};

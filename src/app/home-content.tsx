@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, fuzzySort } from "@/components/ui/data-table";
+import DebouncedInput from "@/components/ui/debounced-input";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { ScrewDto, ScrewSchema } from "@/lib/validations";
 import { ScrewMaterialDto, ScrewTypeDto } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { RankingInfo } from "@tanstack/match-sorter-utils";
 import {
   keepPreviousData,
   useMutation,
@@ -28,17 +30,28 @@ import {
 import {
   ColumnDef,
   ColumnFiltersState,
+  FilterFn,
   PaginationState,
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
 import { AnimatePresence } from "framer-motion";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ScrewForm } from "./_components/form/screw";
 import { deleteScrew, editScrew, getAllScrews } from "./actions/screw";
+
+declare module "@tanstack/react-table" {
+  //add fuzzy filter to the filterFns
+  interface FilterFns {
+    fuzzy: FilterFn<unknown>;
+  }
+  interface FilterMeta {
+    itemRank: RankingInfo;
+  }
+}
 
 type HomeContentProps = {
   screwTypes: ScrewTypeDto[];
@@ -51,6 +64,7 @@ export default function HomeContent({
   screwMaterials,
   screwTypes,
 }: HomeContentProps) {
+  const [globalFilter, setGlobalFilter] = useState("");
   const queryClient = useQueryClient();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -201,12 +215,16 @@ export default function HomeContent({
           </div>
         ),
         sortUndefined: "last", //force undefined values to the end
-        sortDescFirst: false, //first sort order will be ascending (nullable values can mess up auto detection of sort order)
+        sortDescFirst: false, //first sort order will be ascending (nullable values can mess up auto detection of sort order),
+        filterFn: "fuzzy", //using our custom fuzzy filter function
+        // filterFn: fuzzyFilter, //or just define with the function
+        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
       },
       {
         accessorKey: "quantity",
         header: "Số lượng",
         cell: ({ row }) => <>{row.original.quantity}</>,
+        filterFn: "includesString",
       },
       {
         accessorKey: "componentType",
@@ -264,6 +282,20 @@ export default function HomeContent({
 
   return (
     <>
+      <div className="sm:w-1/5 relative flex items-center">
+        <DebouncedInput
+          className="w-full border rounded-md focus:border-blue-400 px-4 py-2"
+          value={globalFilter ?? ""}
+          onChange={(value) => setGlobalFilter(String(value))}
+          placeholder="Tìm kiếm trong các cột"
+        />
+        <div className="absolute right-3 text-gray-500 pointer-events-none">
+          <Search />
+        </div>
+      </div>
+
+      <div className="h-8"></div>
+
       <DataTable
         columns={columns}
         data={rows?.data ?? []}
@@ -278,6 +310,8 @@ export default function HomeContent({
         setColumnVisibility={setColumnVisibility}
         rowSelection={rowSelection}
         setRowSelection={setRowSelection}
+        globalFilter={globalFilter}
+        setGlobalFilter={setGlobalFilter}
       />
 
       {/* Edit Dialog */}
@@ -329,7 +363,8 @@ export default function HomeContent({
               <DialogHeader>
                 <DialogTitle>Xác nhận xóa</DialogTitle>
                 <DialogDescription>
-                  Bạn có chắc chắn muốn xóa sản phẩm &quot;{currentItem?.name}&quot;?
+                  Bạn có chắc chắn muốn xóa sản phẩm &quot;{currentItem?.name}
+                  &quot;?
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>

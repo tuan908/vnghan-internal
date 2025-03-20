@@ -21,7 +21,7 @@ export default async function Home() {
   };
 
   return (
-    <main className="flex min-h-screen max-w-7xl m-auto flex-col py-12">
+    <main className="flex max-h-screen max-w-7xl m-auto flex-col py-12">
       <h1 className="text-3xl font-bold">Danh sách phụ kiện</h1>
       <div className="w-full flex justify-end gap-x-4 py-4">
         <Link
