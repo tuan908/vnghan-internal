@@ -65,7 +65,7 @@ export const QuestionForm = ({
         name="question"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Lưu ý</FormLabel>
+            <FormLabel>Câu hỏi thường gặp</FormLabel>
             <FormControl>
               <Textarea
                 {...field}
@@ -84,7 +84,7 @@ export const QuestionForm = ({
         name="answer"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Lưu ý</FormLabel>
+            <FormLabel>Câu trả lời</FormLabel>
             <FormControl>
               <Textarea
                 {...field}

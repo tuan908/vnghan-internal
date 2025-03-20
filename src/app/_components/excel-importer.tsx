@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { errorToast, successToast } from "@/components/ui/toast";
 import { QUERY_KEY } from "@/constants";
 import json from "@/i18n/locales/vi.json";
+import { tryCatch } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { importExcel } from "../actions/file";
@@ -31,27 +32,22 @@ export default function ExcelImporter() {
     const formData = new FormData();
     formData.append("file", file);
     let msg;
-    try {
-      const data = await importExcel(formData);
 
-      if (!data.success) {
-        msg =
-          data.error instanceof Object
-            ? data.error.message
-            : json.error.unknownError;
-        errorToast(msg);
-        return;
-      }
+    const result = await tryCatch(importExcel(formData));
 
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.SCREW] });
-      successToast();
-    } catch (err) {
-      msg = err instanceof Error ? err.message : json.error.unknownError;
+    if (!result.data) {
+      msg =
+        result.error instanceof Object
+          ? result.error.message
+          : json.error.unknownError;
       errorToast(msg);
-    } finally {
-      setIsLoading(false);
-      msg = "";
+      return;
     }
+
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEY.SCREW] });
+    successToast();
+    setIsLoading(false);
+    msg = "";
   };
 
   return (

@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, fuzzySort } from "@/components/ui/data-table";
 import DebouncedInput from "@/components/ui/debounced-input";
 import {
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { errorToast, successToast } from "@/components/ui/toast";
-import { CSS_TEXT_ELLIPSIS, QUERY_KEY } from "@/constants";
+import { QUERY_KEY } from "@/constants";
 import json from "@/i18n/locales/vi.json";
 import { cn } from "@/lib/utils";
 import { ScrewDto, ScrewSchema } from "@/lib/validations";
@@ -67,6 +66,12 @@ export default function HomeContent({
   const [globalFilter, setGlobalFilter] = useState("");
   const [activeDialog, setActiveDialog] = useState<TDialogType>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  // Dialog state
+  const [currentItem, setCurrentItem] = useState<ScrewDto | null>(null);
 
   const editScrewForm = useForm<ScrewDto>({
     resolver: zodResolver(ScrewSchema),
@@ -124,14 +129,6 @@ export default function HomeContent({
       onError: (error) => errorToast(error.message),
     });
 
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
-
-  // Dialog state
-  const [currentItem, setCurrentItem] = useState<ScrewDto | null>(null);
-
   // Handle edit dialog
   const handleEditClick = (item: ScrewDto) => {
     setCurrentItem(item);
@@ -162,41 +159,12 @@ export default function HomeContent({
     handleEditScrewInfo(data);
   });
 
-  const columns: ColumnDef<ScrewDto>[] = useMemo(
+  const columns = useMemo<ColumnDef<ScrewDto>[]>(
     () => [
-      {
-        id: "select",
-        header: ({ table }) => (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value) =>
-              table.toggleAllPageRowsSelected(!!value)
-            }
-            aria-label="Select all"
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-        size: 40,
-      },
       {
         accessorKey: "name",
         header: "Tên sản phẩm",
-        cell: ({ row }) => (
-          <div className={cn("w-full flex items-center", CSS_TEXT_ELLIPSIS)}>
-            {row.original.name}
-          </div>
-        ),
+        cell: ({ row }) => <>{row.original.name}</>,
         sortUndefined: "last", //force undefined values to the end
         sortDescFirst: false, //first sort order will be ascending (nullable values can mess up auto detection of sort order),
         filterFn: "fuzzy", //using our custom fuzzy filter function
@@ -208,12 +176,7 @@ export default function HomeContent({
         accessorKey: "price",
         header: "Giá tham khảo",
         cell: ({ row }) => (
-          <div
-            className={cn(
-              "text-right flex gap-x-2 justify-end",
-              CSS_TEXT_ELLIPSIS
-            )}
-          >
+          <div className={cn("text-right flex gap-x-2 justify-end")}>
             <span>{row.original.price}</span>
             <span className="text-gray-500 pointer-events-none">VND</span>
           </div>
@@ -224,35 +187,23 @@ export default function HomeContent({
       {
         accessorKey: "quantity",
         header: "Số lượng",
-        cell: ({ row }) => (
-          <div className={cn("w-36", CSS_TEXT_ELLIPSIS)}>
-            {row.original.quantity}
-          </div>
-        ),
+        cell: ({ row }) => <>{row.original.quantity}</>,
         filterFn: "includesString",
         size: 150,
       },
       {
         accessorKey: "componentType",
         header: "Loại phụ kiện",
-        cell: ({ row }) => (
-          <div className={cn("w-44", CSS_TEXT_ELLIPSIS)}>
-            {row.original.componentType}
-          </div>
-        ),
+        cell: ({ row }) => <> {row.original.componentType}</>,
         filterFn: "includesString",
         size: 150,
       },
       {
         accessorKey: "material",
         header: "Chất liệu",
-        cell: ({ row }) => (
-          <div className={cn("w-44", CSS_TEXT_ELLIPSIS)}>
-            {row.original.material}
-          </div>
-        ),
+        cell: ({ row }) => <>{row.original.material}</>,
         filterFn: "includesString",
-        size: 150,
+        size: 200,
       },
 
       {

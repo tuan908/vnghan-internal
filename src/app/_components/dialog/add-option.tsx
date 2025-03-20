@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { errorToast, successToast } from "@/components/ui/toast";
+import { QUERY_KEY } from "@/constants";
 import {
   type CreateInstructionDto,
   createInstructionSchema,
@@ -117,7 +118,7 @@ export function AddOptionDropdown({
         return await createScrew(data);
       },
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ["get-screws"] });
+        await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.SCREW] });
         handleCloseDialog();
         successToast();
       },

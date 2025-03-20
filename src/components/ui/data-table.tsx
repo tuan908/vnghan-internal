@@ -1,5 +1,6 @@
 "use client";
 
+import { CSS_TEXT_ELLIPSIS } from "@/constants";
 import { cn } from "@/lib/utils";
 import { compareItems, rankItem } from "@tanstack/match-sorter-utils";
 import {
@@ -20,7 +21,6 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React from "react";
 import Filter from "./filter";
-import { TableRow } from "./table";
 
 /** Your existing DataTable props, plus some columns, data, etc. */
 type DataTableProps<TData> = {
@@ -84,7 +84,7 @@ export function DataTable<TData>({
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 24, // approximate row height
+    estimateSize: () => 20, // approximate row height
     overscan: 20, // number of extra rows to render outside viewport
   });
 
@@ -103,7 +103,7 @@ export function DataTable<TData>({
                       colSpan={header.colSpan}
                       className="sticky top-0 z-[9999] bg-slate-100 border-none p-2 text-center"
                       style={{
-                        width: header.getSize(),
+                        width: `${header.getSize() / 16}rem`,
                       }}
                     >
                       {header.isPlaceholder ? null : (
@@ -148,7 +148,8 @@ export function DataTable<TData>({
             {virtualizer.getVirtualItems().map((virtualRow, index) => {
               const row = rows[virtualRow.index]!;
               return (
-                <TableRow
+                <tr
+                  className="border-b"
                   key={row.id}
                   style={{
                     height: `${virtualRow.size}px`,
@@ -159,7 +160,13 @@ export function DataTable<TData>({
                 >
                   {row.getVisibleCells().map((cell) => {
                     return (
-                      <td key={cell.id} className="z-0 nth-[1]:text-center px-2">
+                      <td
+                        key={cell.id}
+                        className={cn(
+                          "z-0 px-2 max-w-32",
+                          CSS_TEXT_ELLIPSIS
+                        )}
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -167,7 +174,7 @@ export function DataTable<TData>({
                       </td>
                     );
                   })}
-                </TableRow>
+                </tr>
               );
             })}
           </tbody>

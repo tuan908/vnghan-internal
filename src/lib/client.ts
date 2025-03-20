@@ -1,4 +1,4 @@
-import { nullsToUndefined } from "@/lib/utils";
+import { nullsToUndefined, tryCatch } from "@/lib/utils";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -44,29 +44,25 @@ class HttpClient {
       ? setTimeout(() => controller.abort(), timeout)
       : null;
 
-    try {
-      const response = await fetch(fullUrl, {
-        ...restOptions,
-        method,
-        headers: { ...defaultHeaders, ...headers },
-        signal: controller.signal,
-        next: {
-          tags: tag ? [tag] : undefined,
-        },
-      });
+    const response = fetch(fullUrl, {
+      ...restOptions,
+      method,
+      headers: { ...defaultHeaders, ...headers },
+      signal: controller.signal,
+      next: {
+        tags: tag ? [tag] : undefined,
+      },
+    });
 
-      if (!response.ok) {
-        throw new HttpError(response);
-      }
+    const { data, error } = await tryCatch(response);
 
-      const data = await response.json();
-      return nullsToUndefined(data) as T;
-    } catch (error) {
-      console.error("HTTP Request Failed:", error);
-      return undefined;
-    } finally {
-      if (timeoutId) clearTimeout(timeoutId);
+    if (error) {
+      throw error;
     }
+
+    const json = await data.json();
+    if (timeoutId) clearTimeout(timeoutId);
+    return nullsToUndefined(json) as T;
   }
 
   public async get<T>(url: string, options?: RequestOptions) {
@@ -103,17 +99,19 @@ class HttpClient {
     formData.append("file", file);
 
     try {
-      const response = await fetch(`${this._baseUrl}${url}`, {
-        ...options,
-        method: "POST",
-        body: formData,
-      });
+      const { data, error } = await tryCatch(
+        fetch(`${this._baseUrl}${url}`, {
+          ...options,
+          method: "POST",
+          body: formData,
+        })
+      );
 
-      if (!response.ok) {
-        throw new HttpError(response);
+      if (error) {
+        throw error;
       }
 
-      return response.json() as Promise<T>;
+      return data.json() as Promise<T>;
     } catch (error) {
       console.error("File Upload Failed:", error);
       return undefined;
@@ -121,24 +119,22 @@ class HttpClient {
   }
 
   public async downloadFile(url: string, filename: string): Promise<void> {
-    try {
-      const response = await fetch(`${this._baseUrl}${url}`);
+    const response = fetch(`${this._baseUrl}${url}`);
 
-      if (!response.ok) {
-        throw new HttpError(response);
-      }
+    const { data, error } = await tryCatch(response);
 
-      const blob = await response.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    } catch (error) {
-      console.error("File Download Failed:", error);
+    if (error) {
+      throw error;
     }
+
+    const blob = await data.blob();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
   }
 }
 
