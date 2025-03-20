@@ -23,7 +23,8 @@ export function nullsToUndefined<T>(
 }
 
 export function getApiUrl() {
-  if (process.env.NODE_ENV === "production")
-    return `https://${process.env.DEPLOYMENT_ID}.workers.dev/api/v1`;
-  return "http://localhost:8787/api/v1";
+  const apiUrl = process.env.API_URL;
+
+  if (!apiUrl) throw new Error("Invalid api url");
+  return apiUrl;
 }
