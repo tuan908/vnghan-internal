@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Made with love for vnghan by tuanna",
 };
 
-// export const runtime = 'edge';
+export const runtime = 'edge';
 
 export default function RootLayout({
   children,
