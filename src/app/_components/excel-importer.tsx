@@ -2,10 +2,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { errorToast, successToast } from "@/components/ui/toast";
+import { QUERY_KEY } from "@/constants";
 import json from "@/i18n/locales/vi.json";
-import { Check, CircleX } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
 import { importExcel } from "../actions/file";
 
 interface ExcelRow {
@@ -14,6 +15,7 @@ interface ExcelRow {
 }
 
 export default function ExcelImporter() {
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,20 +46,15 @@ export default function ExcelImporter() {
           data.error instanceof Object
             ? data.error.message
             : json.error.unknownError;
-        toast(msg, {
-          action: <CircleX className="text-red-500" />,
-        });
+        errorToast(msg);
         return;
       }
 
-      toast("Dữ liệu đã nhập thành công", {
-        action: <Check className="text-green-500" />,
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.SCREW] });
+      successToast();
     } catch (err) {
       msg = err instanceof Error ? err.message : json.error.unknownError;
-      toast(msg, {
-        action: <CircleX className="text-red-500" />,
-      });
+      errorToast(msg);
     } finally {
       setIsLoading(false);
       msg = "";

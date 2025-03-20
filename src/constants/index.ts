@@ -42,3 +42,9 @@ export const DEFAULT_MATERIAL_ID = 9999;
 export const DEFAULT_TYPE_ID = 9999;
 
 export const DEFAULT_SIZE_ID = 9999;
+
+export const QUERY_KEY = {
+  SCREW: "screws",
+  SCREW_MATERIAL: "screw-materials",
+  SCREW_TYPE: "screw-types"
+}

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { errorToast, successToast } from "@/components/ui/toast";
-import { CSS_TEXT_ELLIPSIS, PAGE_SIZE } from "@/constants";
+import { CSS_TEXT_ELLIPSIS, PAGE_SIZE, QUERY_KEY } from "@/constants";
 import json from "@/i18n/locales/vi.json";
 import { cn } from "@/lib/utils";
 import { ScrewDto, ScrewSchema } from "@/lib/validations";
@@ -84,15 +84,24 @@ export default function HomeContent({
     return () => subscription.unsubscribe();
   }, [editScrewForm, activeDialog]);
 
-  const { data: rows, refetch } = useQuery({
-    queryKey: ["get-screws", pagination.pageIndex],
-    queryFn: async () => {
-      return await getAllScrews({
-        p: pagination.pageIndex,
-      });
-    },
+  const {
+    data: rows,
+    refetch,
+    isPlaceholderData,
+  } = useQuery({
+    queryKey: [QUERY_KEY.SCREW, pagination.pageIndex],
+    queryFn: () => getAllScrews({ page: pagination.pageIndex }),
     placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    if (!isPlaceholderData && rows?.pagination?.hasNextPage) {
+      queryClient.prefetchQuery({
+        queryKey: [QUERY_KEY.SCREW, pagination.pageIndex + 1],
+        queryFn: () => getAllScrews({ page: pagination.pageIndex + 1 }),
+      });
+    }
+  }, [rows, isPlaceholderData, pagination.pageIndex, queryClient]);
 
   const handleCloseDialog = () => {
     if (hasUnsavedChanges) {
@@ -104,19 +113,20 @@ export default function HomeContent({
   };
 
   // Mutation for editing a screw info:
-  const { mutate: handleEditScrewInfo, isPending: isEditingScrew } = useMutation({
-    mutationFn: async (body: ScrewDto) => {
-      return await editScrew(body)
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["get-screws", pagination.pageIndex],
-      });
-      handleCloseDialog();
-      successToast();
-    },
-    onError: (error) => errorToast(error.message),
-  });
+  const { mutate: handleEditScrewInfo, isPending: isEditingScrew } =
+    useMutation({
+      mutationFn: async (body: ScrewDto) => {
+        return await editScrew(body);
+      },
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: [QUERY_KEY.SCREW, pagination.pageIndex],
+        });
+        handleCloseDialog();
+        successToast();
+      },
+      onError: (error) => errorToast(error.message),
+    });
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -140,7 +150,7 @@ export default function HomeContent({
 
   // Handle delete submit
   const handleDeleteSubmit = async () => {
-    const result = await deleteScrew(currentItem!)
+    const result = await deleteScrew(currentItem!);
     if (!result.success) {
       toast(json.error.operate);
       return;
@@ -196,9 +206,7 @@ export default function HomeContent({
       {
         accessorKey: "quantity",
         header: "Số lượng",
-        cell: ({ row }) => (
-          <>{row.original.quantity}</>
-        ),
+        cell: ({ row }) => <>{row.original.quantity}</>,
       },
       {
         accessorKey: "componentType",

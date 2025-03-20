@@ -15,8 +15,8 @@ export const getScrewMaterials = cache(async () => {
   return response.json<ApiResponse<ScrewMaterialDto[]>>();
 });
 
-export const getAllScrews = async ({ p }: { p: number }) => {
-  const response = await fetch(`${getApiUrl()}/screws?p=${p}`);
+export const getAllScrews = async ({ page }: { page: number }) => {
+  const response = await fetch(`${getApiUrl()}/screws?page=${page}`);
   return response.json<ApiResponse<ScrewDto[]>>();
 };
 
