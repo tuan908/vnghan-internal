@@ -1,45 +1,48 @@
 "use server";
 
-import { getApiUrl } from "@/lib/utils";
+import API from "@/lib/client";
 import type { ScrewDto } from "@/lib/validations";
 import type { ApiResponse, ScrewMaterialDto, ScrewTypeDto } from "@/types";
 import { cache } from "react";
 
-export const getScrewTypes = cache(async () => {
-  const response = await fetch(`${getApiUrl()}/screws/types`);
-  return response.json<ApiResponse<ScrewTypeDto[]>>();
-});
+export const getScrewTypes = cache(
+  async (): Promise<ApiResponse<ScrewTypeDto[]> | undefined> => {
+    return await API.get<ApiResponse<ScrewTypeDto[]>>(`/screws/types`);
+  }
+);
 
-export const getScrewMaterials = cache(async () => {
-  const response = await fetch(`${getApiUrl()}/screws/materials`);
-  return response.json<ApiResponse<ScrewMaterialDto[]>>();
-});
+export const getScrewMaterials = cache(
+  async (): Promise<ApiResponse<ScrewMaterialDto[]> | undefined> => {
+    return await API.get<ApiResponse<ScrewMaterialDto[]>>(`/screws/materials`);
+  }
+);
 
-export const getAllScrews = async ({ page }: { page: number }) => {
-  const response = await fetch(`${getApiUrl()}/screws?page=${page}`);
-  return response.json<ApiResponse<ScrewDto[]>>();
+export const getAllScrews = async ({
+  page,
+}: {
+  page: number;
+}): Promise<ApiResponse<ScrewDto[]> | undefined> => {
+  return await API.get<ApiResponse<ScrewDto[]>>(`/screws`, {
+    params: {
+      page: page.toString(),
+    },
+  });
 };
 
-export const createScrew = async (screwDto: ScrewDto) => {
-  const response = await fetch(`${getApiUrl()}/screws}`, {
-    body: JSON.stringify(screwDto),
-    method: "post",
-  });
-  return response.json<ApiResponse<ScrewDto[]>>();
+export const createScrew = async (
+  screwDto: ScrewDto
+): Promise<ApiResponse<ScrewDto[]> | undefined> => {
+  return await API.post(`/screws`, screwDto);
 };
 
-export const editScrew = async (screwDto: ScrewDto) => {
-  const response = await fetch(`${getApiUrl()}/screws/${screwDto.id}`, {
-    body: JSON.stringify(screwDto),
-    method: "patch",
-  });
-  return response.json<ApiResponse<ScrewDto[]>>();
+export const editScrew = async (
+  screwDto: ScrewDto
+): Promise<ApiResponse<ScrewDto[]> | undefined> => {
+  return await API.patch(`/screws/${screwDto.id}`, screwDto);
 };
 
-export const deleteScrew = async (screwDto: ScrewDto) => {
-  const response = await fetch(`${getApiUrl()}/screws/${screwDto.id}`, {
-    body: JSON.stringify(screwDto),
-    method: "delete",
-  });
-  return response.json<ApiResponse<ScrewDto[]>>();
+export const deleteScrew = async (
+  screwDto: ScrewDto
+): Promise<ApiResponse<ScrewDto[]> | undefined> => {
+  return await API.delete(`/screws/${screwDto.id}`, screwDto);
 };

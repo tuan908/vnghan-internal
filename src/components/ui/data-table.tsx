@@ -69,7 +69,7 @@ export function DataTable<TData>({
     columns,
     data,
     getCoreRowModel: getCoreRowModel(),
-    rowCount: serverPagination?.totalItems!,
+    rowCount: serverPagination ? serverPagination.totalItems : 0,
     manualPagination: true,
     state: {
       pagination,
@@ -94,7 +94,7 @@ export function DataTable<TData>({
     const maxVisiblePages = 2; // Number of page buttons to show at once
 
     let startPage = Math.max(0, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 1);
 
     // Adjust start if we're near the end
     if (endPage - startPage + 1 < maxVisiblePages) {

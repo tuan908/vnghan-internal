@@ -13,7 +13,6 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": ["@cloudflare/workers-types/2023-07-01"],
     "plugins": [
       {
         "name": "next"
@@ -30,6 +29,6 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "**/*.d.ts"
-  ],
+, "next.config.mjs"  ],
   "exclude": ["node_modules"]
 }

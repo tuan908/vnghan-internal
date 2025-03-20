@@ -9,27 +9,20 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { importExcel } from "../actions/file";
 
-interface ExcelRow {
-  id: string;
-  [key: string]: any;
-}
-
 export default function ExcelImporter() {
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
-      setError(null);
     }
   };
 
   const handleUpload = async () => {
     if (!file) {
-      setError("Please select a file first");
+      errorToast("Please select a file first");
       return;
     }
 

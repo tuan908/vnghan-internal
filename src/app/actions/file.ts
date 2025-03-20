@@ -3,7 +3,7 @@
 import { ErrorCodes } from "@/constants";
 import json from "@/i18n/locales/vi.json";
 import { createErrorResponse } from "@/lib/api-response";
-import { getApiUrl } from "@/lib/utils";
+import API from "@/lib/client";
 import type { ApiResponse } from "@/types";
 
 export async function importExcel(formData: FormData): Promise<ApiResponse> {
@@ -16,10 +16,15 @@ export async function importExcel(formData: FormData): Promise<ApiResponse> {
     });
   }
 
-  const response = await fetch(`${getApiUrl()}/files/importExcel`, {
-    method: "post",
-    body: formData,
-  });
+  const response = await API.uploadFile<ApiResponse>(
+    `/files/importExcel`,
+    file
+  );
 
-  return response.json();
+  return response
+    ? response
+    : createErrorResponse({
+        code: ErrorCodes.INTERNAL_SERVER_ERROR,
+        message: json.error.internalServerError,
+      });
 }

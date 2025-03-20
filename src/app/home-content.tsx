@@ -151,7 +151,7 @@ export default function HomeContent({
   // Handle delete submit
   const handleDeleteSubmit = async () => {
     const result = await deleteScrew(currentItem!);
-    if (!result.success) {
+    if (!result) {
       toast(json.error.operate);
       return;
     }
@@ -329,7 +329,7 @@ export default function HomeContent({
               <DialogHeader>
                 <DialogTitle>Xác nhận xóa</DialogTitle>
                 <DialogDescription>
-                  Bạn có chắc chắn muốn xóa sản phẩm "{currentItem?.name}"?
+                  Bạn có chắc chắn muốn xóa sản phẩm &quot;{currentItem?.name}&quot;?
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>

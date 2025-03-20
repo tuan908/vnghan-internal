@@ -103,9 +103,14 @@ export type RecursivelyReplaceNullWithUndefined<T> = T extends null
 export type ScrewTypeDto = {
   id: number;
   name?: string;
-}
+};
 
 export type ScrewMaterialDto = {
   id: number;
   name?: string;
-}
+};
+
+export type SelectOptions = {
+  screwTypesPromise: Promise<ApiResponse<ScrewTypeDto[]>>;
+  screwMaterialsPromise: Promise<ApiResponse<ScrewMaterialDto[]>>;
+};

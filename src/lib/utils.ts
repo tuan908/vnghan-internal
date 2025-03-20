@@ -15,16 +15,9 @@ export function nullsToUndefined<T>(
 
   // object check based on: https://stackoverflow.com/a/51458052/6489012
   if (obj?.constructor.name === "Object") {
-    for (let key in obj) {
+    for (const key in obj) {
       obj[key] = nullsToUndefined(obj[key]) as any;
     }
   }
   return obj as any;
-}
-
-export function getApiUrl() {
-  const apiUrl = process.env.API_URL;
-
-  if (!apiUrl) throw new Error("Invalid api url");
-  return apiUrl;
 }
