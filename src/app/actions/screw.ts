@@ -17,16 +17,8 @@ export const getScrewMaterials = cache(
   }
 );
 
-export const getAllScrews = async ({
-  page,
-}: {
-  page: number;
-}): Promise<ApiResponse<ScrewDto[]> | undefined> => {
-  return await API.get<ApiResponse<ScrewDto[]>>(`/screws`, {
-    params: {
-      page: page.toString(),
-    },
-  });
+export const getAllScrews = async (): Promise<ApiResponse<ScrewDto[]> | undefined> => {
+  return await API.get<ApiResponse<ScrewDto[]>>(`/screws`);
 };
 
 export const createScrew = async (

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { errorToast, successToast } from "@/components/ui/toast";
-import { CSS_TEXT_ELLIPSIS, PAGE_SIZE, QUERY_KEY } from "@/constants";
+import { CSS_TEXT_ELLIPSIS, QUERY_KEY } from "@/constants";
 import json from "@/i18n/locales/vi.json";
 import { cn } from "@/lib/utils";
 import { ScrewDto, ScrewSchema } from "@/lib/validations";
@@ -31,7 +31,6 @@ import {
   ColumnDef,
   ColumnFiltersState,
   FilterFn,
-  PaginationState,
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
@@ -64,12 +63,8 @@ export default function HomeContent({
   screwMaterials,
   screwTypes,
 }: HomeContentProps) {
-  const [globalFilter, setGlobalFilter] = useState("");
   const queryClient = useQueryClient();
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: PAGE_SIZE,
-  });
+  const [globalFilter, setGlobalFilter] = useState("");
   const [activeDialog, setActiveDialog] = useState<TDialogType>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -98,24 +93,11 @@ export default function HomeContent({
     return () => subscription.unsubscribe();
   }, [editScrewForm, activeDialog]);
 
-  const {
-    data: rows,
-    refetch,
-    isPlaceholderData,
-  } = useQuery({
-    queryKey: [QUERY_KEY.SCREW, pagination.pageIndex],
-    queryFn: () => getAllScrews({ page: pagination.pageIndex }),
+  const { data: rows, refetch } = useQuery({
+    queryKey: [QUERY_KEY.SCREW],
+    queryFn: () => getAllScrews(),
     placeholderData: keepPreviousData,
   });
-
-  useEffect(() => {
-    if (!isPlaceholderData && rows?.pagination?.hasNextPage) {
-      queryClient.prefetchQuery({
-        queryKey: [QUERY_KEY.SCREW, pagination.pageIndex + 1],
-        queryFn: () => getAllScrews({ page: pagination.pageIndex + 1 }),
-      });
-    }
-  }, [rows, isPlaceholderData, pagination.pageIndex, queryClient]);
 
   const handleCloseDialog = () => {
     if (hasUnsavedChanges) {
@@ -134,7 +116,7 @@ export default function HomeContent({
       },
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          queryKey: [QUERY_KEY.SCREW, pagination.pageIndex],
+          queryKey: [QUERY_KEY.SCREW],
         });
         handleCloseDialog();
         successToast();
@@ -205,12 +187,13 @@ export default function HomeContent({
         ),
         enableSorting: false,
         enableHiding: false,
+        size: 40,
       },
       {
         accessorKey: "name",
         header: "Tên sản phẩm",
         cell: ({ row }) => (
-          <div className={cn("w-44", CSS_TEXT_ELLIPSIS)}>
+          <div className={cn("w-full flex items-center", CSS_TEXT_ELLIPSIS)}>
             {row.original.name}
           </div>
         ),
@@ -219,12 +202,35 @@ export default function HomeContent({
         filterFn: "fuzzy", //using our custom fuzzy filter function
         // filterFn: fuzzyFilter, //or just define with the function
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        size: 150,
+      },
+      {
+        accessorKey: "price",
+        header: "Giá tham khảo",
+        cell: ({ row }) => (
+          <div
+            className={cn(
+              "text-right flex gap-x-2 justify-end",
+              CSS_TEXT_ELLIPSIS
+            )}
+          >
+            <span>{row.original.price}</span>
+            <span className="text-gray-500 pointer-events-none">VND</span>
+          </div>
+        ),
+        filterFn: "includesString",
+        size: 150,
       },
       {
         accessorKey: "quantity",
         header: "Số lượng",
-        cell: ({ row }) => <>{row.original.quantity}</>,
+        cell: ({ row }) => (
+          <div className={cn("w-36", CSS_TEXT_ELLIPSIS)}>
+            {row.original.quantity}
+          </div>
+        ),
         filterFn: "includesString",
+        size: 150,
       },
       {
         accessorKey: "componentType",
@@ -234,6 +240,8 @@ export default function HomeContent({
             {row.original.componentType}
           </div>
         ),
+        filterFn: "includesString",
+        size: 150,
       },
       {
         accessorKey: "material",
@@ -243,30 +251,15 @@ export default function HomeContent({
             {row.original.material}
           </div>
         ),
+        filterFn: "includesString",
+        size: 150,
       },
-      {
-        accessorKey: "price",
-        header: "Giá tham khảo",
-        cell: ({ row }) => (
-          <div className={cn("w-32 text-right", CSS_TEXT_ELLIPSIS)}>
-            {row.original.price} VND
-          </div>
-        ),
-      },
-      {
-        accessorKey: "notes",
-        header: "Lưu ý",
-        cell: ({ row }) => (
-          <div className={cn("w-44", CSS_TEXT_ELLIPSIS)}>
-            {row.original.note}
-          </div>
-        ),
-      },
+
       {
         id: "actions",
         header: "Hành động",
         cell: ({ row }) => (
-          <div className={cn("w-24 flex gap-x-6 items-center")}>
+          <div className={cn("flex gap-x-6 justify-center items-center")}>
             <button onMouseDown={() => handleEditClick(row.original)}>
               <Pencil className="h-5 w-5 text-blue-400 hover:text-blue-300" />
             </button>
@@ -275,6 +268,7 @@ export default function HomeContent({
             </button>
           </div>
         ),
+        size: 100,
       },
     ],
     []
@@ -299,9 +293,6 @@ export default function HomeContent({
       <DataTable
         columns={columns}
         data={rows?.data ?? []}
-        serverPagination={rows?.pagination}
-        pagination={pagination}
-        setPagination={setPagination}
         sorting={sorting}
         setSorting={setSorting}
         columnFilters={columnFilters}
