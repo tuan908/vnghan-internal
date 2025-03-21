@@ -162,6 +162,13 @@ export default function HomeContent({
   const columns = useMemo<ColumnDef<ScrewDto>[]>(
     () => [
       {
+        accessorKey: "id",
+        header: "ID",
+        cell: ({ row }) => <>{row.original.id}</>,
+        enableColumnFilter: false,
+        size: 75,
+      },
+      {
         accessorKey: "name",
         header: "Tên sản phẩm",
         cell: ({ row }) => <>{row.original.name}</>,

@@ -85,12 +85,12 @@ export function DataTable<TData>({
     count: rows.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 20, // approximate row height
-    overscan: 20, // number of extra rows to render outside viewport
+    overscan: 150, // number of extra rows to render outside viewport
   });
 
   return (
-    <div ref={parentRef} className="w-[82rem]">
-      <div style={{ height: `500px`, overflowY: "scroll" }}>
+    <div ref={parentRef} className="w-[82rem] md:w-3/4">
+      <div className="w-[500px] md:w-96 overflow-y-auto">
         <table className="border-none border-collapse relative w-7xl z-10">
           <thead className="relative">
             {table.getHeaderGroups().map((headerGroup) => (
