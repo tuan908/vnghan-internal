@@ -14,7 +14,6 @@ import {
 import { Form } from "@/components/ui/form";
 import { errorToast, successToast } from "@/components/ui/toast";
 import { QUERY_KEY } from "@/constants";
-import json from "@/i18n/locales/vi.json";
 import { cn } from "@/lib/utils";
 import { ScrewDto, ScrewSchema } from "@/lib/validations";
 import { ScrewMaterialDto, ScrewTypeDto } from "@/types";
@@ -37,7 +36,6 @@ import { AnimatePresence } from "framer-motion";
 import { Pencil, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { ScrewForm } from "./_components/form/screw";
 import { deleteScrew, editScrew, getAllScrews } from "./actions/screw";
 
@@ -113,6 +111,20 @@ export default function HomeContent({
     }
   };
 
+  const { mutate: handleSoftDeleteScrew } = useMutation({
+    mutationFn: async () => {
+      return await deleteScrew(currentItem!);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [QUERY_KEY.SCREW],
+      });
+      handleCloseDialog();
+      successToast();
+    },
+    onError: (error) => errorToast(error.message),
+  });
+
   // Mutation for editing a screw info:
   const { mutate: handleEditScrewInfo, isPending: isEditingScrew } =
     useMutation({
@@ -142,19 +154,6 @@ export default function HomeContent({
   };
 
   // Handle delete submit
-  const handleDeleteSubmit = async () => {
-    const result = await deleteScrew(currentItem!);
-    if (!result) {
-      toast(json.error.operate);
-      return;
-    }
-
-    setActiveDialog(null);
-
-    // Refetch data if needed
-    refetch();
-  };
-
   const handleEditSubmit = editScrewForm.handleSubmit((data) => {
     handleEditScrewInfo(data);
   });
@@ -234,7 +233,7 @@ export default function HomeContent({
 
   return (
     <>
-      <div className="sm:w-1/5 relative flex items-center">
+      <div className="w-[90%] py-6 md:py-0 lg:w-1/5 relative flex items-center m-auto">
         <DebouncedInput
           className="w-full border rounded-md focus:border-blue-400 px-4 py-2"
           value={globalFilter ?? ""}
@@ -246,22 +245,24 @@ export default function HomeContent({
         </div>
       </div>
 
-      <div className="h-8"></div>
+      <div className="hidden md:h-8"></div>
 
-      <DataTable
-        columns={columns}
-        data={rows?.data ?? []}
-        sorting={sorting}
-        setSorting={setSorting}
-        columnFilters={columnFilters}
-        setColumnFilters={setColumnFilters}
-        columnVisibility={columnVisibility}
-        setColumnVisibility={setColumnVisibility}
-        rowSelection={rowSelection}
-        setRowSelection={setRowSelection}
-        globalFilter={globalFilter}
-        setGlobalFilter={setGlobalFilter}
-      />
+      <div className="w-full flex justify-center items-center">
+        <DataTable
+          columns={columns}
+          data={rows?.data ?? []}
+          sorting={sorting}
+          setSorting={setSorting}
+          columnFilters={columnFilters}
+          setColumnFilters={setColumnFilters}
+          columnVisibility={columnVisibility}
+          setColumnVisibility={setColumnVisibility}
+          rowSelection={rowSelection}
+          setRowSelection={setRowSelection}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+        />
+      </div>
 
       {/* Edit Dialog */}
       <AnimatePresence>
@@ -327,7 +328,7 @@ export default function HomeContent({
                 <Button
                   type="button"
                   variant="destructive"
-                  onClick={handleDeleteSubmit}
+                  onClick={() => handleSoftDeleteScrew()}
                 >
                   Xóa
                 </Button>

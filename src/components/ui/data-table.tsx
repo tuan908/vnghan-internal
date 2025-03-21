@@ -89,8 +89,8 @@ export function DataTable<TData>({
   });
 
   return (
-    <div ref={parentRef} className="w-[82rem] md:w-3/4">
-      <div className="w-[500px] md:w-96 overflow-y-auto">
+    <div ref={parentRef} className="w-[90%]">
+      <div className="h-[384px] md:h-156 overflow-y-auto">
         <table className="border-none border-collapse relative w-7xl z-10">
           <thead className="relative">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -163,7 +163,7 @@ export function DataTable<TData>({
                       <td
                         key={cell.id}
                         className={cn(
-                          "z-0 px-2 max-w-32",
+                          "z-0 px-2 min-w-0 md:max-w-16",
                           CSS_TEXT_ELLIPSIS
                         )}
                       >
