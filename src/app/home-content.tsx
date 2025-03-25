@@ -14,6 +14,7 @@ import {
 import { Form } from "@/components/ui/form";
 import { errorToast, successToast } from "@/components/ui/toast";
 import { QUERY_KEY } from "@/constants";
+import json from "@/i18n/locales/vi.json";
 import { cn } from "@/lib/utils";
 import { ScrewDto, ScrewSchema } from "@/lib/validations";
 import { ScrewMaterialDto, ScrewTypeDto } from "@/types";
@@ -165,9 +166,10 @@ export default function HomeContent({
         cell: ({ row }) => <>{row.original.id}</>,
         enableColumnFilter: false,
         size: 75,
-      },   {
+      },
+      {
         accessorKey: "componentType",
-        header: "Loại phụ kiện",
+        header: json.table.componentType,
         cell: ({ row }) => <> {row.original.componentType}</>,
         filterFn: "includesString",
         size: 150,
@@ -175,7 +177,7 @@ export default function HomeContent({
 
       {
         accessorKey: "price",
-        header: "Giá tham khảo",
+        header: json.table.price,
         cell: ({ row }) => (
           <div className={cn("text-right flex gap-x-2 justify-end")}>
             <span>{row.original.price}</span>
@@ -187,14 +189,14 @@ export default function HomeContent({
       },
       {
         accessorKey: "quantity",
-        header: "Số lượng",
+        header: json.table.quantity,
         cell: ({ row }) => <>{row.original.quantity}</>,
         filterFn: "includesString",
         size: 150,
       },
       {
         accessorKey: "name",
-        header: "Tên sản phẩm",
+        header: json.table.name,
         cell: ({ row }) => <>{row.original.name}</>,
         sortUndefined: "last", //force undefined values to the end
         sortDescFirst: false, //first sort order will be ascending (nullable values can mess up auto detection of sort order),
@@ -205,7 +207,7 @@ export default function HomeContent({
       },
       {
         accessorKey: "note",
-        header: "Note",
+        header: json.table.note,
         cell: ({ row }) => <>{row.original.note}</>,
         filterFn: "includesString",
         size: 200,
@@ -213,7 +215,7 @@ export default function HomeContent({
 
       {
         id: "actions",
-        header: "Hành động",
+        header: json.table.action,
         cell: ({ row }) => (
           <div className={cn("flex gap-x-6 justify-center items-center")}>
             <button onMouseDown={() => handleEditClick(row.original)}>

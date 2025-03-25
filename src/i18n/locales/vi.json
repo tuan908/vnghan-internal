@@ -11,5 +11,13 @@
     "noValidRows": "Dữ liệu không hợp lệ"
   },
   "title": { "notification": "Thông báo" },
-  "successOperation": "Thao tác thành công!"
+  "successOperation": "Thao tác thành công!",
+  "table": {
+    "componentType": "Tên sản phẩm",
+    "price": "Giá tham khảo",
+    "quantity": "Số lượng",
+    "name": "Loại phụ kiện",
+    "note": "Lưu ý",
+    "action": "Hành động"
+  }
 }
