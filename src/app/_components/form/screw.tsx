@@ -20,7 +20,7 @@ import { ScrewDto } from "@/lib/validations";
 import { ScrewMaterialDto, ScrewTypeDto } from "@/types";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Loader2 } from "lucide-react";
-import { FC, useEffect } from "react";
+import { FC, useEffect, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 
 type ScrewFormProps = {
@@ -41,27 +41,82 @@ export const ScrewForm: FC<ScrewFormProps> = ({
   screwMaterials,
   screw,
 }) => {
-  const { register, reset, control, setValue } = useFormContext<ScrewDto>();
+  const {
+    register,
+    reset,
+    control,
+    setValue,
+    formState: { errors, isValid },
+  } = useFormContext<ScrewDto>();
 
+  // Diagnostic logging
+  useEffect(() => {
+    console.group("ScrewForm Initialization");
+    console.log("Mode:", mode);
+    console.log("Screw Data:", screw);
+    console.log("Form Errors:", errors);
+    console.log("Form Valid:", isValid);
+    console.groupEnd();
+  }, [mode, screw, errors, isValid]);
+
+  // Robust form initialization
   useEffect(() => {
     if (screw) {
-      reset({
-        id: screw.id,
-        name: screw.name,
-        quantity: screw.quantity,
-        price: screw.price,
-        note: screw.note,
-        componentType: screw.componentType,
-        category: screw.category,
-        material: screw.material,
-      });
+      try {
+        // Explicitly set each field
+        Object.keys(screw).forEach((key) => {
+          const value = screw[key as keyof ScrewDto];
+
+          // Handle potential undefined or null values
+          setValue(key as keyof ScrewDto, value ?? "", {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        });
+
+        // Fallback reset for complete state management
+        reset(screw, {
+          keepErrors: false,
+          keepDirty: false,
+          keepDefaultValues: false,
+        });
+      } catch (error) {
+        console.error("Form Initialization Error:", error);
+      }
     }
   }, [screw, reset, setValue]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitting Form:", {
+      mode,
+      screw,
+      isValid,
+      errors,
+    });
     onSubmit(e);
   };
+
+  // Memoized rendering of select options to prevent unnecessary re-renders
+  const typeOptions = useMemo(
+    () =>
+      screwTypes.map((x) => (
+        <SelectItem key={x.id + "#" + x.name} value={x.name!}>
+          {x.name}
+        </SelectItem>
+      )),
+    [screwTypes]
+  );
+
+  const materialOptions = useMemo(
+    () =>
+      screwMaterials.map((x) => (
+        <SelectItem key={x.id + "#" + x.name} value={x.name!}>
+          {x.name}
+        </SelectItem>
+      )),
+    [screwMaterials]
+  );
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
@@ -121,12 +176,9 @@ export const ScrewForm: FC<ScrewFormProps> = ({
           control={control}
           name="componentType"
           render={({ field }) => (
-            <FormItem  key={field.value}>
+            <FormItem key={field.value}>
               <FormLabel>Loại phụ kiện</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Chọn loại phụ kiện" />
@@ -179,9 +231,9 @@ export const ScrewForm: FC<ScrewFormProps> = ({
             <FormLabel>Lưu ý</FormLabel>
             <FormControl>
               <Textarea
-                {...field}
                 className="resize-none min-h-24"
                 placeholder="Nhập lưu ý (nếu có)"
+                {...field}
               />
             </FormControl>
             <FormMessage />

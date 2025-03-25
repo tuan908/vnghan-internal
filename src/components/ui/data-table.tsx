@@ -91,7 +91,7 @@ export function DataTable<TData>({
   return (
     <div ref={parentRef} className="w-[90%]">
       <div className="h-[384px] md:h-156 overflow-y-auto">
-        <table className="border-none border-collapse relative w-7xl z-10">
+        <table className="w-full border-none border-collapse relative z-10">
           <thead className="relative">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>

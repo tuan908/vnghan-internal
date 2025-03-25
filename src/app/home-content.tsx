@@ -73,7 +73,6 @@ export default function HomeContent({
 
   const editScrewForm = useForm<ScrewDto>({
     resolver: zodResolver(ScrewSchema),
-    mode: "onChange",
     defaultValues: {
       category: "",
       name: "",
@@ -166,18 +165,14 @@ export default function HomeContent({
         cell: ({ row }) => <>{row.original.id}</>,
         enableColumnFilter: false,
         size: 75,
-      },
-      {
-        accessorKey: "name",
-        header: "Tên sản phẩm",
-        cell: ({ row }) => <>{row.original.name}</>,
-        sortUndefined: "last", //force undefined values to the end
-        sortDescFirst: false, //first sort order will be ascending (nullable values can mess up auto detection of sort order),
-        filterFn: "fuzzy", //using our custom fuzzy filter function
-        // filterFn: fuzzyFilter, //or just define with the function
-        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+      },   {
+        accessorKey: "componentType",
+        header: "Loại phụ kiện",
+        cell: ({ row }) => <> {row.original.componentType}</>,
+        filterFn: "includesString",
         size: 150,
       },
+
       {
         accessorKey: "price",
         header: "Giá tham khảo",
@@ -198,16 +193,20 @@ export default function HomeContent({
         size: 150,
       },
       {
-        accessorKey: "componentType",
-        header: "Loại phụ kiện",
-        cell: ({ row }) => <> {row.original.componentType}</>,
-        filterFn: "includesString",
+        accessorKey: "name",
+        header: "Tên sản phẩm",
+        cell: ({ row }) => <>{row.original.name}</>,
+        sortUndefined: "last", //force undefined values to the end
+        sortDescFirst: false, //first sort order will be ascending (nullable values can mess up auto detection of sort order),
+        filterFn: "fuzzy", //using our custom fuzzy filter function
+        // filterFn: fuzzyFilter, //or just define with the function
+        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         size: 150,
       },
       {
-        accessorKey: "material",
-        header: "Chất liệu",
-        cell: ({ row }) => <>{row.original.material}</>,
+        accessorKey: "note",
+        header: "Note",
+        cell: ({ row }) => <>{row.original.note}</>,
         filterFn: "includesString",
         size: 200,
       },
@@ -233,7 +232,7 @@ export default function HomeContent({
 
   return (
     <>
-      <div className="w-[90%] py-6 md:py-0 lg:w-1/5 relative flex items-center m-auto">
+      <div className="w-full md:w-4/5 py-6 md:py-0 lg:w-1/5 relative flex items-center">
         <DebouncedInput
           className="w-full border rounded-md focus:border-blue-400 px-4 py-2"
           value={globalFilter ?? ""}
@@ -245,7 +244,7 @@ export default function HomeContent({
         </div>
       </div>
 
-      <div className="hidden md:h-8"></div>
+      <div className="h-4"></div>
 
       <div className="w-full flex justify-center items-center">
         <DataTable
