@@ -1,5 +1,5 @@
-import { Toaster } from "@/components/ui/sonner";
-import { ReactQueryProvider } from "@/providers";
+import { Toaster } from "@/frontend/components/ui/sonner";
+import { ReactQueryProvider } from "@/shared/providers";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -7,8 +7,6 @@ export const metadata: Metadata = {
   title: "VngHan's Tool",
   description: "Made with love for vnghan by tuanna",
 };
-
-export const runtime = 'edge';
 
 export default function RootLayout({
   children,

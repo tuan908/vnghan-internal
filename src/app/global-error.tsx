@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 export default function GlobalError() {
   <main className="flex min-screen justify-center items-center">

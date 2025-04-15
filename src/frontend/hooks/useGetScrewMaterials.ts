@@ -1,0 +1,21 @@
+import { QUERY_KEY } from "@/shared/constants";
+import { client } from "@/shared/utils/hono-client";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+
+export const useGetScrewMaterials = () => {
+  const { data: screwMaterials } = useQuery({
+    queryKey: [QUERY_KEY.SCREW_MATERIAL],
+    queryFn: async () => {
+      const res = await client.api.v1.screws.materials.$get();
+      const resJson = await res.json();
+
+      if (!resJson?.data) {
+        return [];
+      }
+      return resJson?.data;
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  return { screwMaterials: screwMaterials ?? [] };
+};
