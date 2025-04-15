@@ -43,8 +43,8 @@ export function AddOptionDropdown() {
   const queryClient = useQueryClient();
   const [activeDialog, setActiveDialog] = useState<DialogType>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const {screwTypes} = useGetScrewTypes();
-  const {screwMaterials} = useGetScrewMaterials();
+  const { screwTypes } = useGetScrewTypes();
+  const { screwMaterials } = useGetScrewMaterials();
 
   // Create form methods
   const createScrewForm = useForm<ScrewDto>({
@@ -108,56 +108,58 @@ export function AddOptionDropdown() {
   }, [questionForm, activeDialog]);
 
   // Mutation for creating a screw
-  const {createScrew, isCreatingScrew} = useCreateScrew();
+  const { createScrew, isCreatingScrew } = useCreateScrew();
 
   // Mutation for creating an instruction
-  const {mutate: createInstruction, isPending: isCreatingInstruction} =
+  const { mutate: createInstruction, isPending: isCreatingInstruction } =
     useMutation({
       mutationFn: async (data: CreateInstructionDto) => {
         // Implement your API call here
         console.log("Creating instruction:", data);
         // Simulate API call
-        return new Promise<CreateInstructionDto>(resolve => {
+        return new Promise<CreateInstructionDto>((resolve) => {
           setTimeout(() => resolve(data), 1000);
         });
       },
       onSuccess: async () => {
-        await queryClient.invalidateQueries({queryKey: ["get-instructions"]});
-        setActiveDialog(null)
+        await queryClient.invalidateQueries({ queryKey: ["get-instructions"] });
+        setActiveDialog(null);
         successToast();
       },
-      onError: error => errorToast(error.message),
+      onError: (error) => errorToast(error.message),
     });
 
   // Mutation for creating a question
-  const {mutate: createQuestion, isPending: isCreatingQuestion} = useMutation({
-    mutationFn: async (data: CreateQuestionDto) => {
-      // Implement your API call here
-      console.log("Creating question:", data);
-      // Simulate API call
-      return new Promise<CreateQuestionDto>(resolve => {
-        setTimeout(() => resolve(data), 1000);
-      });
+  const { mutate: createQuestion, isPending: isCreatingQuestion } = useMutation(
+    {
+      mutationFn: async (data: CreateQuestionDto) => {
+        // Implement your API call here
+        console.log("Creating question:", data);
+        // Simulate API call
+        return new Promise<CreateQuestionDto>((resolve) => {
+          setTimeout(() => resolve(data), 1000);
+        });
+      },
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({ queryKey: ["get-questions"] });
+        setActiveDialog(null);
+        successToast();
+      },
+      onError: (error) => errorToast(error.message),
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({queryKey: ["get-questions"]});
-      setActiveDialog(null)
-      successToast();
-    },
-    onError: error => errorToast(error.message),
-  });
+  );
 
   // Form submission handlers
-  const handleSubmitScrew = createScrewForm.handleSubmit(async data => {
+  const handleSubmitScrew = createScrewForm.handleSubmit(async (data) => {
     await createScrew(data);
-    setActiveDialog(null)
+    setActiveDialog(null);
   });
 
-  const handleSubmitInstruction = instructionForm.handleSubmit(data => {
+  const handleSubmitInstruction = instructionForm.handleSubmit((data) => {
     createInstruction(data);
   });
 
-  const handleSubmitQuestion = questionForm.handleSubmit(data => {
+  const handleSubmitQuestion = questionForm.handleSubmit((data) => {
     createQuestion(data);
   });
 
@@ -272,13 +274,13 @@ export function AddOptionDropdown() {
           <Dialog open={!!activeDialog} onOpenChange={handleOpenChange}>
             <DialogContent
               className="sm:max-w-[48rem] overflow-hidden"
-              onEscapeKeyDown={e => {
+              onEscapeKeyDown={(e) => {
                 if (hasUnsavedChanges) {
                   e.preventDefault();
                   setActiveDialog(null);
                 }
               }}
-              onInteractOutside={e => {
+              onInteractOutside={(e) => {
                 if (hasUnsavedChanges) {
                   e.preventDefault();
                 }

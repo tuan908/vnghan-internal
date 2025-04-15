@@ -16,11 +16,11 @@ import {
   SelectValue,
 } from "@/frontend/components/ui/select";
 import { Textarea } from "@/frontend/components/ui/textarea";
-import { ScrewMaterialDto, ScrewTypeDto } from "@/shared/types";
-import { ScrewDto } from "@/shared/validations";
+import type { ScrewMaterialDto, ScrewTypeDto } from "@/shared/types";
+import type { ScrewDto } from "@/shared/validations";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Loader2 } from "lucide-react";
-import { FC, useEffect } from "react";
+import { type FC, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 
 type ScrewFormProps = {
@@ -163,7 +163,11 @@ export const ScrewForm: FC<ScrewFormProps> = ({
           render={({ field }) => (
             <FormItem key={field.value}>
               <FormLabel>Loại phụ kiện</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={field.disabled}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                disabled={field.disabled}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Chọn loại phụ kiện" />
@@ -189,7 +193,11 @@ export const ScrewForm: FC<ScrewFormProps> = ({
           render={({ field }) => (
             <FormItem key={field.value}>
               <FormLabel>Chất liệu</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={field.disabled}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                disabled={field.disabled}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Chọn chất liệu" />

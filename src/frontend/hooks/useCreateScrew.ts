@@ -6,7 +6,7 @@ import { errorToast, successToast } from "../components/ui/toast";
 
 export const useCreateScrew = () => {
   const queryClient = useQueryClient();
-  const {mutateAsync: createScrew, isPending: isCreatingScrew} = useMutation({
+  const { mutateAsync: createScrew, isPending: isCreatingScrew } = useMutation({
     mutationKey: ["CREATE_SCREW"],
     mutationFn: async (req: ScrewDto) => {
       const res = await client.api.v1.screws.$post({
@@ -21,7 +21,7 @@ export const useCreateScrew = () => {
       });
       successToast();
     },
-    onError: error => errorToast(error.message),
+    onError: (error) => errorToast(error.message),
   });
-  return {createScrew, isCreatingScrew};
+  return { createScrew, isCreatingScrew };
 };

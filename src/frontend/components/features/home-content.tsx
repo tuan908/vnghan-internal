@@ -113,14 +113,13 @@ export default function HomeContent() {
   // Handle edit submit
   const handleEditSubmit = editScrewForm.handleSubmit(async (data) => {
     await editScrew(data);
-    setActiveDialog(null)
+    setActiveDialog(null);
   });
 
   const handleDeleteScrew = async () => {
-    await deleteScrew(currentItem!)
-    setActiveDialog(null)
-  }
-
+    await deleteScrew(currentItem!);
+    setActiveDialog(null);
+  };
 
   const columns = useMemo<ColumnDef<ScrewDto>[]>(
     () => [

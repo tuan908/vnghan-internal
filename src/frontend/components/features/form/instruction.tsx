@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/frontend/components/ui/select";
 import { Textarea } from "@/frontend/components/ui/textarea";
-import { ScrewTypeDto } from "@/shared/types";
+import type { ScrewTypeDto } from "@/shared/types";
 import { CreateInstructionDto } from "@/shared/validations";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Loader2 } from "lucide-react";
