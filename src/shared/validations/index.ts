@@ -138,3 +138,22 @@ export const CustomerSchema = z.object({
 });
 
 export type CustomerDto = z.infer<typeof CustomerSchema>;
+
+export const SignInSchema = z.object({
+  username: z
+    .string({
+      message: format(json.error.fieldRequired, json.form.login.username),
+    })
+    .min(1, {
+      message: format(json.error.fieldRequired, json.form.login.username),
+    }),
+  password: z
+    .string({
+      message: format(json.error.fieldRequired, json.form.login.password),
+    })
+    .min(6, {
+      message: format(json.error.fieldRequired, json.form.login.password),
+    }),
+});
+
+export type SignInFormValues = z.infer<typeof SignInSchema>;

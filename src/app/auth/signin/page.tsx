@@ -11,33 +11,12 @@ import {
 } from "@/frontend/components/ui/form";
 import { Input } from "@/frontend/components/ui/input";
 import { useSignIn } from "@/frontend/hooks/useSignIn";
-import json from "@/shared/i18n/locales/vi/vi.json";
-import { format } from "@/shared/utils";
+import { SignInFormValues, SignInSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { setCookie } from "cookies-next";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
-
-export const SignInSchema = z.object({
-  username: z
-    .string({
-      message: format(json.error.fieldRequired, json.form.login.username),
-    })
-    .min(1, {
-      message: format(json.error.fieldRequired, json.form.login.username),
-    }),
-  password: z
-    .string({
-      message: format(json.error.fieldRequired, json.form.login.password),
-    })
-    .min(6, {
-      message: format(json.error.fieldRequired, json.form.login.password),
-    }),
-});
-
-export type SignInFormValues = z.infer<typeof SignInSchema>;
 
 export default function SignInPage() {
   const router = useRouter();
