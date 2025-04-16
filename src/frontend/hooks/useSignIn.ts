@@ -1,5 +1,5 @@
-import type { SignInFormValues } from "@/app/auth/signin/page";
 import { clientApiV1 } from "@/shared/utils/hono-client";
+import type { SignInFormValues } from "@/shared/validations";
 import { useMutation } from "@tanstack/react-query";
 
 const mutationFn = async (req: SignInFormValues) => {
