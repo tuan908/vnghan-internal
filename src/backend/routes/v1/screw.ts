@@ -189,12 +189,12 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
   .delete("/:id", async (c) => {
     const { REDIS_TOKEN, REDIS_URL } = env(c);
     const db = c.get("db");
-    const body = await c.req.json();
+    const req = await c.req.json<ScrewDto>();
 
     const [screw] = await db
       .select()
       .from(DbSchema.Screw)
-      .where(eq(DbSchema.Screw.name, body.name!))
+      .where(eq(DbSchema.Screw.id, req.id!))
       .limit(1);
 
     if (!screw) {

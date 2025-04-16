@@ -31,7 +31,7 @@ import {
 } from "@tanstack/react-table";
 import { AnimatePresence } from "framer-motion";
 import { Pencil, Search, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { ScrewForm } from "./form/screw";
 
@@ -95,7 +95,7 @@ export default function HomeContent() {
     }
   };
 
-  const { deleteScrew } = useDeleteScrew();
+  const { deleteScrew, isDeleting } = useDeleteScrew();
   const { editScrew, isEditing } = useEditScrew();
 
   // Handle edit dialog
@@ -110,15 +110,29 @@ export default function HomeContent() {
     setActiveDialog("delete");
   };
 
+  const reset = () => {
+    startTransition(() => {
+      if (currentItem) {
+        setCurrentItem(null);
+      }
+
+      if (activeDialog) {
+        setActiveDialog(null);
+      }
+    });
+  };
+
   // Handle edit submit
   const handleEditSubmit = editScrewForm.handleSubmit(async (data) => {
     await editScrew(data);
-    setActiveDialog(null);
+    reset();
   });
 
   const handleDeleteScrew = async () => {
-    await deleteScrew(currentItem!);
-    setActiveDialog(null);
+    if (currentItem) {
+      await deleteScrew(currentItem);
+      reset();
+    }
   };
 
   const columns = useMemo<ColumnDef<ScrewDto>[]>(
@@ -286,6 +300,7 @@ export default function HomeContent() {
                   type="button"
                   variant="outline"
                   onClick={handleCloseDialog}
+                  disabled={isDeleting}
                 >
                   Hủy
                 </Button>
@@ -293,6 +308,7 @@ export default function HomeContent() {
                   type="button"
                   variant="destructive"
                   onClick={handleDeleteScrew}
+                  disabled={isDeleting}
                 >
                   Xóa
                 </Button>
