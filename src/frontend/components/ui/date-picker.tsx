@@ -38,8 +38,7 @@ export function DatePicker({ date, onChange }: DayPickerProps) {
           mode="single"
           selected={date}
           onSelect={onChange}
-          hideWeekdays
-          autoFocus
+          initialFocus
         />
       </PopoverContent>
     </Popover>
