@@ -17,7 +17,7 @@ import { useEditScrew } from "@/frontend/hooks/useEditScrew";
 import { useGetScrewMaterials } from "@/frontend/hooks/useGetScrewMaterials";
 import { useGetScrews } from "@/frontend/hooks/useGetScrews";
 import { useGetScrewTypes } from "@/frontend/hooks/useGetScrewTypes";
-import json from "@/shared/i18n/locales/vi.json";
+import json from "@/shared/i18n/locales/vi/vi.json";
 import { cn } from "@/shared/utils";
 import { ScrewDto, ScrewSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,13 +45,13 @@ declare module "@tanstack/react-table" {
   }
 }
 
-type TDialogType = "edit" | "delete" | null;
+type DialogType = "edit" | "delete" | null;
 
 export default function HomeContent() {
   const { screwTypes } = useGetScrewTypes();
   const { screwMaterials } = useGetScrewMaterials();
   const [globalFilter, setGlobalFilter] = useState("");
-  const [activeDialog, setActiveDialog] = useState<TDialogType>(null);
+  const [activeDialog, setActiveDialog] = useState<DialogType>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);

@@ -1,11 +1,11 @@
-import { CreateScrewDto_SERVER } from "@/backend/schema/screw";
+import { CreateScrewDto } from "@/backend/schema";
 import {
   DEFAULT_MATERIAL_ID,
   DEFAULT_SIZE_ID,
   DEFAULT_TYPE_ID,
   ErrorCodes,
 } from "@/shared/constants";
-import json from "@/shared/i18n/locales/vi.json";
+import json from "@/shared/i18n/locales/vi/vi.json";
 import type {
   ScrewMaterialDto,
   ScrewTypeDto,
@@ -59,7 +59,7 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
       .where(eq(DbSchema.Screw.isDeleted, false))
       .orderBy(DbSchema.Screw.id);
 
-    return c.json(createSuccessResponse(nullsToUndefined(screws)), 200);
+    return c.json(createSuccessResponse(screws), 200);
   })
   .post("/", async (c) => {
     const db = c.get("db");
@@ -80,7 +80,7 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
         .then((res) => res[0] || { id: DEFAULT_MATERIAL_ID }),
     ]);
 
-    const entity: CreateScrewDto_SERVER = {
+    const entity: CreateScrewDto = {
       sizeId: DEFAULT_SIZE_ID,
       description: newScrew.category,
       name: newScrew.name,

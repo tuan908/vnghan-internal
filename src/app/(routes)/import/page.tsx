@@ -1,4 +1,4 @@
-import ExcelImporter from "@/frontend/components/features/excel-importer";
+import ExcelImporter from "@/frontend/components/features/excel/excel-importer";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 

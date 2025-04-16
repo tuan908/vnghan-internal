@@ -1,4 +1,4 @@
-import json from "@/shared/i18n/locales/vi.json";
+import json from "@/shared/i18n/locales/vi/vi.json";
 import { Check, CircleX } from "lucide-react";
 import { toast } from "sonner";
 

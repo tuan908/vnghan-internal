@@ -1,0 +1,52 @@
+{
+  "error": {
+    "invalidFile": "File không hợp lệ",
+    "invalidFileType": "Loại file không hợp lệ",
+    "invalidFileSize": "Kích thước file không hợp lệ",
+    "invalidFileExtension": "Phần mở rộng file không hợp lệ",
+    "unknownError": "Đã xảy ra lỗi không xác định",
+    "internalServerError": "Lỗi máy chủ",
+    "notFound": "Không tìm thấy dữ liệu",
+    "operate": "Có lỗi xảy ra khi thao tác dữ liệu!",
+    "noValidRows": "Dữ liệu không hợp lệ",
+    "missingEnvironmentVariables": "Thiếu biến môi trường",
+    "invalidCredentials": "Tên đăng nhập hoặc mật khẩu không đúng",
+    "userAlreadyExists": "Người dùng đã tồn tại",
+    "fieldRequired": "Hãy nhập {0}",
+    "forbidden": "Tài khoản hoặc mật khẩu không đúng.",
+    "tokenExpired": "Token hết hiệu lực",
+    "badRequest": "",
+    "invalidFormat": ""
+  },
+  "title": { "notification": "Thông báo" },
+  "successOperation": "Thao tác thành công!",
+  "table": {
+    "componentType": "Tên sản phẩm",
+    "price": "Giá tham khảo",
+    "quantity": "Số lượng",
+    "name": "Loại phụ kiện",
+    "note": "Lưu ý",
+    "action": "Hành động"
+  },
+  "form": {
+    "login": {
+      "username": "tên người dùng",
+      "password": "mật khẩu"
+    },
+    "createCustomer": {
+      "name": "tên khách hàng",
+      "phone": "số điện thoại",
+      "address": "địa chỉ",
+      "platform": "nền tảng",
+      "need": "nhu cầu",
+      "money": "số tiền",
+      "nextMessageTime": "thời gian nhắn lại"
+    }
+  },
+  "role": {
+    "viewer": "Người xem",
+    "editor": "Người chỉnh sửa",
+    "owner": "Người sở hữu",
+    "administrator": "Quản lý"
+  }
+}

@@ -1,10 +1,10 @@
+import HomeContent from "@/frontend/components/features/home/home-content";
 import { buttonVariants } from "@/frontend/components/ui/button";
 import { cn } from "@/shared/utils";
 import { Sheet } from "lucide-react";
 import Link from "next/link";
-import { AddOptionDropdown } from "../frontend/components/features/dialog/add-option";
-import { ExportOptionDropdown } from "../frontend/components/features/export-option";
-import HomeContent from "../frontend/components/features/home-content";
+import { AddOptionDropdown } from "../../frontend/components/features/dialog/add-option";
+import { ExportOptionDropdown } from "../../frontend/components/features/excel/export-option";
 
 export default function Home() {
   return (

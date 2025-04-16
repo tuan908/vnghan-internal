@@ -1,4 +1,4 @@
-import json from "@/shared/i18n/locales/vi.json";
+import json from "@/shared/i18n/locales/vi/vi.json";
 import type { ServerEnvironment } from "@/shared/types";
 import type { Context, MiddlewareHandler, Next } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";

@@ -1,10 +1,9 @@
-import { ScrewEntity } from "@/backend/schema/screw";
 import {
   DEFAULT_MATERIAL_ID,
   DEFAULT_SIZE_ID,
   ErrorCodes,
 } from "@/shared/constants";
-import json from "@/shared/i18n/locales/vi.json";
+import json from "@/shared/i18n/locales/vi/vi.json";
 import type { ImportResult, ServerEnvironment } from "@/shared/types";
 import { inArray } from "drizzle-orm";
 import { type Row, Workbook } from "exceljs";
@@ -15,7 +14,7 @@ import {
   createSuccessResponse,
 } from "../../lib/api-response";
 import { invalidateCache } from "../../lib/cache";
-import DbSchema from "../../schema";
+import DbSchema, { ScrewEntity } from "../../schema";
 
 const fileRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
   .post("/excel", async (c) => {

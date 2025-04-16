@@ -1,4 +1,6 @@
 import { z } from "zod";
+import json from "../i18n/locales/vi/vi.json";
+import { format } from "../utils";
 
 export const ScrewSchema = z.object({
   id: z.number().optional(),
@@ -50,3 +52,89 @@ export const createQuestionSchema = z.object({
 });
 
 export type CreateQuestionDto = z.infer<typeof createQuestionSchema>;
+
+export const CustomerSchema = z.object({
+  id: z.number().optional(),
+  name: z
+    .string({
+      message: format(json.error.fieldRequired, json.form.createCustomer.name),
+    })
+    .min(1, {
+      message: format(json.error.fieldRequired, json.form.createCustomer.name),
+    }),
+  phone: z
+    .string({
+      message: format(json.error.fieldRequired, json.form.createCustomer.phone),
+    })
+    .min(1, {
+      message: format(json.error.fieldRequired, json.form.createCustomer.phone),
+    }),
+  address: z
+    .string({
+      message: format(
+        json.error.fieldRequired,
+        json.form.createCustomer.address,
+      ),
+    })
+    .min(1, {
+      message: format(
+        json.error.fieldRequired,
+        json.form.createCustomer.address,
+      ),
+    }),
+  platform: z
+    .string({
+      message: format(
+        json.error.fieldRequired,
+        json.form.createCustomer.platform,
+      ),
+    })
+    .min(1, {
+      message: format(
+        json.error.fieldRequired,
+        json.form.createCustomer.platform,
+      ),
+    }),
+  need: z
+    .string({
+      message: format(json.error.fieldRequired, json.form.createCustomer.need),
+    })
+    .min(1, {
+      message: format(json.error.fieldRequired, json.form.createCustomer.need),
+    }),
+  money: z
+    .string({
+      message: format(json.error.fieldRequired, json.form.createCustomer.money),
+    })
+    .min(1, {
+      message: format(json.error.fieldRequired, json.form.createCustomer.money),
+    })
+    .superRefine((value, ctx) => {
+      const parsedNum = Number(value);
+
+      if (isNaN(parsedNum)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Hãy nhập 1 số",
+        });
+        return;
+      }
+
+      if (parsedNum <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Số tiền phải lớn hơn 0",
+        });
+      }
+    }),
+  nextMessageTime: z
+    .date({
+      required_error: format(
+        json.error.fieldRequired,
+        json.form.createCustomer.nextMessageTime,
+      ),
+    })
+    .refine(x => x.toISOString()),
+});
+
+export type CustomerDto = z.infer<typeof CustomerSchema>;

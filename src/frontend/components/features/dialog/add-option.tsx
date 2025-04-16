@@ -31,9 +31,9 @@ import {
   DropdownMenuTrigger,
 } from "../..//ui/dropdown-menu";
 import { errorToast, successToast } from "../..//ui/toast";
-import { InstructionForm } from "../form/instruction";
-import { QuestionForm } from "../form/question";
-import { ScrewForm } from "../form/screw";
+import { InstructionForm } from "../home/form/instruction";
+import { QuestionForm } from "../home/form/question";
+import { ScrewForm } from "../home/form/screw";
 
 // Dialog types
 type DialogType = "screw" | "instruction" | "question" | null;

@@ -1,5 +1,5 @@
 import { QUERY_KEY } from "@/shared/constants";
-import { client } from "@/shared/utils/hono-client";
+import { clientApiV1 } from "@/shared/utils/hono-client";
 import type { ScrewDto } from "@/shared/validations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { errorToast, successToast } from "../components/ui/toast";
@@ -9,7 +9,7 @@ export const useEditScrew = () => {
   const { mutateAsync: editScrew, isPending: isEditing } = useMutation({
     mutationKey: ["EDIT_SCREW"],
     mutationFn: async (req: ScrewDto) => {
-      const res = await client.api.v1.screws[":id"].$patch(
+      const res = await clientApiV1.screws[":id"].$patch(
         {
           param: {
             id: req.id!?.toString(),

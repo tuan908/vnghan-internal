@@ -1,6 +1,8 @@
+import json from "@/shared/i18n/locales/vi/vi.json";
 import type { RecursivelyReplaceNullWithUndefined } from "@/shared/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { UserRoles } from "../constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -48,3 +50,53 @@ export async function tryCatch<T, E = Error>(
 export const getUrl = () => {
   return process.env.NEXT_PUBLIC_VERCEL_URL!;
 };
+
+export function format(str: string, ...args: any[]): string {
+  return str.replace(/{(\d+)}/g, (match, index) => {
+    return typeof args[index] !== "undefined" ? args[index] : match;
+  });
+}
+
+export function convertRole(role?: string) {
+  // Viewer, Editor, Owner, Administrator
+  switch (role) {
+    case UserRoles.Viewer:
+      return json.role.viewer;
+
+    case UserRoles.Editor:
+      return json.role.editor;
+
+    case UserRoles.Owner:
+      return json.role.owner;
+
+    case UserRoles.Administrator:
+      return json.role.administrator;
+
+    default:
+      throw new Error("Invalid Role");
+  }
+}
+
+/**
+ * Converts a string | undefined value to a string
+ * @param value - The input string or undefined value
+ * @param defaultValue - The default value to return if input is undefined (defaults to empty string)
+ * @returns A non-undefined string value
+ */
+export const toStringValue = (
+  value: string | undefined,
+  defaultValue: string = "",
+): string => {
+  return value !== undefined ? value : defaultValue;
+};
+
+/**
+ * Maps a value that can be undefined to a specified value or default
+ * Similar to toStringValue but with more flexibility on input and output types
+ * @param value - The input value which could be undefined
+ * @param defaultValue - The default value to return if input is undefined
+ * @returns The input value or the default value if input is undefined
+ */
+export function mapUndefinable<T>(value: T | undefined, defaultValue: T): T {
+  return value !== undefined ? value : defaultValue;
+}

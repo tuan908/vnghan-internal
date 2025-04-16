@@ -3,12 +3,12 @@
 
 import { useImportExcel } from "@/frontend/hooks/useImportExcel";
 import { QUERY_KEY } from "@/shared/constants";
-import json from "@/shared/i18n/locales/vi.json";
+import json from "@/shared/i18n/locales/vi/vi.json";
 import { tryCatch } from "@/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Button } from "../../components/ui/button";
-import { errorToast, successToast } from "../../components/ui/toast";
+import { Button } from "../../ui/button";
+import { errorToast, successToast } from "../../ui/toast";
 
 export default function ExcelImporter() {
   const queryClient = useQueryClient();

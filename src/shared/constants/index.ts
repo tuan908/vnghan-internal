@@ -48,3 +48,10 @@ export const QUERY_KEY = {
   SCREW_MATERIAL: "screw-materials",
   SCREW_TYPE: "screw-types",
 };
+
+export const UserRoles = {
+  Viewer: "001",
+  Editor: "002",
+  Owner: "003",
+  Administrator: "004",
+};

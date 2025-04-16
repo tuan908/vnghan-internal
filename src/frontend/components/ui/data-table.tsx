@@ -26,7 +26,8 @@ import Filter from "./filter";
 type DataTableProps<TData> = {
   columns: any;
   data: TData[];
-  onRowClick?: (row: TData) => void;
+} & Partial<{
+  onRowClick: (row: TData) => void;
   sorting: SortingState;
   setSorting: OnChangeFn<SortingState>;
   columnFilters: ColumnFiltersState;
@@ -37,7 +38,7 @@ type DataTableProps<TData> = {
   setRowSelection: OnChangeFn<RowSelectionState>;
   globalFilter: string;
   setGlobalFilter: OnChangeFn<string>;
-};
+}>;
 
 export function DataTable<TData>({
   columns,
@@ -89,7 +90,7 @@ export function DataTable<TData>({
   });
 
   return (
-    <div ref={parentRef} className="w-[90%]">
+    <div ref={parentRef} className="w-full">
       <div className="h-[384px] md:h-156 overflow-y-auto">
         <table className="w-full border-none border-collapse relative z-10">
           <thead className="relative">
