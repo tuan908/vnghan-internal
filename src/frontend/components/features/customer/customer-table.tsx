@@ -192,7 +192,7 @@ export function CustomerTable({
 
   return (
     <>
-      <DataTable columns={columns} data={customers} />{" "}
+      <DataTable columns={columns} data={customers} />
       <AnimatePresence>
         {activeDialog === "edit" ? (
           <Dialog

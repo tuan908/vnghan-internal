@@ -53,10 +53,10 @@ app.use("*", async (c, next) => {
   if (isAuthRoute(c)) return next();
   return await jwtMiddleware(c, next);
 });
-app.use("*", async (c, next) => {
-  if (isAuthRoute(c)) return next();
-  return await cacheMiddleware(c, next);
-});
+// app.use("*", async (c, next) => {
+//   if (isAuthRoute(c)) return next();
+//   return await cacheMiddleware(c, next);
+// });
 
 // --- Database Middleware ---
 app.use("*", dbMiddleware);
