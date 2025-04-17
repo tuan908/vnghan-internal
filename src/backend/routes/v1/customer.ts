@@ -1,7 +1,7 @@
 import { ErrorCodes } from "@/shared/constants";
 import { UserRole } from "@/shared/constants/roles";
 import json from "@/shared/i18n/locales/vi/vi.json";
-import { nullsToUndefined, toStringValue, tryCatch } from "@/shared/utils";
+import { nullsToUndefined, toStringValue } from "@/shared/utils";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import {
@@ -86,22 +86,16 @@ const customerRouterV1 = new Hono()
     const db = c.get("db");
     const user = c.get("user");
     const body = await c.req.json();
-    const needsPromise = db
-      .select({needId: DbSchema.Need.id})
+    const [need] = await db
+      .select({id: DbSchema.Need.id})
       .from(DbSchema.Need)
       .where(eq(DbSchema.Need.description, body.need));
-    const platformsPromise = db
-      .select({platformId: DbSchema.Platform.id})
+    const [platform] = await db
+      .select({id: DbSchema.Platform.id})
       .from(DbSchema.Platform)
       .where(eq(DbSchema.Platform.description, body.platform));
 
-    const {data} = await tryCatch(
-      Promise.all([needsPromise, platformsPromise])
-    );
-
-    const [needsResult, platformsResult] = Array.isArray(data) ? data : [];
-
-    if (!needsResult || !platformsResult) {
+    if (!need?.id || !platform?.id) {
       return c.json(
         createErrorResponse({
           code: ErrorCodes.BAD_REQUEST,
@@ -132,22 +126,32 @@ const customerRouterV1 = new Hono()
       );
     }
 
-    const [needId] = needsResult;
-    const [platformsId] = platformsResult;
-
-    await db
+    const [customerPlatform] = await db
       .insert(DbSchema.CustomersPlatforms)
       .values({
         customerId: customer.id,
-        needId: needId?.needId!,
-        platformId: platformsId?.platformId!,
+        needId: need.id,
+        platformId: platform.id,
+        userId: user.id,
       })
       .returning();
+
+    if (!customerPlatform) {
+      return c.json(
+        createErrorResponse({
+          code: ErrorCodes.INTERNAL_SERVER_ERROR,
+          message: json.error.unknownError,
+          statusCode: 500,
+        }),
+        500
+      );
+    }
 
     return c.json(createSuccessResponse(nullsToUndefined(customer)));
   })
   .put("/:id", async c => {
     const db = c.get("db");
+    const user = c.get("user");
     const id = parseInt(c.req.param("id"));
     if (isNaN(id)) {
       return c.json(
@@ -158,15 +162,74 @@ const customerRouterV1 = new Hono()
       );
     }
     const body = await c.req.json();
-    const result = await db
+
+    const [need] = await db
+      .select({id: DbSchema.Need.id})
+      .from(DbSchema.Need)
+      .where(eq(DbSchema.Need.description, body.need));
+    const [platform] = await db
+      .select({id: DbSchema.Platform.id})
+      .from(DbSchema.Platform)
+      .where(eq(DbSchema.Platform.description, body.platform));
+
+    if (!need?.id || !platform?.id) {
+      return c.json(
+        createErrorResponse({
+          code: ErrorCodes.BAD_REQUEST,
+          message: json.error.badRequest,
+        }),
+        400
+      );
+    }
+
+    const [customer] = await db
       .update(DbSchema.Customer)
       .set(body)
       .where(eq(DbSchema.Customer.id, id))
       .returning();
-    return c.json(createSuccessResponse(result));
+
+    if (!customer) {
+      return c.json(
+        createErrorResponse({
+          code: ErrorCodes.INTERNAL_SERVER_ERROR,
+          message: json.error.unknownError,
+          statusCode: 500,
+        }),
+        500
+      );
+    }
+
+    const [customerPlatform] = await db
+      .update(DbSchema.CustomersPlatforms)
+      .set({
+        customerId: customer.id,
+        needId: need.id,
+        platformId: platform.id,
+      })
+      .where(
+        and(
+          eq(DbSchema.CustomersPlatforms.customerId, customer.id),
+          eq(DbSchema.CustomersPlatforms.userId, user.id)
+        )
+      )
+      .returning();
+
+    if (!customerPlatform) {
+      return c.json(
+        createErrorResponse({
+          code: ErrorCodes.INTERNAL_SERVER_ERROR,
+          message: json.error.unknownError,
+          statusCode: 500,
+        }),
+        500
+      );
+    }
+
+    return c.json(createSuccessResponse(customer));
   })
   .delete("/:id", async c => {
     const db = c.get("db");
+    const user = c.get("user");
     const id = parseInt(c.req.param("id"));
     if (isNaN(id)) {
       return c.json(
@@ -176,10 +239,44 @@ const customerRouterV1 = new Hono()
         })
       );
     }
-    await db
+    const [customer] = await db
       .update(DbSchema.Customer)
       .set({isDeleted: true})
-      .where(eq(DbSchema.Customer.id, id));
+      .where(eq(DbSchema.Customer.id, id))
+      .returning();
+
+    if (!customer) {
+      return c.json(
+        createErrorResponse({
+          code: ErrorCodes.INTERNAL_SERVER_ERROR,
+          message: json.error.unknownError,
+          statusCode: 500,
+        }),
+        500
+      );
+    }
+
+    const [customerPlatform] = await db
+      .update(DbSchema.CustomersPlatforms)
+      .set({isDeleted: true})
+      .where(
+        and(
+          eq(DbSchema.CustomersPlatforms.customerId, id),
+          eq(DbSchema.CustomersPlatforms.userId, user.id)
+        )
+      )
+      .returning();
+
+    if (!customerPlatform) {
+      return c.json(
+        createErrorResponse({
+          code: ErrorCodes.INTERNAL_SERVER_ERROR,
+          message: json.error.unknownError,
+          statusCode: 500,
+        }),
+        500
+      );
+    }
 
     return c.json(createSuccessResponse({message: "Customer deleted"}));
   });

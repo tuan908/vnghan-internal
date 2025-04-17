@@ -7,7 +7,9 @@
     "dev": "next dev",
     "lint": "next lint",
     "format": "prettier --write . --ignore-unknown",
-    "start": "next start"
+    "start": "next start",
+    "db:generate": "drizzle-kit generate --config=./drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config=./drizzle.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

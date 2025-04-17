@@ -84,6 +84,13 @@ export const customersPlatforms = pgTable("t_customer_platform", {
   needId: integer("need_id")
     .notNull()
     .references(() => needs.id),
+
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  isDeleted: boolean("is_deleted").default(false),
 });
 
 const screws = pgTable("t_screw", {
@@ -149,7 +156,7 @@ export const users = pgTable("t_user", {
   id: serial("id").primaryKey(),
   username: text("username"),
   passwordHash: text("password_hash"),
-  role: text("role", { enum: ["001", "002", "003", "004"] }).default("001"), // Viewer, Editor, Owner, Administrator
+  role: text("role", {enum: ["001", "002", "003", "004"]}).default("001"), // Viewer, Editor, Owner, Administrator
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isDeleted: boolean("is_deleted").default(false),
