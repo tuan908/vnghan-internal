@@ -60,7 +60,7 @@ const authRouterV1 = new Hono()
       "HS256"
     );
 
-    return c.json({token});
+    return c.json(createSuccessResponse({token}));
   })
   .post("/login", async c => {
     const db = c.get("db");
@@ -72,7 +72,8 @@ const authRouterV1 = new Hono()
           code: ErrorCodes.BAD_REQUEST,
           message: json.error.invalidCredentials,
           statusCode: 400,
-        })
+        }),
+        400
       );
     }
 
@@ -150,7 +151,7 @@ const authRouterV1 = new Hono()
       throw tokenSignError;
     }
 
-    return c.json(createSuccessResponse(token), 200);
+    return c.json(createSuccessResponse({token}), 200);
   });
 
 export default authRouterV1;

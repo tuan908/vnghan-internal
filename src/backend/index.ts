@@ -3,6 +3,7 @@ import json from "@/shared/i18n/locales/vi/vi.json";
 import { createErrorResponse } from "@/shared/utils/api-response";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Hono } from "hono";
+import { logger } from "hono/logger";
 import { MiddlewareFactory } from "./middlewares";
 import authRouterV1 from "./routes/v1/auth";
 import customerRouterV1 from "./routes/v1/customer";
@@ -26,6 +27,8 @@ const jwt = MiddlewareFactory.createJwtMiddleware({
 const db = MiddlewareFactory.createDbMiddleware();
 
 const app = new Hono().basePath("/api");
+
+app.use(logger())
 
 app.use("*", async (c, next) => {
   const path = c.req.path;
