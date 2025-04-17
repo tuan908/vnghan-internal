@@ -20,13 +20,14 @@ let cacheStore: RedisCacheStore | null = null;
 // Cache middleware factory
 // Cache middleware factory
 export const createCacheMiddleware = (
-  options: CacheOptions = {},
-): MiddlewareHandler<{ Bindings: ServerEnvironment }> => {
+  options: CacheOptions = {}
+): MiddlewareHandler<{Bindings: ServerEnvironment}> => {
   // Merge provided options with defaults
-  const opts = { ...defaultOptions, ...options };
+  const opts = {...defaultOptions, ...options};
 
   return async (c: Context, next: Next) => {
-    const { REDIS_URL, REDIS_TOKEN } = options;
+    const {REDIS_URL, REDIS_TOKEN} = options;
+    const user = c.get("user");
 
     if (!REDIS_URL || !REDIS_TOKEN) {
       throw new Error(json.error.missingEnvironmentVariables);
@@ -46,10 +47,15 @@ export const createCacheMiddleware = (
     // Generate cache key
     let cacheKey = opts.keyGenerator!(c);
 
+    const userId = user?.id;
+    if (userId) {
+      cacheKey += `:user:${userId}`;
+    }
+
     // Add vary headers to cache key if specified
     if (opts.varyByHeaders?.length) {
       const varyValues = opts.varyByHeaders
-        .map((header) => c.req.header(header) || "")
+        .map(header => c.req.header(header) || "")
         .join(":");
       cacheKey += `:${varyValues}`;
     }
@@ -112,7 +118,7 @@ export const createCacheMiddleware = (
           // Skip certain headers
           if (
             !["set-cookie", "connection", "keep-alive"].includes(
-              key.toLowerCase(),
+              key.toLowerCase()
             )
           ) {
             headers[key] = value;
@@ -128,7 +134,7 @@ export const createCacheMiddleware = (
           contentType: contentType, // Store content type for proper reconstruction
         };
 
-        await cacheStore.set(cacheKey, cacheEntry, opts.ttl!).catch((error) => {
+        await cacheStore.set(cacheKey, cacheEntry, opts.ttl!).catch(error => {
           console.error("Cache storage error:", error);
         });
       } catch (error) {

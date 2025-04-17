@@ -1,10 +1,14 @@
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { Context, Hono } from "hono";
+import { logger } from "hono/logger";
+
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
+import type { ServerEnvironment } from "@/shared/types";
 import { createErrorResponse } from "@/shared/utils/api-response";
 import { Session } from "@/shared/utils/session";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { Hono } from "hono";
-import { logger } from "hono/logger";
+
+// Middleware + Routes
 import { MiddlewareFactory } from "./middlewares";
 import authRouterV1 from "./routes/v1/auth";
 import customerRouterV1 from "./routes/v1/customer";
@@ -13,68 +17,73 @@ import fileRouterV1 from "./routes/v1/file";
 import screwRouterV1 from "./routes/v1/screw";
 import screwRouterV2 from "./routes/v2/screw";
 
+// Extend Hono Context types
 declare module "hono" {
   interface ContextVariableMap {
     db: ReturnType<typeof drizzle>;
-    user: Session
+    user: Session;
   }
 }
 
-const jwt = MiddlewareFactory.createJwtMiddleware({
+// --- Configurable Middleware ---
+const jwtMiddleware = MiddlewareFactory.createJwtMiddleware({
   secret: process.env.JWT_TOKEN_SECRET!,
   algorithm: "HS256",
   tokenFromHeader: true,
   tokenFromCookie: true,
 });
-const db = MiddlewareFactory.createDbMiddleware();
-const cache = MiddlewareFactory.createCacheMiddleware({
-  ttl: 300, // 5 minutes
-  varyByHeaders: ["Accept-Language"],
+
+const cacheMiddleware = MiddlewareFactory.createCacheMiddleware({
+  ttl: 300,
   cacheControl: "public, max-age=300",
-  REDIS_TOKEN: process.env.REDIS_TOKEN,
+  varyByHeaders: ["Accept-Language"],
   REDIS_URL: process.env.REDIS_URL,
+  REDIS_TOKEN: process.env.REDIS_TOKEN,
 });
 
-const app = new Hono().basePath("/api");
+const dbMiddleware = MiddlewareFactory.createDbMiddleware();
 
-app.use(logger());
+const app = new Hono<{Bindings: ServerEnvironment}>().basePath("/api");
 
+// --- Global Logging ---
+app.use("*", logger());
+
+// --- JWT + Cache middleware (skip for auth routes) ---
 app.use("*", async (c, next) => {
-  const path = c.req.path;
-  // Skip JWT middleware for auth routes
-  if (path.startsWith("/api/v1/auth")) {
-    return next();
-  }
-  // Apply JWT middleware for all other routes
-  return jwt(c, next);
+  if (isAuthRoute(c)) return next();
+  await jwtMiddleware(c, next);
 });
-app.use("*", db);
-app.use("*", cache);
+app.use("*", async (c, next) => {
+  if (isAuthRoute(c)) return next();
+  await cacheMiddleware(c, next);
+});
 
-app.onError((error, c) => {
-  console.error(error.stack);
-  console.error(error.cause);
-  console.error(error.name);
-  console.error(error.message);
+// --- Database Middleware ---
+app.use("*", dbMiddleware);
 
+// --- Global Error Handler ---
+app.onError((err, c) => {
+  console.error("[Unhandled Error]", err);
   return c.json(
     createErrorResponse({
       code: ErrorCodes.INTERNAL_SERVER_ERROR,
       message: json.error.internalServerError,
       statusCode: 500,
     }),
-    500,
+    500
   );
 });
 
+// --- API Routes ---
 const route = app
+  .route("/v1/auth", authRouterV1)
   .route("/v1/files", fileRouterV1)
   .route("/v1/screws", screwRouterV1)
   .route("/v1/customers", customerRouterV1)
-  .route("/v1/auth", authRouterV1)
   .route("/v1/customerCommon", customerCommonRouterV1)
   .route("/v2/screws", screwRouterV2);
 
 export default app;
-
 export type AppRoute = typeof route;
+
+const isAuthRoute = (c: Context) => c.req.path.startsWith("/api/v1/auth");
