@@ -35,8 +35,7 @@ const cache = MiddlewareFactory.createCacheMiddleware({
 
 const app = new Hono().basePath("/api");
 
-app.use(logger())
-
+app.use(logger());
 
 app.use("*", async (c, next) => {
   const path = c.req.path;
@@ -48,16 +47,21 @@ app.use("*", async (c, next) => {
   return jwt(c, next);
 });
 app.use("*", db);
-app.use("*", cache)
+app.use("*", cache);
 
 app.onError((error, c) => {
+  console.error(error.stack);
+  console.error(error.cause);
+  console.error(error.name);
   console.error(error.message);
+
   return c.json(
     createErrorResponse({
       code: ErrorCodes.INTERNAL_SERVER_ERROR,
       message: json.error.internalServerError,
+      statusCode: 500,
     }),
-    500,
+    500
   );
 });
 
