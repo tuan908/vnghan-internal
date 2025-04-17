@@ -65,8 +65,8 @@ export function CustomerTable({
       nextMessageTime: new Date(),
     },
   });
-  const {editCustomer, isEditingCustomer} = useEditCustomer();
-  const {deleteCustomer, isDeletingCustomer} = useDeleteCustomer();
+  const { editCustomer, isEditingCustomer } = useEditCustomer();
+  const { deleteCustomer, isDeletingCustomer } = useDeleteCustomer();
 
   // Dialog state
   const [currentItem, setCurrentItem] = useState<CustomerDto | null>(null);
@@ -119,40 +119,40 @@ export function CustomerTable({
       {
         header: "Tên KH",
         accessorKey: "name",
-        cell: ({row}) => <>{row.getValue("name")} </>,
+        cell: ({ row }) => <>{row.getValue("name")} </>,
       },
       {
         header: "SĐT",
         accessorKey: "phone",
-        cell: ({row}) => <>{row.getValue("phone")} </>,
+        cell: ({ row }) => <>{row.getValue("phone")} </>,
       },
       {
         header: "Địa chỉ",
         accessorKey: "address",
-        cell: ({row}) => <>{row.getValue("address")} </>,
+        cell: ({ row }) => <>{row.getValue("address")} </>,
       },
       {
         header: "Nền tảng",
         accessorKey: "platform",
-        cell: ({row}) => <>{row.getValue("platform")}</>,
+        cell: ({ row }) => <>{row.getValue("platform")}</>,
       },
       {
         header: "Nhu cầu",
         accessorKey: "need",
-        cell: ({row}) => <>{row.original.need}</>,
+        cell: ({ row }) => <>{row.original.need}</>,
       },
       {
         header: "Tiền",
         accessorKey: "money",
-        cell: ({row}) => <>{row.getValue("money")} </>,
+        cell: ({ row }) => <>{row.getValue("money")} </>,
       },
       {
         header: "Thời gian nhắn lại",
         accessorKey: "nextMessageTime",
-        cell: ({row}) => {
+        cell: ({ row }) => {
           const formattedNextMessageTime = format(
             new Date(row.getValue("nextMessageTime")),
-            "yyyy-MM-dd hh:mm:ss"
+            "yyyy-MM-dd hh:mm:ss",
           );
           return <>{formattedNextMessageTime}</>;
         },
@@ -160,7 +160,7 @@ export function CustomerTable({
       {
         id: "actions",
         header: json.table.action,
-        cell: ({row}) => (
+        cell: ({ row }) => (
           <div className={cn("flex gap-x-6 justify-center items-center")}>
             <button onClick={() => handleEditClick(row.original)}>
               <Pencil className="h-5 w-5 text-blue-400 hover:text-blue-300" />
@@ -173,7 +173,7 @@ export function CustomerTable({
         size: 100,
       },
     ],
-    []
+    [],
   );
 
   const handleCloseDialog = () => {
@@ -185,7 +185,7 @@ export function CustomerTable({
     }
   };
 
-  const handleEditSubmit = editCustomerForm.handleSubmit(async data => {
+  const handleEditSubmit = editCustomerForm.handleSubmit(async (data) => {
     await editCustomer(data);
     reset();
   });
@@ -197,19 +197,19 @@ export function CustomerTable({
         {activeDialog === "edit" ? (
           <Dialog
             open={!!activeDialog}
-            onOpenChange={open => {
+            onOpenChange={(open) => {
               if (!open) handleCloseDialog();
             }}
           >
             <DialogContent
               className="sm:max-w-[48rem] overflow-hidden"
-              onEscapeKeyDown={e => {
+              onEscapeKeyDown={(e) => {
                 if (hasUnsavedChanges) {
                   e.preventDefault();
                   handleCloseDialog();
                 }
               }}
-              onInteractOutside={e => {
+              onInteractOutside={(e) => {
                 if (hasUnsavedChanges) {
                   e.preventDefault();
                 }
@@ -227,7 +227,7 @@ export function CustomerTable({
                     control={editCustomerForm.control}
                     name="name"
                     disabled={isEditingCustomer}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <FormItem className="flex flex-col gap-y-2">
                         <FormLabel>Tên KH</FormLabel>
                         <FormControl>
@@ -241,7 +241,7 @@ export function CustomerTable({
                     control={editCustomerForm.control}
                     name="phone"
                     disabled={isEditingCustomer}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <FormItem className="flex flex-col gap-y-2">
                         <FormLabel>SĐT</FormLabel>
                         <FormControl>
@@ -256,7 +256,7 @@ export function CustomerTable({
                     control={editCustomerForm.control}
                     name="address"
                     disabled={isEditingCustomer}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <FormItem className="flex flex-col gap-y-2">
                         <FormLabel>Địa chỉ</FormLabel>
                         <FormControl>
@@ -274,7 +274,7 @@ export function CustomerTable({
                     control={editCustomerForm.control}
                     name="money"
                     disabled={isEditingCustomer}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <FormItem className="flex flex-col gap-y-2">
                         <FormLabel>Tiền (VND)</FormLabel>
                         <FormControl>
@@ -289,7 +289,7 @@ export function CustomerTable({
                     control={editCustomerForm.control}
                     name="platform"
                     disabled={isEditingCustomer}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <FormItem className="flex flex-col gap-y-2">
                         <FormLabel>Nền tảng</FormLabel>
                         <Select
@@ -324,7 +324,7 @@ export function CustomerTable({
                     control={editCustomerForm.control}
                     name="need"
                     disabled={isEditingCustomer}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <FormItem className="flex flex-col gap-y-2">
                         <FormLabel>Nhu cầu</FormLabel>
                         <Select
@@ -358,13 +358,13 @@ export function CustomerTable({
                     control={editCustomerForm.control}
                     name="nextMessageTime"
                     disabled={isEditingCustomer}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <FormItem className="col-span-1 md:col-span-2 flex flex-col gap-y-2">
                         <FormLabel>Thời gian nhắn lại</FormLabel>
                         <FormControl>
                           <DatePicker
                             date={field.value}
-                            onChange={date => field.onChange(date)}
+                            onChange={(date) => field.onChange(date)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -381,7 +381,7 @@ export function CustomerTable({
         ) : activeDialog === "delete" ? (
           <Dialog
             open={!!activeDialog}
-            onOpenChange={open => {
+            onOpenChange={(open) => {
               if (!open) handleCloseDialog();
             }}
           >

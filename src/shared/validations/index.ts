@@ -134,7 +134,7 @@ export const CustomerSchema = z.object({
         json.form.createCustomer.nextMessageTime,
       ),
     })
-    .refine(x => x.toISOString()),
+    .refine((x) => x.toISOString()),
 });
 
 export type CustomerDto = z.infer<typeof CustomerSchema>;
