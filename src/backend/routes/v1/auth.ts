@@ -85,7 +85,7 @@ const authRouterV1 = new Hono()
         .where(eq(DbSchema.User.username, username));
       existingUser = user;
     } catch (error) {
-      console.error(error);
+      console.error(error instanceof Error ? error?.cause : error);
       throw error;
     }
 

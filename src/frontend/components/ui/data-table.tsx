@@ -164,7 +164,7 @@ export function DataTable<TData>({
                       <td
                         key={cell.id}
                         className={cn(
-                          "z-0 px-2 min-w-0 md:max-w-16",
+                          "z-0 px-2 min-w-0 md:max-w-16 text-sm",
                           CSS_TEXT_ELLIPSIS,
                         )}
                       >
