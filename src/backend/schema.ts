@@ -57,6 +57,12 @@ export const customers = pgTable("t_customer", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isDeleted: boolean("is_deleted").default(false),
+  // ✅ Audit fields
+  createdBy: integer("created_by").references(() => users.id),
+  updatedBy: integer("updated_by").references(() => users.id),
+
+  // 🧩 Optional: Ownership / responsibility
+  assignedTo: integer("assigned_to").references(() => users.id),
 });
 
 export const platforms = pgTable("t_platform", {

@@ -63,6 +63,8 @@ export const createJwtMiddleware = (
       );
     }
 
+    c.set("user", data)
+
     await next();
   };
 };

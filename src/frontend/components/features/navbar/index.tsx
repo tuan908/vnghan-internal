@@ -11,9 +11,15 @@ import {
 import { deleteCookie } from "cookies-next";
 import { LogOut, UserCircle } from "lucide-react";
 import Link from "next/link";
-import { redirect, useRouter } from "next/navigation";
+import { redirect, usePathname, useRouter } from "next/navigation";
 import { use, useEffect } from "react";
 import { DropdownMenuItemWithIcon } from "../../ui/dropdown-menu";
+
+const ROUTES = [
+  {pathname: "/", name: "Trang chủ"},
+  {pathname: "/customers", name: "Thông tin khách hàng"},
+  {pathname: "/import", name: "Nhập liệu từ file"},
+];
 
 export default function Navbar({
   sessionPromise,
@@ -22,6 +28,7 @@ export default function Navbar({
 }) {
   const session = use(sessionPromise);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!session) {
@@ -37,8 +44,15 @@ export default function Navbar({
   return (
     <nav className="sticky top-0 flex flex-row gap-x-4 px-8 py-2 shadow-md justify-around">
       <div className="flex-1 flex flex-row gap-x-8 items-center">
-        <Link href="/">Trang chủ</Link>
-        <Link href="/customers">Nhập thông tin khách hàng</Link>
+        {ROUTES.map((x, index) => (
+          <Link
+            key={`${x}-${index}`}
+            href={x.pathname}
+            className={cn(pathname === x.pathname && "text-red-400")}
+          >
+            {x.name}
+          </Link>
+        ))}
       </div>
 
       <div className="flex items-center gap-x-4 relative">
@@ -62,7 +76,7 @@ export default function Navbar({
             "flex flex-col",
             session?.role === UserRoles.Administrator
               ? "text-red-400"
-              : "text-blue-400",
+              : "text-blue-400"
           )}
         >
           <span>Xin chào, {session?.username}</span>

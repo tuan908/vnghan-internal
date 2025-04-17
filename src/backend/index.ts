@@ -1,6 +1,7 @@
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { createErrorResponse } from "@/shared/utils/api-response";
+import { Session } from "@/shared/utils/session";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
@@ -15,6 +16,7 @@ import screwRouterV2 from "./routes/v2/screw";
 declare module "hono" {
   interface ContextVariableMap {
     db: ReturnType<typeof drizzle>;
+    user: Session
   }
 }
 
