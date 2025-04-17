@@ -1,4 +1,4 @@
-import { type JWTPayload, jwtVerify } from "jose";
+import { type JWTPayload, jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { cache } from "react";
 
@@ -15,6 +15,21 @@ function getJwtSecretKey(): Uint8Array {
     throw new Error("JWT Secret key is not defined");
   }
   return new TextEncoder().encode(sessionSecret);
+}
+
+export async function encrypt(payload: Session) {
+  try {
+    const secretKey = new TextEncoder().encode(process.env.JWT_TOKEN_SECRET!);
+    const token = await new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(Math.floor(Date.now() / 1000) + process.env.JWT_TOKEN_EXPIRED!)
+    .sign(secretKey);
+
+  return token;
+  } catch {
+    return undefined;
+  }
 }
 
 export async function decrypt(input: string) {

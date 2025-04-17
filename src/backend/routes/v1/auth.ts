@@ -6,11 +6,11 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "@/shared/utils/api-response";
+import { encrypt } from "@/shared/utils/session";
 import type { SignInFormValues } from "@/shared/validations";
 import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { sign } from "hono/jwt";
 
 const authRouterV1 = new Hono()
   .post("/register", async c => {
@@ -54,11 +54,18 @@ const authRouterV1 = new Hono()
       })
       .returning();
 
-    const token = await sign(
-      {id: newUser?.id, username: newUser?.username, role: newUser?.role},
-      process.env.JWT_TOKEN_SECRET!,
-      "HS256"
-    );
+    const tokenPromise = encrypt({
+      id: newUser?.id!,
+      username: newUser?.username!,
+      role: newUser?.role!,
+    });
+
+    const {data: token, error: tokenSignError} = await tryCatch(tokenPromise);
+
+    if (tokenSignError) {
+      console.log(tokenSignError);
+      throw tokenSignError;
+    }
 
     return c.json(createSuccessResponse({token}));
   })
@@ -134,20 +141,16 @@ const authRouterV1 = new Hono()
       );
     }
 
-    const tokenPromise = sign(
-      {
-        id: existingUser?.id,
-        username: existingUser?.username,
-        role: existingUser?.role,
-      },
-      process.env.JWT_TOKEN_SECRET!,
-      "HS256"
-    );
+    const tokenPromise = encrypt({
+      id: existingUser?.id,
+      username: existingUser?.username!,
+      role: existingUser?.role!,
+    });
 
     const {data: token, error: tokenSignError} = await tryCatch(tokenPromise);
 
     if (tokenSignError) {
-      console.log(bcryptCompareError);
+      console.log(tokenSignError);
       throw tokenSignError;
     }
 
