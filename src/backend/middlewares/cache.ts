@@ -12,6 +12,7 @@ import {
   type CacheOptions,
   RedisCacheStore,
   defaultOptions,
+  invalidateCache,
 } from "../lib/cache";
 
 let cacheStore: RedisCacheStore | null = null;
@@ -38,6 +39,7 @@ export const createCacheMiddleware = (
 
     // Skip caching for non-cacheable methods
     if (!opts.methods?.includes(c.req.method)) {
+      await invalidateCache();
       return await next();
     }
 

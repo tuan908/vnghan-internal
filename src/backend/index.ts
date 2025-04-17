@@ -25,10 +25,18 @@ const jwt = MiddlewareFactory.createJwtMiddleware({
   tokenFromCookie: true,
 });
 const db = MiddlewareFactory.createDbMiddleware();
+const cache = MiddlewareFactory.createCacheMiddleware({
+  ttl: 300, // 5 minutes
+  varyByHeaders: ["Accept-Language"],
+  cacheControl: "public, max-age=300",
+  REDIS_TOKEN: process.env.REDIS_TOKEN,
+  REDIS_URL: process.env.REDIS_URL,
+});
 
 const app = new Hono().basePath("/api");
 
 app.use(logger())
+
 
 app.use("*", async (c, next) => {
   const path = c.req.path;
@@ -40,6 +48,7 @@ app.use("*", async (c, next) => {
   return jwt(c, next);
 });
 app.use("*", db);
+app.use("*", cache)
 
 app.onError((error, c) => {
   console.error(error.message);

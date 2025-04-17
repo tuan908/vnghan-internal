@@ -20,20 +20,10 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../lib/api-response";
-import { invalidateCache } from "../../lib/cache";
-import { MiddlewareFactory } from "../../middlewares";
 import DbSchema from "../../schema";
 
-const cacheMiddleware = MiddlewareFactory.createCacheMiddleware({
-  ttl: 300, // 5 minutes
-  varyByHeaders: ["Accept-Language"],
-  cacheControl: "public, max-age=300",
-  REDIS_TOKEN: process.env.REDIS_TOKEN,
-  REDIS_URL: process.env.REDIS_URL,
-});
-
 const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
-  .get("/", cacheMiddleware, async (c) => {
+  .get("/", async (c) => {
     const db = c.get("db");
 
     const screws = await db
@@ -102,14 +92,6 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
         }),
       );
 
-    const { error } = await tryCatch(invalidateCache(REDIS_URL, REDIS_TOKEN));
-    if (error)
-      return c.json(
-        createErrorResponse({
-          code: ErrorCodes.INTERNAL_SERVER_ERROR,
-          message: json.error.internalServerError,
-        }),
-      );
     return c.json(createSuccessResponse({ data: result }), 200);
   })
   .patch("/:id", async (c) => {
@@ -175,14 +157,6 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
         404,
       );
     }
-    const { error } = await tryCatch(invalidateCache(REDIS_URL, REDIS_TOKEN));
-    if (error)
-      return c.json(
-        createErrorResponse({
-          code: ErrorCodes.INTERNAL_SERVER_ERROR,
-          message: json.error.internalServerError,
-        }),
-      );
 
     return c.json(createSuccessResponse({ data: result }), 200);
   })
@@ -224,18 +198,9 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
       );
     }
 
-    const { error } = await tryCatch(invalidateCache(REDIS_URL, REDIS_TOKEN));
-    if (error)
-      return c.json(
-        createErrorResponse({
-          code: ErrorCodes.INTERNAL_SERVER_ERROR,
-          message: json.error.internalServerError,
-        }),
-      );
-
     return c.json(createSuccessResponse({ data: result }), 200);
   })
-  .get("/types", cacheMiddleware, async (c) => {
+  .get("/types", async (c) => {
     const db = c.get("db");
     const response = await db
       .select({ id: DbSchema.ScrewType.id, name: DbSchema.ScrewType.name })
@@ -245,7 +210,7 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
       200,
     );
   })
-  .get("/materials", cacheMiddleware, async (c) => {
+  .get("/materials", async (c) => {
     const db = c.get("db");
     const response = await db
       .select({

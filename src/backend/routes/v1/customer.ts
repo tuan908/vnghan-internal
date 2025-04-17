@@ -166,6 +166,7 @@ const customerRouterV1 = new Hono()
       .update(DbSchema.Customer)
       .set({ isDeleted: true })
       .where(eq(DbSchema.Customer.id, id));
+
     return c.json(createSuccessResponse({ message: "Customer deleted" }));
   });
 export default customerRouterV1;

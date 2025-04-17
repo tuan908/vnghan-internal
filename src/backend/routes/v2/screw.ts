@@ -21,7 +21,6 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../lib/api-response";
-import { invalidateCache } from "../../lib/cache";
 import DbSchema from "../../schema";
 
 const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
@@ -107,7 +106,6 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
       materialId: screwMaterial.id,
     };
 
-    await invalidateCache(REDIS_URL, REDIS_TOKEN, `GET:/api/v2/screws`);
     const result = await db.insert(DbSchema.Screw).values(entity).execute();
     return c.json(createSuccessResponse({ data: result }), 200);
   })
@@ -166,11 +164,6 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
       );
     }
 
-    await invalidateCache(
-      REDIS_URL,
-      REDIS_TOKEN,
-      `GET:/api/v2/screws/${body.id!}`,
-    );
     return c.json(createSuccessResponse({ data: result }), 200);
   })
   .delete("/:id", async (c) => {
@@ -211,11 +204,6 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
       );
     }
 
-    await invalidateCache(
-      REDIS_URL,
-      REDIS_TOKEN,
-      `GET:/api/v2/screws/${body.id!}`,
-    );
     return c.json(createSuccessResponse({ data: result }), 200);
   })
   .get("/types", async (c) => {

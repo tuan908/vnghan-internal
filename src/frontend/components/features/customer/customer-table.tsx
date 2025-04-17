@@ -389,7 +389,7 @@ export function CustomerTable({
               <DialogHeader>
                 <DialogTitle>Xác nhận xóa</DialogTitle>
                 <DialogDescription>
-                  Bạn có chắc chắn muốn xóa sản phẩm &quot;{currentItem?.name}
+                  Bạn có chắc chắn muốn xóa khách hàng &quot;{currentItem?.name}
                   &quot;?
                 </DialogDescription>
               </DialogHeader>

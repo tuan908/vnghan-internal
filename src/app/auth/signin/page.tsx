@@ -1,5 +1,6 @@
 "use client";
 
+import { procesingLogin } from "@/app/actions";
 import { Button } from "@/frontend/components/ui/button";
 import {
   Form,
@@ -13,7 +14,6 @@ import { Input } from "@/frontend/components/ui/input";
 import { useSignIn } from "@/frontend/hooks/useSignIn";
 import { SignInFormValues, SignInSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { setCookie } from "cookies-next";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -36,8 +36,7 @@ export default function SignInPage() {
       form.setError("root", { message: result?.error?.message });
       return;
     }
-    await setCookie("access_token", result?.data);
-    router.push("/");
+    await procesingLogin(result?.data?.token!)
   };
 
   return (

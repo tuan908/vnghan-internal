@@ -13,7 +13,6 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../lib/api-response";
-import { invalidateCache } from "../../lib/cache";
 import DbSchema, { ScrewEntity } from "../../schema";
 
 const fileRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
@@ -154,8 +153,6 @@ const fileRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
         .returning();
 
       const result = await insertQuery;
-
-      await invalidateCache(REDIS_URL, REDIS_TOKEN);
 
       return c.json(
         createSuccessResponse<ImportResult>({
