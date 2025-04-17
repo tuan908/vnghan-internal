@@ -51,11 +51,11 @@ app.use("*", logger());
 // --- JWT + Cache middleware (skip for auth routes) ---
 app.use("*", async (c, next) => {
   if (isAuthRoute(c)) return next();
-  await jwtMiddleware(c, next);
+  return await jwtMiddleware(c, next);
 });
 app.use("*", async (c, next) => {
   if (isAuthRoute(c)) return next();
-  await cacheMiddleware(c, next);
+  return await cacheMiddleware(c, next);
 });
 
 // --- Database Middleware ---
