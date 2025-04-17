@@ -40,7 +40,7 @@ export class RedisCacheStore implements CacheStore {
   constructor(
     redisUrl: string,
     redisToken: string,
-    namespace: string = "hono-cache:"
+    namespace: string = "hono-cache:",
   ) {
     this.redis = new Redis({
       url: redisUrl,
@@ -55,7 +55,7 @@ export class RedisCacheStore implements CacheStore {
 
   async get(key: string): Promise<CacheEntry | null> {
     const promise = this.redis.get<string>(this.getNamespacedKey(key));
-    const {data} = await tryCatch(promise);
+    const { data } = await tryCatch(promise);
     if (!data) return null;
 
     if (typeof data === "object") {
@@ -69,13 +69,13 @@ export class RedisCacheStore implements CacheStore {
     const promise = this.redis.set(this.getNamespacedKey(key), serialized, {
       ex: ttl,
     });
-    const {error} = await tryCatch(promise);
+    const { error } = await tryCatch(promise);
     if (error) throw error;
   }
 
   async delete(key: string): Promise<void> {
     const promise = this.redis.del(this.getNamespacedKey(key));
-    const {error} = await tryCatch(promise);
+    const { error } = await tryCatch(promise);
     if (error) throw error;
   }
 
@@ -112,7 +112,7 @@ export const defaultOptions: CacheOptions = {
 
 // Helper to encode response body to string
 export async function encodeBody(json: any): Promise<string> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const arrayBuffer = str2ab(JSON.stringify(json));
     const encodedBody = Buffer.from(arrayBuffer).toString("base64");
     resolve(encodedBody);
@@ -121,7 +121,7 @@ export async function encodeBody(json: any): Promise<string> {
 
 // Helper to decode body from string
 export function decodeBody(bodyString: string): Promise<ArrayBuffer> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const cachedBody = Buffer.from(bodyString, "base64").buffer;
     resolve(cachedBody);
   });
@@ -132,7 +132,7 @@ export const invalidateCache = (
   redisUrl: string | undefined = process.env.REDIS_URL,
   redisToken: string | undefined = process.env.REDIS_TOKEN,
   pattern?: string,
-  namespace: string = "hono-cache:"
+  namespace: string = "hono-cache:",
 ): Promise<void> => {
   if (!redisUrl || !redisToken) {
     throw new Error(json.error.missingEnvironmentVariables);
@@ -150,7 +150,7 @@ export const invalidateCache = (
  */
 export function ab2str(
   buf: ArrayBuffer | null | undefined,
-  encoding: string = "utf-8"
+  encoding: string = "utf-8",
 ): string {
   // Guard against null or undefined input
   if (!buf) {
@@ -183,7 +183,7 @@ export function ab2str(
  */
 export function str2ab(
   str: string,
-  encoding: string = "utf-8"
+  encoding: string = "utf-8",
 ): ArrayBuffer | SharedArrayBuffer {
   // Guard against null or undefined input
   if (!str) {

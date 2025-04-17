@@ -36,7 +36,7 @@ export default function SignInPage() {
       form.setError("root", { message: result?.error?.message });
       return;
     }
-    await procesingLogin(result?.data?.token!)
+    await procesingLogin(result?.data?.token!);
   };
 
   return (

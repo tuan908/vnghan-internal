@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 
 const authRouterV1 = new Hono()
-  .post("/register", async c => {
-    const {username, password} = await c.req.json();
+  .post("/register", async (c) => {
+    const { username, password } = await c.req.json();
 
     if (!username || !password) {
       return c.json(
@@ -23,7 +23,7 @@ const authRouterV1 = new Hono()
           message: json.error.invalidCredentials,
           statusCode: 400,
         }),
-        400
+        400,
       );
     }
 
@@ -39,7 +39,7 @@ const authRouterV1 = new Hono()
           code: ErrorCodes.FORBIDDEN,
           message: json.error.userAlreadyExists,
           statusCode: 403,
-        })
+        }),
       );
     }
 
@@ -60,18 +60,18 @@ const authRouterV1 = new Hono()
       role: newUser?.role!,
     });
 
-    const {data: token, error: tokenSignError} = await tryCatch(tokenPromise);
+    const { data: token, error: tokenSignError } = await tryCatch(tokenPromise);
 
     if (tokenSignError) {
       console.log(tokenSignError);
       throw tokenSignError;
     }
 
-    return c.json(createSuccessResponse({token}));
+    return c.json(createSuccessResponse({ token }));
   })
-  .post("/login", async c => {
+  .post("/login", async (c) => {
     const db = c.get("db");
-    const {username, password} = await c.req.json<SignInFormValues>();
+    const { username, password } = await c.req.json<SignInFormValues>();
 
     if (!username || !password) {
       return c.json(
@@ -80,7 +80,7 @@ const authRouterV1 = new Hono()
           message: json.error.invalidCredentials,
           statusCode: 400,
         }),
-        400
+        400,
       );
     }
 
@@ -104,7 +104,7 @@ const authRouterV1 = new Hono()
           message: json.error.invalidCredentials,
           statusCode: 403,
         }),
-        403
+        403,
       );
     }
 
@@ -117,12 +117,12 @@ const authRouterV1 = new Hono()
           message: json.error.internalServerError,
           statusCode: 500,
         }),
-        500
+        500,
       );
     }
 
-    const {data: passwordMatches, error: bcryptCompareError} = await tryCatch(
-      bcrypt.compare(password, hashedPassword)
+    const { data: passwordMatches, error: bcryptCompareError } = await tryCatch(
+      bcrypt.compare(password, hashedPassword),
     );
 
     if (bcryptCompareError) {
@@ -137,7 +137,7 @@ const authRouterV1 = new Hono()
           message: json.error.invalidCredentials,
           statusCode: 403,
         }),
-        403
+        403,
       );
     }
 
@@ -147,14 +147,14 @@ const authRouterV1 = new Hono()
       role: existingUser?.role!,
     });
 
-    const {data: token, error: tokenSignError} = await tryCatch(tokenPromise);
+    const { data: token, error: tokenSignError } = await tryCatch(tokenPromise);
 
     if (tokenSignError) {
       console.log(tokenSignError);
       throw tokenSignError;
     }
 
-    return c.json(createSuccessResponse({token}), 200);
+    return c.json(createSuccessResponse({ token }), 200);
   });
 
 export default authRouterV1;

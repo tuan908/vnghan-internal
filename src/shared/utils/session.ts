@@ -21,20 +21,24 @@ export async function encrypt(payload: Session) {
   try {
     const secretKey = new TextEncoder().encode(process.env.JWT_TOKEN_SECRET!);
     const token = await new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime(Math.floor(Date.now() / 1000) + process.env.JWT_TOKEN_EXPIRED!)
-    .sign(secretKey);
+      .setProtectedHeader({alg: "HS256"})
+      .setIssuedAt()
+      .setExpirationTime(
+        Math.floor(Date.now() / 1000) +
+          Number(process.env.JWT_TOKEN_EXPIRED!) / 1000
+      )
+      .sign(secretKey);
 
-  return token;
-  } catch {
+    return token;
+  } catch (error) {
+    console.error(error);
     return undefined;
   }
 }
 
 export async function decrypt(input: string) {
   try {
-    const { payload } = await jwtVerify(input, getJwtSecretKey());
+    const {payload} = await jwtVerify(input, getJwtSecretKey());
     return payload as Session;
   } catch {
     return undefined;

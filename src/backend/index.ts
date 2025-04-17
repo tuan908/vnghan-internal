@@ -61,7 +61,7 @@ app.onError((error, c) => {
       message: json.error.internalServerError,
       statusCode: 500,
     }),
-    500
+    500,
   );
 });
 
