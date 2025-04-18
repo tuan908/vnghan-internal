@@ -1,18 +1,23 @@
-import type { PlatformDto } from "@/backend/schema";
+import type { PlatformDto } from "@/backend/db/schema";
 import { useDeleteCustomer } from "@/frontend/hooks/useDeleteCustomer";
 import { useEditCustomer } from "@/frontend/hooks/useEditCustomer";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { cn } from "@/shared/utils";
 import { CustomerDto, CustomerSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ColumnDef } from "@tanstack/react-table";
+import type {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+} from "@tanstack/react-table";
 import { format } from "date-fns/format";
 import { AnimatePresence } from "framer-motion";
 import { Pencil, Trash2 } from "lucide-react";
 import { startTransition, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "../../ui/button";
-import { DataTable } from "../../ui/data-table";
+import { DataTable, fuzzySort } from "../../ui/data-table";
 import { DatePicker } from "../../ui/date-picker";
 import {
   Dialog,
@@ -72,6 +77,10 @@ export function CustomerTable({
   const [currentItem, setCurrentItem] = useState<CustomerDto | null>(null);
   const [activeDialog, setActiveDialog] = useState<DialogType>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
 
   // Handle edit dialog
   const handleEditClick = (item: CustomerDto) => {
@@ -120,31 +129,38 @@ export function CustomerTable({
         header: "Tên KH",
         accessorKey: "name",
         cell: ({row}) => <>{row.getValue("name")} </>,
+        filterFn: "fuzzy",
+        sortingFn: fuzzySort,
       },
       {
         header: "SĐT",
         accessorKey: "phone",
         cell: ({row}) => <>{row.getValue("phone")} </>,
+        filterFn: "includesString",
       },
       {
         header: "Địa chỉ",
         accessorKey: "address",
         cell: ({row}) => <>{row.getValue("address")} </>,
+        filterFn: "includesString",
       },
       {
         header: "Nền tảng",
         accessorKey: "platform",
         cell: ({row}) => <>{row.getValue("platform")}</>,
+        filterFn: "includesString",
       },
       {
         header: "Nhu cầu",
         accessorKey: "need",
         cell: ({row}) => <>{row.original.need}</>,
+        filterFn: "includesString",
       },
       {
         header: "Tiền",
         accessorKey: "money",
         cell: ({row}) => <>{row.getValue("money")} </>,
+        filterFn: "includesString",
       },
       {
         header: "Thời gian nhắn lại",
@@ -156,6 +172,8 @@ export function CustomerTable({
           );
           return <>{formattedNextMessageTime}</>;
         },
+        sortDescFirst: false,
+        sortUndefined: "last",
       },
       {
         id: "actions",
@@ -171,6 +189,7 @@ export function CustomerTable({
           </div>
         ),
         size: 100,
+        enableColumnFilter: false,
       },
     ],
     []
@@ -192,7 +211,18 @@ export function CustomerTable({
 
   return (
     <>
-      <DataTable columns={columns} data={customers} />
+      <DataTable
+        columns={columns}
+        data={customers}
+        sorting={sorting}
+        setSorting={setSorting}
+        columnFilters={columnFilters}
+        setColumnFilters={setColumnFilters}
+        columnVisibility={columnVisibility}
+        setColumnVisibility={setColumnVisibility}
+        rowSelection={rowSelection}
+        setRowSelection={setRowSelection}
+      />
       <AnimatePresence>
         {activeDialog === "edit" ? (
           <Dialog
