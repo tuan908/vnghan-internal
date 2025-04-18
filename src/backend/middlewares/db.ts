@@ -2,7 +2,7 @@ import type { ServerEnvironment } from "@/shared/types";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import type { MiddlewareHandler } from "hono";
-import DbSchema from "../schema";
+import { DbSchema } from "../db/schema";
 
 /**
  * Create a Hono middleware for database access using Neon's HTTP client

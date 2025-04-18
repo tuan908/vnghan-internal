@@ -1,4 +1,4 @@
-import { CreateScrewDto } from "@/backend/schema";
+import { DbSchema, type CreateScrewDto } from "@/backend/db/schema";
 import {
   DEFAULT_MATERIAL_ID,
   DEFAULT_SIZE_ID,
@@ -20,7 +20,6 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../lib/api-response";
-import DbSchema from "../../schema";
 
 const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
   .get("/", async (c) => {

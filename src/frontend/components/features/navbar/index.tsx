@@ -16,9 +16,9 @@ import { use, useEffect } from "react";
 import { DropdownMenuItemWithIcon } from "../../ui/dropdown-menu";
 
 const ROUTES = [
-  {pathname: "/", name: "Trang chủ"},
-  {pathname: "/customers", name: "Thông tin khách hàng"},
-  {pathname: "/import", name: "Nhập liệu từ file"},
+  { pathname: "/", name: "Trang chủ" },
+  { pathname: "/customers", name: "Thông tin khách hàng" },
+  { pathname: "/import", name: "Nhập liệu từ file" },
 ];
 
 export default function Navbar({
@@ -76,7 +76,7 @@ export default function Navbar({
             "flex flex-col",
             session?.role === UserRoles.Administrator
               ? "text-red-400"
-              : "text-blue-400"
+              : "text-blue-400",
           )}
         >
           <span>Xin chào, {session?.username}</span>

@@ -13,15 +13,19 @@ import { MiddlewareFactory } from "./middlewares";
 import authRouterV1 from "./routes/v1/auth";
 import customerRouterV1 from "./routes/v1/customer";
 import customerCommonRouterV1 from "./routes/v1/customerCommon";
-import fileRouterV1 from "./routes/v1/file";
+import filetRouterV1 from "./routes/v1/file";
+import importRouterV1 from "./routes/v1/import";
 import screwRouterV1 from "./routes/v1/screw";
 import screwRouterV2 from "./routes/v2/screw";
+import { ImportFileExtension } from "./types";
 
 // Extend Hono Context types
 declare module "hono" {
   interface ContextVariableMap {
     db: ReturnType<typeof drizzle>;
     user: Session;
+    fileBuffer: Buffer<any>;
+    fileType: ImportFileExtension;
   }
 }
 
@@ -43,7 +47,7 @@ const cacheMiddleware = MiddlewareFactory.createCacheMiddleware({
 
 const dbMiddleware = MiddlewareFactory.createDbMiddleware();
 
-const app = new Hono<{Bindings: ServerEnvironment}>().basePath("/api");
+const app = new Hono<{ Bindings: ServerEnvironment }>().basePath("/api");
 
 // --- Global Logging ---
 app.use("*", logger());
@@ -53,10 +57,11 @@ app.use("*", async (c, next) => {
   if (isAuthRoute(c)) return next();
   return await jwtMiddleware(c, next);
 });
-// app.use("*", async (c, next) => {
-//   if (isAuthRoute(c)) return next();
-//   return await cacheMiddleware(c, next);
-// });
+
+app.use("*", async (c, next) => {
+  if (isAuthRoute(c)) return next();
+  return await cacheMiddleware(c, next);
+});
 
 // --- Database Middleware ---
 app.use("*", dbMiddleware);
@@ -70,17 +75,18 @@ app.onError((err, c) => {
       message: json.error.internalServerError,
       statusCode: 500,
     }),
-    500
+    500,
   );
 });
 
 // --- API Routes ---
 const route = app
   .route("/v1/auth", authRouterV1)
-  .route("/v1/files", fileRouterV1)
+  .route("/v1/files", filetRouterV1)
   .route("/v1/screws", screwRouterV1)
   .route("/v1/customers", customerRouterV1)
   .route("/v1/customerCommon", customerCommonRouterV1)
+  .route("/v1/import", importRouterV1)
   .route("/v2/screws", screwRouterV2);
 
 export default app;

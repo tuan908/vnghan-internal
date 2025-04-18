@@ -256,9 +256,9 @@ export default function CustomerForm() {
                           <FormItem className="flex flex-col gap-y-2">
                             <FormLabel>Nhu cầu</FormLabel>
                             <Textarea
-                                {...field}
-                                className="resize-none h-12 overflow-y-auto"
-                              />
+                              {...field}
+                              className="resize-none h-12 overflow-y-auto"
+                            />
                           </FormItem>
                         )}
                       />

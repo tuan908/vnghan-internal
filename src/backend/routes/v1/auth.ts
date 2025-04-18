@@ -1,4 +1,4 @@
-import DbSchema from "@/backend/schema";
+import { DbSchema } from "@/backend/db/schema";
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { tryCatch } from "@/shared/utils";

@@ -9,7 +9,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-const screwMaterials = pgTable("t_screw_material", {
+export const ScrewMaterial = pgTable("t_screw_material", {
   id: serial("id").primaryKey(),
   name: text("name"),
   note: text("note"),
@@ -18,7 +18,7 @@ const screwMaterials = pgTable("t_screw_material", {
   isDeleted: boolean("is_deleted").default(false),
 });
 
-const screwUnits = pgTable("t_screw_unit", {
+export const ScrewUnit = pgTable("t_screw_unit", {
   id: serial("id").primaryKey(),
   name: text("name"),
   detail: text("detail"),
@@ -28,7 +28,7 @@ const screwUnits = pgTable("t_screw_unit", {
   isDeleted: boolean("is_deleted").default(false),
 });
 
-const screwTypes = pgTable("t_screw_type", {
+export const ScrewType = pgTable("t_screw_type", {
   id: serial("id").primaryKey(),
   name: text("name"),
   note: text("note"),
@@ -37,7 +37,7 @@ const screwTypes = pgTable("t_screw_type", {
   isDeleted: boolean("is_deleted").default(false),
 });
 
-const screwSizes = pgTable("t_screw_size", {
+export const ScrewSize = pgTable("t_screw_size", {
   id: serial("id").primaryKey(),
   name: text("name"),
   note: text("note"),
@@ -46,7 +46,7 @@ const screwSizes = pgTable("t_screw_size", {
   isDeleted: boolean("is_deleted").default(false),
 });
 
-export const customers = pgTable("t_customer", {
+export const Customer = pgTable("t_customer", {
   id: serial("id").primaryKey(),
   name: text("name"),
   phone: text("phone"),
@@ -59,14 +59,14 @@ export const customers = pgTable("t_customer", {
   isDeleted: boolean("is_deleted").default(false),
   need: text("need").default(""),
   // ✅ Audit fields
-  createdBy: integer("created_by").references(() => users.id),
-  updatedBy: integer("updated_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => User.id),
+  updatedBy: integer("updated_by").references(() => User.id),
 
   // 🧩 Optional: Ownership / responsibility
-  assignedTo: integer("assigned_to").references(() => users.id),
+  assignedTo: integer("assigned_to").references(() => User.id),
 });
 
-export const platforms = pgTable("t_platform", {
+export const Platform = pgTable("t_platform", {
   id: serial("id").primaryKey(),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -74,39 +74,39 @@ export const platforms = pgTable("t_platform", {
   isDeleted: boolean("is_deleted").default(false),
 });
 
-export const customersPlatforms = pgTable("t_customer_platform", {
+export const CustomerPlatform = pgTable("t_customer_platform", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id")
     .notNull()
-    .references(() => customers.id),
+    .references(() => Customer.id),
   platformId: integer("platform_id")
     .notNull()
-    .references(() => platforms.id),
+    .references(() => Platform.id),
   // needId: integer("need_id")
   //   .notNull()
   //   .references(() => needs.id),
 
   userId: integer("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => User.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isDeleted: boolean("is_deleted").default(false),
 });
 
-const screws = pgTable("t_screw", {
+export const Screw = pgTable("t_screw", {
   id: serial("id").primaryKey(),
   name: text("name"),
   description: text("description"),
   componentTypeId: integer("type_id")
     .notNull()
-    .references(() => screwTypes.id),
+    .references(() => ScrewType.id),
   sizeId: integer("size_id")
     .notNull()
-    .references(() => screwSizes.id),
+    .references(() => ScrewSize.id),
   materialId: integer("material_id")
     .notNull()
-    .references(() => screwMaterials.id),
+    .references(() => ScrewMaterial.id),
   note: text("note"),
   price: text("price"),
   quantity: text("quantity"),
@@ -115,7 +115,7 @@ const screws = pgTable("t_screw", {
   isDeleted: boolean("is_deleted").default(false),
 });
 
-const screwQuestions = pgTable("t_screw_question", {
+export const ScrewQuestion = pgTable("t_screw_question", {
   id: serial("id").primaryKey(),
   name: text("name"),
   data: jsonb("data"),
@@ -125,7 +125,7 @@ const screwQuestions = pgTable("t_screw_question", {
   isDeleted: boolean("is_deleted").default(false),
 });
 
-const screwInstructions = pgTable("t_screw_instruction", {
+export const ScrewInstruction = pgTable("t_screw_instruction", {
   id: serial("id").primaryKey(),
   name: text("name"),
   data: jsonb("data"),
@@ -135,17 +135,17 @@ const screwInstructions = pgTable("t_screw_instruction", {
   isDeleted: boolean("is_deleted").default(false),
 });
 
-const screwImages = pgTable("t_screw_images", {
+export const ScrewImage = pgTable("t_screw_images", {
   id: serial("id").primaryKey(),
   url: text("name"),
   note: text("note"),
-  screwId: integer("screw_id").references(() => screws.id),
+  screwId: integer("screw_id").references(() => Screw.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isDeleted: boolean("is_deleted").default(false),
 });
 
-export const needs = pgTable("t_need", {
+export const Need = pgTable("t_need", {
   id: serial("id").primaryKey(),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -153,37 +153,19 @@ export const needs = pgTable("t_need", {
   isDeleted: boolean("is_deleted").default(false),
 });
 
-export const users = pgTable("t_user", {
+export const User = pgTable("t_user", {
   id: serial("id").primaryKey(),
   username: text("username"),
   passwordHash: text("password_hash"),
-  role: text("role", {enum: ["001", "002", "003", "004"]}).default("001"), // Viewer, Editor, Owner, Administrator
+  role: text("role", { enum: ["001", "002", "003", "004"] }).default("001"), // Viewer, Editor, Owner, Administrator
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isDeleted: boolean("is_deleted").default(false),
 });
 
-const DbSchema = {
-  Screw: screws,
-  ScrewType: screwTypes,
-  ScrewSize: screwSizes,
-  ScrewQuestion: screwQuestions,
-  ScrewMaterial: screwMaterials,
-  ScrewImages: screwImages,
-  ScrewInstruction: screwInstructions,
-  ScrewUnit: screwUnits,
-  Customer: customers,
-  CustomersPlatforms: customersPlatforms,
-  Platform: platforms,
-  // Need: needs,
-  User: users,
-};
-
-export default DbSchema;
-
-export type ScrewEntity = Omit<typeof DbSchema.Screw.$inferSelect, "id">;
+export type ScrewEntity = Omit<typeof Screw.$inferSelect, "id">;
 export type CreateScrewDto = RecursivelyReplaceNullWithUndefined<
-  typeof DbSchema.Screw.$inferInsert
+  typeof Screw.$inferInsert
 >;
 
 // export type NeedDto = Omit<
@@ -192,6 +174,24 @@ export type CreateScrewDto = RecursivelyReplaceNullWithUndefined<
 // >;
 
 export type PlatformDto = Omit<
-  RecursivelyReplaceNullWithUndefined<typeof DbSchema.Platform.$inferSelect>,
+  RecursivelyReplaceNullWithUndefined<typeof Platform.$inferSelect>,
   "createdAt" | "updatedAt" | "isDeleted"
 >;
+
+const DbSchema = {
+  Customer,
+  CustomerPlatform,
+  Need,
+  Platform,
+  Screw,
+  ScrewImage,
+  ScrewInstruction,
+  ScrewMaterial,
+  ScrewQuestion,
+  ScrewSize,
+  ScrewType,
+  ScrewUnit,
+  User,
+};
+
+export { DbSchema };

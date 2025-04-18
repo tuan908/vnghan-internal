@@ -1,16 +1,156 @@
+"use client";
+
 import ExcelImporter from "@/frontend/components/features/excel/excel-importer";
-import { ChevronLeft } from "lucide-react";
+import { Button } from "@/frontend/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from "@/frontend/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/frontend/components/ui/tabs";
+import { ChevronLeft, Download, Settings, Users } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function ImportPage() {
+  const [importType, setImportType] = useState<"screw" | "customer">("screw");
+
+  // Functions to handle template downloads
+  const downloadScrewTemplate = () => {
+    // In a real app, this would download an actual template file
+    console.log("Downloading screw template");
+    // Example of how you would trigger a real download:
+    // window.location.href = "/api/templates/screw-template.xlsx";
+  };
+
+  const downloadCustomerTemplate = () => {
+    // In a real app, this would download an actual template file
+    console.log("Downloading customer template");
+    // Example of how you would trigger a real download:
+    // window.location.href = "/api/templates/customer-template.xlsx";
+  };
+
   return (
-    <main className="container mx-auto py-8">
-      <Link href="/" className="flex gap-x-2 items-center">
-        <ChevronLeft size={24} />
+    <main className="container mx-auto py-8 px-4">
+      {/* Navigation */}
+      <Link
+        href="/"
+        className="flex gap-x-2 items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+      >
+        <ChevronLeft size={20} />
         <span>Về trang chủ</span>
       </Link>
-      <h1 className="text-3xl font-bold mb-6">Excel Data Import</h1>
-      <ExcelImporter />
+
+      {/* Page Title */}
+      {/* <h1 className="text-3xl font-bold mb-8 text-gray-800">Excel Data Import</h1> */}
+
+      {/* Tabs Interface */}
+      <Tabs
+        defaultValue="screw"
+        value={importType}
+        onValueChange={(value) => setImportType(value as "screw" | "customer")}
+        className="max-w-4xl"
+      >
+        <TabsList className="grid grid-cols-2 mb-8">
+          <TabsTrigger value="screw" className="flex items-center gap-2">
+            <Settings size={16} />
+            <span>Import Screws</span>
+          </TabsTrigger>
+          <TabsTrigger value="customer" className="flex items-center gap-2">
+            <Users size={16} />
+            <span>Import Customers</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="screw">
+          <Card className="mb-6 border-gray-100 shadow-sm">
+            <CardHeader className="pb-2">
+              <h2 className="text-xl font-semibold">Screw Data Import</h2>
+              <CardDescription>
+                Import your screw inventory data from an Excel spreadsheet
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6 flex items-center justify-between">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Template Format</h3>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li>• Column A: Product </li>
+                    <li>• Column B: Description</li>
+                    <li>• Column C: Size (mm)</li>
+                    <li>• Column D: Material</li>
+                    <li>• Column E: Quantity</li>
+                    <li>• Column F: Price</li>
+                  </ul>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={downloadScrewTemplate}
+                  className="h-9"
+                >
+                  <Download size={16} className="mr-2" />
+                  Download Template
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Excel Importer for Screws */}
+          <ExcelImporter
+            type="screw"
+            apiEndpoint="/api/import/screws"
+            queryKey={["SCREW"]}
+          />
+        </TabsContent>
+
+        <TabsContent value="customer">
+          <Card className="mb-6 border-gray-100 shadow-sm">
+            <CardHeader className="pb-2">
+              <h2 className="text-xl font-semibold">Customer Data Import</h2>
+              <CardDescription>
+                Import your customer information from an Excel spreadsheet
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6 flex items-center justify-between">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Template Format</h3>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li>• Column A: Tên khách hàng</li>
+                    <li>• Column B: SĐT</li>
+                    <li>• Column C: Địa chỉ</li>
+                    <li>• Column D: Nền tàng</li>
+                    <li>• Column E: Nhu cầu</li>
+                    <li>• Column F: Tiền</li>
+                    <li>• Column G: Thời gian nhắn lại</li>
+                  </ul>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={downloadCustomerTemplate}
+                  className="h-9"
+                >
+                  <Download size={16} className="mr-2" />
+                  Download Template
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Excel Importer for Customers */}
+          <ExcelImporter
+            type="customer"
+            apiEndpoint="/api/import/customers"
+            queryKey={["CUSTOMER"]}
+          />
+        </TabsContent>
+      </Tabs>
     </main>
   );
 }

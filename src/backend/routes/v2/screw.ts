@@ -1,4 +1,4 @@
-import { CreateScrewDto } from "@/backend/schema";
+import { CreateScrewDto } from "@/backend/db/schema/schema";
 import {
   DEFAULT_MATERIAL_ID,
   DEFAULT_SIZE_ID,
@@ -17,11 +17,11 @@ import { ScrewDto } from "@/shared/validations";
 import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { env } from "hono/adapter";
+import DbSchema from "../../db/schema/schema";
 import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../lib/api-response";
-import DbSchema from "../../schema";
 
 const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
   .get("/", async (c) => {

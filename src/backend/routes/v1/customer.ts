@@ -4,14 +4,14 @@ import json from "@/shared/i18n/locales/vi/vi.json";
 import { nullsToUndefined, toStringValue } from "@/shared/utils";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { DbSchema } from "../../db/schema";
 import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../lib/api-response";
-import DbSchema from "../../schema";
 
 const customerRouterV1 = new Hono()
-  .get("/", async c => {
+  .get("/", async (c) => {
     const db = c.get("db");
     const user = c.get("user");
     const isAdmin = user.role === UserRole.Admin;
@@ -28,25 +28,25 @@ const customerRouterV1 = new Hono()
       })
       .from(DbSchema.Customer)
       .innerJoin(
-        DbSchema.CustomersPlatforms,
-        eq(DbSchema.Customer.id, DbSchema.CustomersPlatforms.customerId)
+        DbSchema.CustomerPlatform,
+        eq(DbSchema.Customer.id, DbSchema.CustomerPlatform.customerId),
       )
       // .innerJoin(
       //   DbSchema.Need,
-      //   eq(DbSchema.CustomersPlatforms.needId, DbSchema.Need.id)
+      //   eq(DbSchema.CustomerPlatform.needId, DbSchema.Need.id)
       // )
       .innerJoin(
         DbSchema.Platform,
-        eq(DbSchema.CustomersPlatforms.platformId, DbSchema.Platform.id)
+        eq(DbSchema.CustomerPlatform.platformId, DbSchema.Platform.id),
       )
       .where(
         and(
           eq(DbSchema.Customer.isDeleted, false),
-          ...(isAdmin ? [] : [eq(DbSchema.Customer.assignedTo, user.id)])
-        )
+          ...(isAdmin ? [] : [eq(DbSchema.Customer.assignedTo, user.id)]),
+        ),
       );
 
-    const customers = nullsToUndefined(customerList).map(customer => {
+    const customers = nullsToUndefined(customerList).map((customer) => {
       return {
         id: customer.id,
         address: toStringValue(customer.address),
@@ -60,7 +60,7 @@ const customerRouterV1 = new Hono()
     });
     return c.json(createSuccessResponse(customers), 200);
   })
-  .get("/:id", async c => {
+  .get("/:id", async (c) => {
     const db = c.get("db");
     const id = parseInt(c.req.param("id"));
     if (isNaN(id)) {
@@ -68,7 +68,7 @@ const customerRouterV1 = new Hono()
         createErrorResponse({
           code: ErrorCodes.BAD_REQUEST,
           message: "Invalid ID",
-        })
+        }),
       );
     }
     const customer = await db
@@ -77,12 +77,12 @@ const customerRouterV1 = new Hono()
       .where(
         and(
           eq(DbSchema.Customer.id, id),
-          eq(DbSchema.Customer.isDeleted, false)
-        )
+          eq(DbSchema.Customer.isDeleted, false),
+        ),
       );
     return c.json(createSuccessResponse(customer));
   })
-  .post("/", async c => {
+  .post("/", async (c) => {
     const db = c.get("db");
     const user = c.get("user");
     const body = await c.req.json();
@@ -91,7 +91,7 @@ const customerRouterV1 = new Hono()
     //   .from(DbSchema.Need)
     //   .where(eq(DbSchema.Need.description, body.need));
     const [platform] = await db
-      .select({id: DbSchema.Platform.id})
+      .select({ id: DbSchema.Platform.id })
       .from(DbSchema.Platform)
       .where(eq(DbSchema.Platform.description, body.platform));
 
@@ -111,7 +111,7 @@ const customerRouterV1 = new Hono()
           code: ErrorCodes.BAD_REQUEST,
           message: json.error.badRequest,
         }),
-        400
+        400,
       );
     }
 
@@ -132,12 +132,12 @@ const customerRouterV1 = new Hono()
           message: json.error.unknownError,
           statusCode: 500,
         }),
-        500
+        500,
       );
     }
 
     const [customerPlatform] = await db
-      .insert(DbSchema.CustomersPlatforms)
+      .insert(DbSchema.CustomerPlatform)
       .values({
         customerId: customer.id,
         platformId: platform.id,
@@ -152,13 +152,13 @@ const customerRouterV1 = new Hono()
           message: json.error.unknownError,
           statusCode: 500,
         }),
-        500
+        500,
       );
     }
 
     return c.json(createSuccessResponse(nullsToUndefined(customer)));
   })
-  .put("/:id", async c => {
+  .put("/:id", async (c) => {
     const db = c.get("db");
     const user = c.get("user");
     const id = parseInt(c.req.param("id"));
@@ -167,7 +167,7 @@ const customerRouterV1 = new Hono()
         createErrorResponse({
           code: ErrorCodes.BAD_REQUEST,
           message: "Invalid ID",
-        })
+        }),
       );
     }
     const body = await c.req.json();
@@ -177,7 +177,7 @@ const customerRouterV1 = new Hono()
     //   .from(DbSchema.Need)
     //   .where(eq(DbSchema.Need.description, body.need));
     const [platform] = await db
-      .select({id: DbSchema.Platform.id})
+      .select({ id: DbSchema.Platform.id })
       .from(DbSchema.Platform)
       .where(eq(DbSchema.Platform.description, body.platform));
 
@@ -197,7 +197,7 @@ const customerRouterV1 = new Hono()
           code: ErrorCodes.BAD_REQUEST,
           message: json.error.badRequest,
         }),
-        400
+        400,
       );
     }
 
@@ -214,12 +214,12 @@ const customerRouterV1 = new Hono()
           message: json.error.unknownError,
           statusCode: 500,
         }),
-        500
+        500,
       );
     }
 
     const [customerPlatform] = await db
-      .update(DbSchema.CustomersPlatforms)
+      .update(DbSchema.CustomerPlatform)
       .set({
         customerId: customer.id,
         // needId: need.id,
@@ -227,9 +227,9 @@ const customerRouterV1 = new Hono()
       })
       .where(
         and(
-          eq(DbSchema.CustomersPlatforms.customerId, customer.id),
-          eq(DbSchema.CustomersPlatforms.userId, user.id)
-        )
+          eq(DbSchema.CustomerPlatform.customerId, customer.id),
+          eq(DbSchema.CustomerPlatform.userId, user.id),
+        ),
       )
       .returning();
 
@@ -240,13 +240,13 @@ const customerRouterV1 = new Hono()
           message: json.error.unknownError,
           statusCode: 500,
         }),
-        500
+        500,
       );
     }
 
     return c.json(createSuccessResponse(customer));
   })
-  .delete("/:id", async c => {
+  .delete("/:id", async (c) => {
     const db = c.get("db");
     const user = c.get("user");
     const id = parseInt(c.req.param("id"));
@@ -255,12 +255,12 @@ const customerRouterV1 = new Hono()
         createErrorResponse({
           code: ErrorCodes.BAD_REQUEST,
           message: "Invalid ID",
-        })
+        }),
       );
     }
     const [customer] = await db
       .update(DbSchema.Customer)
-      .set({isDeleted: true})
+      .set({ isDeleted: true })
       .where(eq(DbSchema.Customer.id, id))
       .returning();
 
@@ -271,18 +271,18 @@ const customerRouterV1 = new Hono()
           message: json.error.unknownError,
           statusCode: 500,
         }),
-        500
+        500,
       );
     }
 
     const [customerPlatform] = await db
-      .update(DbSchema.CustomersPlatforms)
-      .set({isDeleted: true})
+      .update(DbSchema.CustomerPlatform)
+      .set({ isDeleted: true })
       .where(
         and(
-          eq(DbSchema.CustomersPlatforms.customerId, id),
-          eq(DbSchema.CustomersPlatforms.userId, user.id)
-        )
+          eq(DbSchema.CustomerPlatform.customerId, id),
+          eq(DbSchema.CustomerPlatform.userId, user.id),
+        ),
       )
       .returning();
 
@@ -293,10 +293,10 @@ const customerRouterV1 = new Hono()
           message: json.error.unknownError,
           statusCode: 500,
         }),
-        500
+        500,
       );
     }
 
-    return c.json(createSuccessResponse({message: "Customer deleted"}));
+    return c.json(createSuccessResponse({ message: "Customer deleted" }));
   });
 export default customerRouterV1;
