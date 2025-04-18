@@ -37,7 +37,7 @@ import {
 import { Textarea } from "@/frontend/components/ui/textarea";
 import { useCreateCustomer } from "@/frontend/hooks/useCreateCustomer";
 import { useGetCustomers } from "@/frontend/hooks/useGetCustomers";
-import { useGetNeeds } from "@/frontend/hooks/useGetNeeds";
+// import { useGetNeeds } from "@/frontend/hooks/useGetNeeds";
 import { useGetPlatforms } from "@/frontend/hooks/useGetPlatforms";
 import { CustomerDto, CustomerSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,7 +64,7 @@ export default function CustomerForm() {
   const [activeDialog, setActiveDialog] = useState<DialogType>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { platforms } = useGetPlatforms();
-  const { needs } = useGetNeeds();
+  // const { needs } = useGetNeeds();
   const { customers } = useGetCustomers();
   const { createCustomer, isCreatingCustomer } = useCreateCustomer();
 
@@ -97,11 +97,11 @@ export default function CustomerForm() {
     () => (
       <CustomerTable
         customers={customers ?? []}
-        needs={needs ?? []}
+        // needs={needs ?? []}
         platforms={platforms ?? []}
       />
     ),
-    [customers, needs, platforms],
+    [customers, platforms],
   );
 
   return (
@@ -255,30 +255,10 @@ export default function CustomerForm() {
                         render={({ field }) => (
                           <FormItem className="flex flex-col gap-y-2">
                             <FormLabel>Nhu cầu</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Chọn nhu cầu" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <FormMessage />
-                              <SelectContent>
-                                <SelectGroup>
-                                  <SelectLabel>Nhu cầu</SelectLabel>
-                                  {(needs ?? []).map((x, i) => (
-                                    <SelectItem
-                                      key={`${x}#${i}`}
-                                      value={x?.description!}
-                                    >
-                                      {x?.description}
-                                    </SelectItem>
-                                  ))}
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
+                            <Textarea
+                                {...field}
+                                className="resize-none h-12 overflow-y-auto"
+                              />
                           </FormItem>
                         )}
                       />

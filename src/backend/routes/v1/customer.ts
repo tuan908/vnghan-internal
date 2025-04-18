@@ -22,7 +22,7 @@ const customerRouterV1 = new Hono()
         phone: DbSchema.Customer.phone,
         address: DbSchema.Customer.address,
         nextMessageTime: DbSchema.Customer.nextMessageTime,
-        need: DbSchema.Need.description,
+        need: DbSchema.Customer.need,
         platform: DbSchema.Platform.description,
         money: DbSchema.Customer.money,
       })
@@ -31,10 +31,10 @@ const customerRouterV1 = new Hono()
         DbSchema.CustomersPlatforms,
         eq(DbSchema.Customer.id, DbSchema.CustomersPlatforms.customerId)
       )
-      .innerJoin(
-        DbSchema.Need,
-        eq(DbSchema.CustomersPlatforms.needId, DbSchema.Need.id)
-      )
+      // .innerJoin(
+      //   DbSchema.Need,
+      //   eq(DbSchema.CustomersPlatforms.needId, DbSchema.Need.id)
+      // )
       .innerJoin(
         DbSchema.Platform,
         eq(DbSchema.CustomersPlatforms.platformId, DbSchema.Platform.id)
@@ -86,16 +86,26 @@ const customerRouterV1 = new Hono()
     const db = c.get("db");
     const user = c.get("user");
     const body = await c.req.json();
-    const [need] = await db
-      .select({id: DbSchema.Need.id})
-      .from(DbSchema.Need)
-      .where(eq(DbSchema.Need.description, body.need));
+    // const [need] = await db
+    //   .select({id: DbSchema.Need.id})
+    //   .from(DbSchema.Need)
+    //   .where(eq(DbSchema.Need.description, body.need));
     const [platform] = await db
       .select({id: DbSchema.Platform.id})
       .from(DbSchema.Platform)
       .where(eq(DbSchema.Platform.description, body.platform));
 
-    if (!need?.id || !platform?.id) {
+    // if (!need?.id || !platform?.id) {
+    //   return c.json(
+    //     createErrorResponse({
+    //       code: ErrorCodes.BAD_REQUEST,
+    //       message: json.error.badRequest,
+    //     }),
+    //     400
+    //   );
+    // }
+
+    if (!platform?.id) {
       return c.json(
         createErrorResponse({
           code: ErrorCodes.BAD_REQUEST,
@@ -130,7 +140,6 @@ const customerRouterV1 = new Hono()
       .insert(DbSchema.CustomersPlatforms)
       .values({
         customerId: customer.id,
-        needId: need.id,
         platformId: platform.id,
         userId: user.id,
       })
@@ -163,16 +172,26 @@ const customerRouterV1 = new Hono()
     }
     const body = await c.req.json();
 
-    const [need] = await db
-      .select({id: DbSchema.Need.id})
-      .from(DbSchema.Need)
-      .where(eq(DbSchema.Need.description, body.need));
+    // const [need] = await db
+    //   .select({id: DbSchema.Need.id})
+    //   .from(DbSchema.Need)
+    //   .where(eq(DbSchema.Need.description, body.need));
     const [platform] = await db
       .select({id: DbSchema.Platform.id})
       .from(DbSchema.Platform)
       .where(eq(DbSchema.Platform.description, body.platform));
 
-    if (!need?.id || !platform?.id) {
+    // if (!need?.id || !platform?.id) {
+    //   return c.json(
+    //     createErrorResponse({
+    //       code: ErrorCodes.BAD_REQUEST,
+    //       message: json.error.badRequest,
+    //     }),
+    //     400
+    //   );
+    // }
+
+    if (!platform?.id) {
       return c.json(
         createErrorResponse({
           code: ErrorCodes.BAD_REQUEST,
@@ -203,7 +222,7 @@ const customerRouterV1 = new Hono()
       .update(DbSchema.CustomersPlatforms)
       .set({
         customerId: customer.id,
-        needId: need.id,
+        // needId: need.id,
         platformId: platform.id,
       })
       .where(

@@ -57,6 +57,7 @@ export const customers = pgTable("t_customer", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isDeleted: boolean("is_deleted").default(false),
+  need: text("need").default(""),
   // ✅ Audit fields
   createdBy: integer("created_by").references(() => users.id),
   updatedBy: integer("updated_by").references(() => users.id),
@@ -81,9 +82,9 @@ export const customersPlatforms = pgTable("t_customer_platform", {
   platformId: integer("platform_id")
     .notNull()
     .references(() => platforms.id),
-  needId: integer("need_id")
-    .notNull()
-    .references(() => needs.id),
+  // needId: integer("need_id")
+  //   .notNull()
+  //   .references(() => needs.id),
 
   userId: integer("user_id")
     .notNull()
@@ -174,7 +175,7 @@ const DbSchema = {
   Customer: customers,
   CustomersPlatforms: customersPlatforms,
   Platform: platforms,
-  Need: needs,
+  // Need: needs,
   User: users,
 };
 
@@ -185,10 +186,10 @@ export type CreateScrewDto = RecursivelyReplaceNullWithUndefined<
   typeof DbSchema.Screw.$inferInsert
 >;
 
-export type NeedDto = Omit<
-  RecursivelyReplaceNullWithUndefined<typeof DbSchema.Need.$inferSelect>,
-  "createdAt" | "updatedAt" | "isDeleted"
->;
+// export type NeedDto = Omit<
+//   RecursivelyReplaceNullWithUndefined<typeof DbSchema.Need.$inferSelect>,
+//   "createdAt" | "updatedAt" | "isDeleted"
+// >;
 
 export type PlatformDto = Omit<
   RecursivelyReplaceNullWithUndefined<typeof DbSchema.Platform.$inferSelect>,

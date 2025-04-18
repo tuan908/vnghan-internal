@@ -16,13 +16,13 @@ const customerCommonRouterV1 = new Hono()
       .where(eq(DbSchema.Platform.isDeleted, false));
     return c.json(createSuccessResponse(nullsToUndefined(results)));
   })
-  .get("/needs", async (c) => {
-    const db = c.get("db");
-    const results = await db
-      .select({ id: DbSchema.Need.id, description: DbSchema.Need.description })
-      .from(DbSchema.Need)
-      .where(eq(DbSchema.Need.isDeleted, false));
-    return c.json(createSuccessResponse(nullsToUndefined(results)));
-  });
+  // .get("/needs", async (c) => {
+  //   const db = c.get("db");
+  //   const results = await db
+  //     .select({ id: DbSchema.Need.id, description: DbSchema.Need.description })
+  //     .from(DbSchema.Need)
+  //     .where(eq(DbSchema.Need.isDeleted, false));
+  //   return c.json(createSuccessResponse(nullsToUndefined(results)));
+  // });
 
 export default customerCommonRouterV1;
