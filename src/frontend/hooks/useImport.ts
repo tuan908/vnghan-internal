@@ -3,10 +3,11 @@ import { clientApiV1 } from "@/shared/utils/hono-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { errorToast, successToast } from "../components/ui/toast";
 
-const mutationFn = async ({ file }: { file?: File }) => {
+const mutationFn = async ({ file, type }: { file?: File; type: string }) => {
   const res = await clientApiV1.import.$post({
     form: {
       file,
+      type,
     },
   });
   const resJson = await res.json();

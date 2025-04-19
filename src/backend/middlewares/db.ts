@@ -1,8 +1,8 @@
-import type { ServerEnvironment } from "@/shared/types";
 import { neon, Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import type { MiddlewareHandler } from "hono";
 import { DbSchema } from "../db/schema";
+import type { Database, ServerEnvironment } from "../types";
 
 /**
  * Create a Hono middleware for database access using Neon's HTTP client
@@ -15,7 +15,7 @@ export const createDbMiddleware = (
   connectionStringOverride?: string,
 ): MiddlewareHandler<{
   Bindings: ServerEnvironment;
-  Variables: { db: ReturnType<typeof drizzle> };
+  Variables: { db: Database };
 }> => {
   return async (c, next) => {
     const start = Date.now();

@@ -1,4 +1,4 @@
-import { drizzle } from "drizzle-orm/neon-serverless";
+import { Database } from "../types";
 
 export interface ImportService {
   /**
@@ -10,9 +10,10 @@ export interface ImportService {
    * @throws Error if import fails (transactional)
    */
   importCustomers(
-    db: ReturnType<typeof drizzle>,
+    db: Database,
     file: Buffer | ReadableStream,
     fileType: "csv" | "excel",
+    operatorId: number,
     options?: CustomerImportOptions,
   ): Promise<CustomerImportResult>;
 

@@ -1,9 +1,3 @@
-export interface ServerEnvironment {
-  DATABASE_URL: string;
-  REDIS_URL: string;
-  REDIS_TOKEN: string;
-}
-
 export interface ApiResponse<T = unknown> {
   success: boolean;
   status: {

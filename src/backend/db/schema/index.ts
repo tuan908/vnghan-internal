@@ -78,10 +78,16 @@ export const CustomerPlatform = pgTable("t_customer_platform", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id")
     .notNull()
-    .references(() => Customer.id),
+    .references(() => Customer.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   platformId: integer("platform_id")
     .notNull()
-    .references(() => Platform.id),
+    .references(() => Platform.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   // needId: integer("need_id")
   //   .notNull()
   //   .references(() => needs.id),
@@ -163,20 +169,31 @@ export const User = pgTable("t_user", {
   isDeleted: boolean("is_deleted").default(false),
 });
 
-export type ScrewEntity = Omit<typeof Screw.$inferSelect, "id">;
-export type CreateScrewDto = RecursivelyReplaceNullWithUndefined<
-  typeof Screw.$inferInsert
->;
+export const ExcelTemplate = pgTable("t_excel_template", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // e.g. "Customer Import"
+  description: text("description"), // optional
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  isDeleted: boolean("is_deleted").default(false),
+});
 
-// export type NeedDto = Omit<
-//   RecursivelyReplaceNullWithUndefined<typeof DbSchema.Need.$inferSelect>,
-//   "createdAt" | "updatedAt" | "isDeleted"
-// >;
+export const ExcelTemplateHeader = pgTable("t_excel_template_header", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id")
+    .notNull()
+    .references(() => ExcelTemplate.id, { onDelete: "cascade" }),
 
-export type PlatformDto = Omit<
-  RecursivelyReplaceNullWithUndefined<typeof Platform.$inferSelect>,
-  "createdAt" | "updatedAt" | "isDeleted"
->;
+  label: text("label").notNull(), // Column title in Excel
+  key: text("key").notNull(), // Corresponding field in system
+  order: integer("order").notNull(), // Order in Excel
+  exampleValue: text("example_value"), // Optional example
+  required: boolean("required").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  isDeleted: boolean("is_deleted").default(false),
+});
 
 const DbSchema = {
   Customer,
@@ -192,6 +209,22 @@ const DbSchema = {
   ScrewType,
   ScrewUnit,
   User,
+  ExcelTemplate,
+  ExcelTemplateHeader,
 };
 
 export { DbSchema };
+export type ScrewEntity = Omit<typeof Screw.$inferSelect, "id">;
+export type CreateScrewDto = RecursivelyReplaceNullWithUndefined<
+  typeof Screw.$inferInsert
+>;
+
+// export type NeedDto = Omit<
+//   RecursivelyReplaceNullWithUndefined<typeof DbSchema.Need.$inferSelect>,
+//   "createdAt" | "updatedAt" | "isDeleted"
+// >;
+
+export type PlatformDto = Omit<
+  RecursivelyReplaceNullWithUndefined<typeof Platform.$inferSelect>,
+  "createdAt" | "updatedAt" | "isDeleted"
+>;

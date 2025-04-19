@@ -1,21 +1,20 @@
-import { drizzle } from "drizzle-orm/neon-serverless";
 import { Context, Hono } from "hono";
 import { logger } from "hono/logger";
 
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
-import type { ServerEnvironment } from "@/shared/types";
 import { createErrorResponse } from "@/shared/utils/api-response";
 import { Session } from "@/shared/utils/session";
+import type { Database, ServerEnvironment } from "./types";
 
 // Middleware + Routes
 import { MiddlewareFactory } from "./middlewares";
 import authRouterV1 from "./routes/v1/auth";
 import customerRouterV1 from "./routes/v1/customer";
 import customerCommonRouterV1 from "./routes/v1/customerCommon";
-import filetRouterV1 from "./routes/v1/file";
 import importRouterV1 from "./routes/v1/import";
 import screwRouterV1 from "./routes/v1/screw";
+import templateRouterV1 from "./routes/v1/templates";
 import userRouteV1 from "./routes/v1/user";
 import screwRouterV2 from "./routes/v2/screw";
 import { ImportFileExtension } from "./types";
@@ -23,7 +22,7 @@ import { ImportFileExtension } from "./types";
 // Extend Hono Context types
 declare module "hono" {
   interface ContextVariableMap {
-    db: ReturnType<typeof drizzle>;
+    db: Database;
     user: Session;
     fileBuffer: Buffer<any>;
     fileType: ImportFileExtension;
@@ -83,7 +82,7 @@ app.onError((err, c) => {
 // --- API Routes ---
 const route = app
   .route("/v1/auth", authRouterV1)
-  .route("/v1/files", filetRouterV1)
+  .route("/v1/templates", templateRouterV1)
   .route("/v1/screws", screwRouterV1)
   .route("/v1/customers", customerRouterV1)
   .route("/v1/customerCommon", customerCommonRouterV1)

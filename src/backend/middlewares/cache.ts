@@ -1,5 +1,4 @@
 import json from "@/shared/i18n/locales/vi/vi.json";
-import type { ServerEnvironment } from "@/shared/types";
 import type { Context, MiddlewareHandler, Next } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import {
@@ -14,10 +13,10 @@ import {
   defaultOptions,
   invalidateCache,
 } from "../lib/cache";
+import type { ServerEnvironment } from "../types";
 
 let cacheStore: RedisCacheStore | null = null;
 
-// Cache middleware factory
 // Cache middleware factory
 export const createCacheMiddleware = (
   options: CacheOptions = {},

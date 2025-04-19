@@ -21,19 +21,26 @@ import { useState } from "react";
 export default function ImportPage() {
   const [importType, setImportType] = useState<"screw" | "customer">("screw");
 
-  // Functions to handle template downloads
-  const downloadScrewTemplate = () => {
-    // In a real app, this would download an actual template file
-    console.log("Downloading screw template");
-    // Example of how you would trigger a real download:
-    // window.location.href = "/api/templates/screw-template.xlsx";
+  // Trigger browser download using a hidden <a> element
+  const downloadFile = (url: string, filename: string) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
+  // Call this for Screw template
+  const downloadScrewTemplate = () => {
+    const url = `/api/v1/templates?type=screw`;
+    downloadFile(url, "screw-template.xlsx");
+  };
+
+  // Call this for Customer template
   const downloadCustomerTemplate = () => {
-    // In a real app, this would download an actual template file
-    console.log("Downloading customer template");
-    // Example of how you would trigger a real download:
-    // window.location.href = "/api/templates/customer-template.xlsx";
+    const url = `/api/v1/templates?type=customer`;
+    downloadFile(url, "customer-template.xlsx");
   };
 
   return (

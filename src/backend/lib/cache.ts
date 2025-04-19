@@ -108,6 +108,8 @@ export const defaultOptions: CacheOptions = {
   varyByHeaders: [],
   cacheControl: "public, max-age=60",
   namespace: "hono-cache:",
+  REDIS_TOKEN: process.env.REDIS_URL,
+  REDIS_URL: process.env.REDIS_TOKEN,
 };
 
 // Helper to encode response body to string

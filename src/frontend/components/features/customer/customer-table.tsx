@@ -1,4 +1,4 @@
-import type { PlatformDto } from "@/backend/schema";
+import type { PlatformDto } from "@/backend/db/schema";
 import { useDeleteCustomer } from "@/frontend/hooks/useDeleteCustomer";
 import { useEditCustomer } from "@/frontend/hooks/useEditCustomer";
 import { useIntlFormatter } from "@/frontend/hooks/useIntlFormatter";

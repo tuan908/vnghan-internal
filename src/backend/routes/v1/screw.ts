@@ -1,4 +1,4 @@
-import { DbSchema, type CreateScrewDto } from "@/backend/schema";
+import { DbSchema, type CreateScrewDto } from "@/backend/db/schema";
 import {
   DEFAULT_MATERIAL_ID,
   DEFAULT_SIZE_ID,
@@ -6,11 +6,7 @@ import {
   ErrorCodes,
 } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
-import type {
-  ScrewMaterialDto,
-  ScrewTypeDto,
-  ServerEnvironment,
-} from "@/shared/types";
+import { ScrewMaterialDto, ScrewTypeDto } from "@/shared/types";
 import { nullsToUndefined, tryCatch } from "@/shared/utils";
 import { getCurrentDate } from "@/shared/utils/date";
 import type { ScrewDto } from "@/shared/validations";
@@ -21,6 +17,7 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../lib/api-response";
+import type { ServerEnvironment } from "../../types";
 
 const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
   .get("/", async (c) => {

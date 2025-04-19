@@ -1,10 +1,11 @@
 // services/customerImportService.ts
+import { getCurrentDate } from "@/shared/utils/date";
 import { parse as csvParse } from "csv-parse/sync";
-import { like } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/neon-serverless";
+import { and, eq, like } from "drizzle-orm";
 import * as XLSX from "xlsx";
 import { DbSchema } from "../db/schema";
 import type { CustomerModel } from "../models/Customer";
+import { Database } from "../types";
 import type {
   CustomerImportOptions,
   CustomerImportResult,
@@ -16,24 +17,29 @@ import type {
 
 export class CustomerImportServiceImpl implements ImportService {
   async importCustomers(
-    db: ReturnType<typeof drizzle>,
+    db: Database,
     file: Buffer | ReadableStream,
     fileType: "csv" | "excel",
-    options: CustomerImportOptions = {},
+    operatorId: number,
+    options: CustomerImportOptions = {}
   ): Promise<CustomerImportResult> {
     // Parse the file based on type
     const data = await this.parseFile(file, fileType, options);
 
     // Validate before proceeding
-    const validationResult = await this.validateCustomerData(file, fileType);
+    const validationResult = await this.validateCustomerData(
+      file,
+      fileType,
+      options
+    );
     if (!validationResult.valid) {
       throw new Error(
-        "Validation failed: " + JSON.stringify(validationResult.errors),
+        "Validation failed: " + JSON.stringify(validationResult.errors)
       );
     }
 
     // Start a transaction
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async tx => {
       let customersCreated = 0;
       let customersUpdated = 0;
 
@@ -43,10 +49,7 @@ export class CustomerImportServiceImpl implements ImportService {
         const batch = data.slice(i, i + batchSize);
 
         for (const record of batch) {
-          const customerData = this.mapToCustomerModel(
-            record,
-            options.columnMapping,
-          );
+          const customerData = this.mapToCustomerModel(record);
 
           if (options.updateExisting) {
             // Try to find existing customer by name
@@ -60,18 +63,65 @@ export class CustomerImportServiceImpl implements ImportService {
               // Use onConflictDoUpdate for existing record
               await tx
                 .insert(DbSchema.Customer)
-                .values({ ...customerData, id: existingCustomer.id })
+                .values({...customerData, id: existingCustomer.id})
                 .onConflictDoUpdate({
                   target: DbSchema.Customer.id,
-                  set: customerData,
+                  set: {
+                    ...customerData,
+                    updatedBy: operatorId,
+                    updatedAt: getCurrentDate(),
+                  },
                 });
+
+              await tx
+                .update(DbSchema.CustomerPlatform)
+                .set({
+                  platformId: DbSchema.Platform.id,
+                  updatedAt: getCurrentDate(),
+                })
+                .from(DbSchema.CustomerPlatform)
+                .innerJoin(
+                  DbSchema.Platform,
+                  eq(DbSchema.CustomerPlatform.platformId, DbSchema.Platform.id)
+                )
+                .where(
+                  and(
+                    eq(
+                      DbSchema.CustomerPlatform.customerId,
+                      existingCustomer.id
+                    ),
+                    eq(DbSchema.CustomerPlatform.userId, operatorId),
+                    eq(DbSchema.Platform.description, customerData.platform)
+                  )
+                );
               customersUpdated++;
               continue;
             }
           }
 
           // Insert new customer
-          await tx.insert(DbSchema.Customer).values(customerData);
+          const [customer] = await tx
+            .insert(DbSchema.Customer)
+            .values({
+              ...customerData,
+              createdBy: operatorId,
+              assignedTo: operatorId,
+            })
+            .returning();
+          const [platform] = await tx
+            .select({
+              id: DbSchema.Platform.id,
+            })
+            .from(DbSchema.Platform)
+            .where(eq(DbSchema.Platform.description, customerData.platform));
+          await tx
+            .insert(DbSchema.CustomerPlatform)
+            .values({
+              customerId: customer?.id!,
+              platformId: platform?.id!,
+              userId: operatorId,
+            })
+            .returning();
           customersCreated++;
         }
       }
@@ -88,8 +138,9 @@ export class CustomerImportServiceImpl implements ImportService {
   async validateCustomerData(
     file: Buffer | ReadableStream,
     fileType: "csv" | "excel",
+    options: CustomerImportOptions = {}
   ): Promise<CustomerValidationResult> {
-    const data = await this.parseFile(file, fileType);
+    const data = await this.parseFile(file, fileType, options);
     const errors: CustomerValidationError[] = [];
     const warnings: CustomerValidationWarning[] = [];
 
@@ -130,7 +181,7 @@ export class CustomerImportServiceImpl implements ImportService {
   private async parseFile(
     file: Buffer | ReadableStream,
     fileType: "csv" | "excel",
-    options: CustomerImportOptions = {},
+    options: CustomerImportOptions = {}
   ): Promise<any[]> {
     let buffer: Buffer;
 
@@ -159,10 +210,26 @@ export class CustomerImportServiceImpl implements ImportService {
       });
       return records;
     } else if (fileType === "excel") {
-      const workbook = XLSX.read(buffer, { type: "buffer" });
+      const workbook = XLSX.read(buffer, {type: "buffer"});
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName!];
-      return XLSX.utils.sheet_to_json(worksheet!, { defval: "" });
+      const raw = XLSX.utils.sheet_to_json(worksheet!, {defval: ""});
+      const columnMapping = options.columnMapping ?? {};
+
+      const result = raw.map((row: any) => {
+        const newRow: Record<string, any> = {};
+
+        for (const [excelColumn, value] of Object.entries(row)) {
+          if (columnMapping[excelColumn]) {
+            const fieldName = columnMapping[excelColumn];
+            if (fieldName === "nextMessageTime")
+              newRow[fieldName] = new Date(value as string).toISOString();
+            newRow[fieldName] = value;
+          }
+        }
+        return newRow;
+      });
+      return result;
     }
 
     throw new Error("Unsupported file type");
@@ -170,7 +237,7 @@ export class CustomerImportServiceImpl implements ImportService {
 
   private mapToCustomerModel(
     record: any,
-    columnMapping?: Record<string, string>,
+    columnMapping?: Record<string, string>
   ): CustomerModel {
     if (!columnMapping) {
       // Default mapping assumes column names match model properties
@@ -180,7 +247,7 @@ export class CustomerImportServiceImpl implements ImportService {
     const customer: any = {};
 
     // Apply custom column mapping
-    Object.keys(columnMapping).forEach((sourceField) => {
+    Object.keys(columnMapping).forEach(sourceField => {
       const targetField = columnMapping[sourceField];
       customer[targetField!] = record[sourceField];
     });
@@ -196,5 +263,15 @@ export class CustomerImportServiceImpl implements ImportService {
   private isValidPhone(phone: string): boolean {
     // Simple validation - improve based on your requirements
     return /^[+]?[\d\s()-]{7,20}$/.test(phone);
+  }
+
+  private reverse(obj: Record<string, any>): Record<string, any> {
+    const reversed: Record<string, string> = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+      reversed[value] = key;
+    }
+
+    return reversed;
   }
 }

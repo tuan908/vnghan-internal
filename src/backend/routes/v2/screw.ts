@@ -1,4 +1,4 @@
-import { CreateScrewDto } from "@/backend/db/schema/schema";
+import { ServerEnvironment } from "@/backend/types";
 import {
   DEFAULT_MATERIAL_ID,
   DEFAULT_SIZE_ID,
@@ -7,17 +7,13 @@ import {
   PAGE_SIZE,
 } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
-import type {
-  ScrewMaterialDto,
-  ScrewTypeDto,
-  ServerEnvironment,
-} from "@/shared/types";
+import { ScrewMaterialDto, ScrewTypeDto } from "@/shared/types";
 import { nullsToUndefined } from "@/shared/utils";
 import { ScrewDto } from "@/shared/validations";
 import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { env } from "hono/adapter";
-import DbSchema from "../../db/schema/schema";
+import { CreateScrewDto, DbSchema } from "../../db/schema";
 import {
   createErrorResponse,
   createSuccessResponse,
