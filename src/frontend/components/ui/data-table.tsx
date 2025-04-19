@@ -4,13 +4,14 @@ import { CSS_TEXT_ELLIPSIS } from "@/shared/constants";
 import { cn } from "@/shared/utils";
 import { compareItems, rankItem } from "@tanstack/match-sorter-utils";
 import {
-  ColumnFiltersState,
-  FilterFn,
-  OnChangeFn,
-  RowSelectionState,
-  SortingFn,
-  SortingState,
-  VisibilityState,
+  type ColumnFiltersState,
+  type FilterFn,
+  type OnChangeFn,
+  type Row,
+  type RowSelectionState,
+  type SortingFn,
+  type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -38,6 +39,7 @@ type DataTableProps<TData> = {
   setRowSelection: OnChangeFn<RowSelectionState>;
   globalFilter: string;
   setGlobalFilter: OnChangeFn<string>;
+  getRowClassName: (row: Row<TData>) => string;
 }>;
 
 export function DataTable<TData>({
@@ -53,6 +55,7 @@ export function DataTable<TData>({
   setRowSelection,
   globalFilter,
   setGlobalFilter,
+  getRowClassName,
 }: DataTableProps<TData>) {
   const table = useReactTable({
     columns,
@@ -102,7 +105,7 @@ export function DataTable<TData>({
                       scope="col"
                       key={header.id}
                       colSpan={header.colSpan}
-                      className="sticky top-0 z-[9999] bg-slate-100 border-none p-2 text-center"
+                      className="sticky top-0 z-[9999] bg-slate-100 border-none p-2 text-center border-r"
                       style={{
                         width: `${header.getSize() / 16}rem`,
                       }}
@@ -150,8 +153,14 @@ export function DataTable<TData>({
               const row = rows[virtualRow.index]!;
               return (
                 <tr
-                  className="border-b"
+                  className={cn(
+                    "border-b hover:bg-slate-100",
+                    !getRowClassName || getRowClassName(row) === ""
+                      ? `odd:bg-white even:bg-slate-50`
+                      : getRowClassName(row),
+                  )}
                   key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
                   style={{
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${
@@ -164,7 +173,7 @@ export function DataTable<TData>({
                       <td
                         key={cell.id}
                         className={cn(
-                          "z-0 px-2 min-w-0 md:max-w-16 text-sm",
+                          "z-0 px-2 min-w-0 md:max-w-16 text-sm border-r",
                           CSS_TEXT_ELLIPSIS,
                         )}
                       >

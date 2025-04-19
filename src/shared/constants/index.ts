@@ -55,3 +55,5 @@ export const UserRoles = {
   Owner: "003",
   Administrator: "004",
 };
+
+export const DATE_FORMAT_DD_MM_YYYY_WITH_SLASH = "dd/MM/yyyy";

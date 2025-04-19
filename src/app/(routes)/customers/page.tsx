@@ -39,16 +39,22 @@ import { useCreateCustomer } from "@/frontend/hooks/useCreateCustomer";
 import { useGetCustomers } from "@/frontend/hooks/useGetCustomers";
 // import { useGetNeeds } from "@/frontend/hooks/useGetNeeds";
 import { useGetPlatforms } from "@/frontend/hooks/useGetPlatforms";
-import { CustomerDto, CustomerSchema } from "@/shared/validations";
+import { useSession } from "@/frontend/hooks/useSession";
+import { useAdminConfig } from "@/frontend/providers/AdminConfigProvider";
+import { RoleUtils } from "@/shared/utils";
+import { type CustomerDto, CustomerSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { deleteCookie } from "cookies-next";
 import { AnimatePresence } from "framer-motion";
 import { Plus, User } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 type DialogType = "user" | "instruction" | "question" | null;
 
 export default function CustomerForm() {
+  const router = useRouter();
   const createCustomerForm = useForm({
     defaultValues: {
       name: "",
@@ -67,6 +73,16 @@ export default function CustomerForm() {
   // const { needs } = useGetNeeds();
   const { customers } = useGetCustomers();
   const { createCustomer, isCreatingCustomer } = useCreateCustomer();
+  const { user, isFetchingUser } = useSession();
+
+  const { config } = useAdminConfig();
+
+  useEffect(() => {
+    if (!isFetchingUser && !user) {
+      router.push("/auth/signin");
+      deleteCookie("access_token");
+    }
+  }, [user, isFetchingUser]);
 
   const onSubmit = async (data: CustomerDto) => {
     const result = await createCustomer(data);
@@ -99,9 +115,11 @@ export default function CustomerForm() {
         customers={customers ?? []}
         // needs={needs ?? []}
         platforms={platforms ?? []}
+        config={config}
+        isAdmin={RoleUtils.isAdmin(user?.role!)}
       />
     ),
-    [customers, platforms],
+    [customers, platforms, user, config],
   );
 
   return (

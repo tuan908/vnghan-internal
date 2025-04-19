@@ -3,7 +3,7 @@ import { clientApiV1 } from "@/shared/utils/hono-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { errorToast, successToast } from "../components/ui/toast";
 
-const mutationFn = async ({file}: {file?: File}) => {
+const mutationFn = async ({ file }: { file?: File }) => {
   const res = await clientApiV1.import.$post({
     form: {
       file,
@@ -15,7 +15,7 @@ const mutationFn = async ({file}: {file?: File}) => {
 
 export const useImportExcel = () => {
   const queryClient = useQueryClient();
-  const {mutateAsync: importExcel, isPending: isProcessing} = useMutation({
+  const { mutateAsync: importExcel, isPending: isProcessing } = useMutation({
     mutationKey: ["IMPORT_EXCEL"],
     mutationFn,
     onSuccess: async () => {
@@ -24,7 +24,7 @@ export const useImportExcel = () => {
       });
       successToast();
     },
-    onError: error => errorToast(error.message),
+    onError: (error) => errorToast(error.message),
   });
-  return {importExcel, isProcessing};
+  return { importExcel, isProcessing };
 };

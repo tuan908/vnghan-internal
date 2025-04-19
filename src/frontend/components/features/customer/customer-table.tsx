@@ -1,20 +1,25 @@
-import type { PlatformDto } from "@/backend/db/schema";
+import type { PlatformDto } from "@/backend/schema";
 import { useDeleteCustomer } from "@/frontend/hooks/useDeleteCustomer";
 import { useEditCustomer } from "@/frontend/hooks/useEditCustomer";
+import { useIntlFormatter } from "@/frontend/hooks/useIntlFormatter";
+import type { AdminConfig } from "@/frontend/providers/AdminConfigProvider";
+import { DATE_FORMAT_DD_MM_YYYY_WITH_SLASH } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { cn } from "@/shared/utils";
-import { CustomerDto, CustomerSchema } from "@/shared/validations";
+import { isToday } from "@/shared/utils/date";
+import { type CustomerDto, CustomerSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type {
   ColumnDef,
   ColumnFiltersState,
+  Row,
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
 import { format } from "date-fns/format";
 import { AnimatePresence } from "framer-motion";
 import { Pencil, Trash2 } from "lucide-react";
-import { startTransition, useMemo, useState } from "react";
+import { startTransition, useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "../../ui/button";
 import { DataTable, fuzzySort } from "../../ui/data-table";
@@ -52,10 +57,14 @@ type DialogType = "edit" | "delete" | null;
 export function CustomerTable({
   customers,
   platforms,
+  config,
+  isAdmin,
   // needs,
 }: {
   customers: CustomerDto[];
   platforms: PlatformDto[];
+  config: AdminConfig;
+  isAdmin: boolean;
   // needs: NeedDto[];
 }) {
   const editCustomerForm = useForm({
@@ -72,6 +81,7 @@ export function CustomerTable({
   });
   const { editCustomer, isEditingCustomer } = useEditCustomer();
   const { deleteCustomer, isDeletingCustomer } = useDeleteCustomer();
+  const { formatCurrency, formatByTemplate } = useIntlFormatter();
 
   // Dialog state
   const [currentItem, setCurrentItem] = useState<CustomerDto | null>(null);
@@ -135,7 +145,11 @@ export function CustomerTable({
       {
         header: "SĐT",
         accessorKey: "phone",
-        cell: ({ row }) => <>{row.getValue("phone")} </>,
+        cell: ({ row }) => (
+          <div className="text-center">
+            {formatByTemplate(row.getValue("phone"), "### ### ####")}
+          </div>
+        ),
         filterFn: "includesString",
       },
       {
@@ -159,7 +173,12 @@ export function CustomerTable({
       {
         header: "Tiền",
         accessorKey: "money",
-        cell: ({ row }) => <>{row.getValue("money")} </>,
+        cell: ({ row }) => (
+          <div className={cn("text-right flex gap-x-2 justify-end")}>
+            <span>{formatCurrency(row.getValue("money"))}</span>
+            <span className="text-gray-500 pointer-events-none">VND</span>
+          </div>
+        ),
         filterFn: "includesString",
       },
       {
@@ -168,9 +187,9 @@ export function CustomerTable({
         cell: ({ row }) => {
           const formattedNextMessageTime = format(
             new Date(row.getValue("nextMessageTime")),
-            "yyyy-MM-dd hh:mm:ss",
+            DATE_FORMAT_DD_MM_YYYY_WITH_SLASH,
           );
-          return <>{formattedNextMessageTime}</>;
+          return <div className="text-center">{formattedNextMessageTime}</div>;
         },
         sortDescFirst: false,
         sortUndefined: "last",
@@ -192,7 +211,7 @@ export function CustomerTable({
         enableColumnFilter: false,
       },
     ],
-    [],
+    [config.todayHighlightColor],
   );
 
   const handleCloseDialog = () => {
@@ -209,6 +228,17 @@ export function CustomerTable({
     reset();
   });
 
+  const getRowStyles = useCallback(
+    (row: Row<CustomerDto>): string => {
+      const nextMessageTime = row.original.nextMessageTime;
+      if (isToday(nextMessageTime) && isAdmin) {
+        return config.todayHighlightColor;
+      }
+      return "";
+    },
+    [config.todayHighlightColor],
+  );
+
   return (
     <>
       <DataTable
@@ -222,7 +252,9 @@ export function CustomerTable({
         setColumnVisibility={setColumnVisibility}
         rowSelection={rowSelection}
         setRowSelection={setRowSelection}
+        getRowClassName={getRowStyles}
       />
+
       <AnimatePresence>
         {activeDialog === "edit" ? (
           <Dialog

@@ -16,6 +16,7 @@ import customerCommonRouterV1 from "./routes/v1/customerCommon";
 import filetRouterV1 from "./routes/v1/file";
 import importRouterV1 from "./routes/v1/import";
 import screwRouterV1 from "./routes/v1/screw";
+import userRouteV1 from "./routes/v1/user";
 import screwRouterV2 from "./routes/v2/screw";
 import { ImportFileExtension } from "./types";
 
@@ -87,6 +88,7 @@ const route = app
   .route("/v1/customers", customerRouterV1)
   .route("/v1/customerCommon", customerCommonRouterV1)
   .route("/v1/import", importRouterV1)
+  .route("/v1/users", userRouteV1)
   .route("/v2/screws", screwRouterV2);
 
 export default app;

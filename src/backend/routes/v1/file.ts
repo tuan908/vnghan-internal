@@ -7,9 +7,9 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { createErrorResponse } from "../../lib/api-response";
 
-const filetRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
-  .get("/templates", async c => {
-    const {type} = c.req.query();
+const filetRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
+  .get("/templates", async (c) => {
+    const { type } = c.req.query();
 
     const downloadLink = getDownloadUrl(`${type}-template.xlsx`);
     if (downloadLink === "")
@@ -19,7 +19,7 @@ const filetRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
           message: json.error.notFound,
           statusCode: 404,
         }),
-        404
+        404,
       );
 
     return c.redirect(downloadLink);
@@ -30,12 +30,12 @@ const filetRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
       "form",
       z.object({
         file: z.custom<File>(),
-      })
+      }),
     ),
-    async c => {
-      const {file} = c.req.valid("form");
-    }
+    async (c) => {
+      const { file } = c.req.valid("form");
+    },
   )
-  .post("/pdf", async c => {});
+  .post("/pdf", async (c) => {});
 
 export default filetRouterV1;

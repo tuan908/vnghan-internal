@@ -1,7 +1,7 @@
 // shared/constants/roles.ts
 export enum UserRole {
   Admin = "004",
-  Editor = "003",
-  Viewer = "002",
-  Guest = "001",
+  Owner = "003",
+  Editor = "002",
+  Viewer = "001",
 }

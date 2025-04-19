@@ -17,6 +17,7 @@ import { useEditScrew } from "@/frontend/hooks/useEditScrew";
 import { useGetScrewMaterials } from "@/frontend/hooks/useGetScrewMaterials";
 import { useGetScrews } from "@/frontend/hooks/useGetScrews";
 import { useGetScrewTypes } from "@/frontend/hooks/useGetScrewTypes";
+import { useIntlFormatter } from "@/frontend/hooks/useIntlFormatter";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { cn } from "@/shared/utils";
 import { ScrewDto, ScrewSchema } from "@/shared/validations";
@@ -59,6 +60,7 @@ export default function HomeContent() {
   const [rowSelection, setRowSelection] = useState({});
   // Dialog state
   const [currentItem, setCurrentItem] = useState<ScrewDto | null>(null);
+  const { formatCurrency } = useIntlFormatter();
 
   const editScrewForm = useForm<ScrewDto>({
     resolver: zodResolver(ScrewSchema),
@@ -157,7 +159,7 @@ export default function HomeContent() {
         header: json.table.price,
         cell: ({ row }) => (
           <div className={cn("text-right flex gap-x-2 justify-end")}>
-            <span>{row.original.price}</span>
+            <span>{formatCurrency(row.original.price)}</span>
             <span className="text-gray-500 pointer-events-none">VND</span>
           </div>
         ),

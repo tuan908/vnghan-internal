@@ -1,4 +1,5 @@
 import { Toaster } from "@/frontend/components/ui/sonner";
+import { AdminConfigProvider } from "@/frontend/providers/AdminConfigProvider";
 import { ReactQueryProvider } from "@/shared/providers";
 import type { Metadata } from "next";
 import "./globals.css";
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <ReactQueryProvider>
+          <AdminConfigProvider>{children}</AdminConfigProvider>
+        </ReactQueryProvider>
         <Toaster position="top-right" />
       </body>
     </html>

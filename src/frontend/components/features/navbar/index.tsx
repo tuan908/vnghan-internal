@@ -1,19 +1,23 @@
 "use client";
 
 import { UserRoles } from "@/shared/constants";
-import { cn, convertRole } from "@/shared/utils";
-import { Session } from "@/shared/utils/session";
+import { cn, convertRole, RoleUtils } from "@/shared/utils";
+import type { Session } from "@/shared/utils/session";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import { deleteCookie } from "cookies-next";
-import { LogOut, UserCircle } from "lucide-react";
+import { LogOut, Settings, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { redirect, usePathname, useRouter } from "next/navigation";
-import { use, useEffect } from "react";
-import { DropdownMenuItemWithIcon } from "../../ui/dropdown-menu";
+import { use, useEffect, useMemo, useState } from "react";
+import {
+  DropdownMenuItemWithIcon,
+  DropdownMenuSeparator,
+} from "../../ui/dropdown-menu";
+import { AdminConfigPanel } from "../admin/admin-config-panel";
 
 const ROUTES = [
   { pathname: "/", name: "Trang chủ" },
@@ -29,12 +33,15 @@ export default function Navbar({
   const session = use(sessionPromise);
   const router = useRouter();
   const pathname = usePathname();
+  const [adminConfigOpen, setAdminConfigOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (!session) {
       redirect("/auth/signin");
     }
   }, [session]);
+
+  const isAdmin = useMemo(() => RoleUtils.isAdmin(session?.role), []);
 
   const signOut = async () => {
     await deleteCookie("access_token");
@@ -63,6 +70,14 @@ export default function Navbar({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 bg-white">
+            {!isAdmin ? null : (
+              <DropdownMenuItemWithIcon
+                icon={Settings}
+                label="Cài đặt"
+                onClick={() => setAdminConfigOpen(true)}
+              />
+            )}
+            <DropdownMenuSeparator />
             <DropdownMenuItemWithIcon
               icon={LogOut}
               label="Đăng xuất"
@@ -70,6 +85,13 @@ export default function Navbar({
             />
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {isAdmin && (
+          <AdminConfigPanel
+            open={adminConfigOpen}
+            onOpenChange={setAdminConfigOpen}
+          />
+        )}
 
         <div
           className={cn(

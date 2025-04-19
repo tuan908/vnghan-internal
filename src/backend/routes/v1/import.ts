@@ -34,16 +34,16 @@ const fileUploadMiddleware = (): MiddlewareHandler => {
           createErrorResponse({
             code: ErrorCodes.BAD_REQUEST,
             message: json.error.badRequest,
-            errors: parseResult.error.errors.flatMap(x => ({
+            errors: parseResult.error.errors.flatMap((x) => ({
               code: x.code as string,
               field: x.path.join(","),
               message: x.message,
             })),
-          })
+          }),
         );
       }
 
-      const {file} = parseResult.data;
+      const { file } = parseResult.data;
 
       if (!file) {
         return c.json(
@@ -51,7 +51,7 @@ const fileUploadMiddleware = (): MiddlewareHandler => {
             code: ErrorCodes.BAD_REQUEST,
             message: json.error.invalidFile,
           }),
-          400
+          400,
         );
       }
 
@@ -68,7 +68,7 @@ const fileUploadMiddleware = (): MiddlewareHandler => {
           {
             error: "Unsupported file format. Please upload CSV or Excel file.",
           },
-          400
+          400,
         );
       }
 
@@ -83,20 +83,20 @@ const fileUploadMiddleware = (): MiddlewareHandler => {
       await next();
     } catch (error) {
       console.error("File upload error:", error);
-      return c.json({error: "Failed to process file upload"}, 500);
+      return c.json({ error: "Failed to process file upload" }, 500);
     }
   };
 };
 
-const importRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
-  .post("/validate", fileUploadMiddleware, async c => {
+const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
+  .post("/validate", fileUploadMiddleware, async (c) => {
     try {
       const fileBuffer = c.get("fileBuffer");
       const fileType = c.get("fileType");
 
       const validationResult = await importService.validateCustomerData(
         fileBuffer,
-        fileType
+        fileType,
       );
 
       return c.json(createSuccessResponse(validationResult), 200);
@@ -107,11 +107,11 @@ const importRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
           code: ErrorCodes.BAD_REQUEST,
           message: json.error.invalidFile,
         }),
-        500
+        500,
       );
     }
   })
-  .post("/", fileUploadMiddleware, async c => {
+  .post("/", fileUploadMiddleware, async (c) => {
     const fileBuffer = c.get("fileBuffer");
     const fileType = c.get("fileType");
     const db = c.get("db");
@@ -141,7 +141,7 @@ const importRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
       db,
       fileBuffer,
       fileType,
-      options
+      options,
     );
 
     return c.json(createSuccessResponse(importResult), 200);

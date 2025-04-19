@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/frontend/components/ui/popover";
+import { DATE_FORMAT_DD_MM_YYYY_WITH_SLASH } from "@/shared/constants";
 import { cn } from "@/shared/utils";
 
 interface DayPickerProps {
@@ -24,12 +25,16 @@ export function DatePicker({ date, onChange }: DayPickerProps) {
         <Button
           variant={"outline"}
           className={cn(
-            "w-full justify-start text-left font-normal border-none outline-none leading-none p-0",
+            "justify-start text-left font-normal border-none outline-none leading-none p-0",
             !date && "text-muted-foreground",
           )}
         >
           <CalendarIcon />
-          {date ? format(date, "yyyy-MM-dd hh:mm:ss") : <span>Chọn ngày</span>}
+          {date ? (
+            format(date, DATE_FORMAT_DD_MM_YYYY_WITH_SLASH)
+          ) : (
+            <span>Chọn ngày</span>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">

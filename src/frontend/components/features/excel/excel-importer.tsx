@@ -111,7 +111,7 @@ export default function ExcelImporter({
       }, 300);
 
       // Use the provided API endpoint if available
-      const result = await tryCatch(importExcel({ file, type }));
+      const result = await tryCatch(importExcel({ file }));
 
       clearInterval(progressInterval);
       setUploadProgress(100);

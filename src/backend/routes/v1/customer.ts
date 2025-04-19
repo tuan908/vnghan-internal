@@ -2,7 +2,8 @@ import { ErrorCodes } from "@/shared/constants";
 import { UserRole } from "@/shared/constants/roles";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { nullsToUndefined, toStringValue } from "@/shared/utils";
-import { and, eq } from "drizzle-orm";
+import { getCurrentDate } from "@/shared/utils/date";
+import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { DbSchema } from "../../db/schema";
 import {
@@ -44,7 +45,8 @@ const customerRouterV1 = new Hono()
           eq(DbSchema.Customer.isDeleted, false),
           ...(isAdmin ? [] : [eq(DbSchema.Customer.assignedTo, user.id)]),
         ),
-      );
+      )
+      .orderBy(desc(DbSchema.Customer.updatedAt));
 
     const customers = nullsToUndefined(customerList).map((customer) => {
       return {
@@ -115,15 +117,17 @@ const customerRouterV1 = new Hono()
       );
     }
 
-    const [customer] = await db
-      .insert(DbSchema.Customer)
-      .values({
-        ...body,
-        createdBy: user.id,
-        updatedBy: user.id,
-        assignedTo: user.id,
-      })
-      .returning();
+    const [customer] = await db.transaction(async (tx) => {
+      return await tx
+        .insert(DbSchema.Customer)
+        .values({
+          ...body,
+          createdBy: user.id,
+          updatedBy: user.id,
+          assignedTo: user.id,
+        })
+        .returning();
+    });
 
     if (!customer) {
       return c.json(
@@ -136,14 +140,17 @@ const customerRouterV1 = new Hono()
       );
     }
 
-    const [customerPlatform] = await db
-      .insert(DbSchema.CustomerPlatform)
-      .values({
-        customerId: customer.id,
-        platformId: platform.id,
-        userId: user.id,
-      })
-      .returning();
+    const [customerPlatform] = await db.transaction(async (tx) => {
+      return await tx
+        .insert(DbSchema.CustomerPlatform)
+        .values({
+          customerId: customer.id,
+          platformId: platform.id,
+          userId: user.id,
+          updatedAt: getCurrentDate(),
+        })
+        .returning();
+    });
 
     if (!customerPlatform) {
       return c.json(
@@ -201,11 +208,13 @@ const customerRouterV1 = new Hono()
       );
     }
 
-    const [customer] = await db
-      .update(DbSchema.Customer)
-      .set(body)
-      .where(eq(DbSchema.Customer.id, id))
-      .returning();
+    const [customer] = await db.transaction(async (tx) => {
+      return await tx
+        .update(DbSchema.Customer)
+        .set({ ...body, updatedAt: getCurrentDate() })
+        .where(eq(DbSchema.Customer.id, id))
+        .returning();
+    });
 
     if (!customer) {
       return c.json(
@@ -218,20 +227,23 @@ const customerRouterV1 = new Hono()
       );
     }
 
-    const [customerPlatform] = await db
-      .update(DbSchema.CustomerPlatform)
-      .set({
-        customerId: customer.id,
-        // needId: need.id,
-        platformId: platform.id,
-      })
-      .where(
-        and(
-          eq(DbSchema.CustomerPlatform.customerId, customer.id),
-          eq(DbSchema.CustomerPlatform.userId, user.id),
-        ),
-      )
-      .returning();
+    const [customerPlatform] = await db.transaction(async (tx) => {
+      return await tx
+        .update(DbSchema.CustomerPlatform)
+        .set({
+          // customerId: customer.id,
+          // needId: need.id,
+          platformId: platform.id,
+          updatedAt: getCurrentDate(),
+        })
+        .where(
+          and(
+            eq(DbSchema.CustomerPlatform.customerId, customer.id),
+            eq(DbSchema.CustomerPlatform.userId, user.id),
+          ),
+        )
+        .returning();
+    });
 
     if (!customerPlatform) {
       return c.json(
@@ -260,7 +272,7 @@ const customerRouterV1 = new Hono()
     }
     const [customer] = await db
       .update(DbSchema.Customer)
-      .set({ isDeleted: true })
+      .set({ isDeleted: true, updatedAt: getCurrentDate() })
       .where(eq(DbSchema.Customer.id, id))
       .returning();
 
@@ -277,7 +289,7 @@ const customerRouterV1 = new Hono()
 
     const [customerPlatform] = await db
       .update(DbSchema.CustomerPlatform)
-      .set({ isDeleted: true })
+      .set({ isDeleted: true, updatedAt: getCurrentDate() })
       .where(
         and(
           eq(DbSchema.CustomerPlatform.customerId, id),
