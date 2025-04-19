@@ -1,6 +1,6 @@
 import type { ServerEnvironment } from "@/shared/types";
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { neon, Pool } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
 import type { MiddlewareHandler } from "hono";
 import DbSchema from "../schema";
 
@@ -8,6 +8,9 @@ import DbSchema from "../schema";
  * Create a Hono middleware for database access using Neon's HTTP client
  * which is better suited for serverless environments like Cloudflare Workers
  */
+
+let pool: Pool | undefined = undefined;
+
 export const createDbMiddleware = (
   connectionStringOverride?: string,
 ): MiddlewareHandler<{
@@ -28,10 +31,12 @@ export const createDbMiddleware = (
 
       // Create a new SQL client for this request using HTTP mode
       // HTTP mode is better for serverless environments as it doesn't maintain persistent connections
-      const sql = neon(connectionString);
+      if (!pool) {
+        pool = new Pool({ connectionString: process.env.DATABASE_URL });
+      }
 
       // Create a Drizzle instance
-      const db = drizzle({ client: sql, schema: DbSchema, logger: true });
+      const db = drizzle({ client: pool, schema: DbSchema, logger: true });
 
       // Add to context
       c.set("db", db);

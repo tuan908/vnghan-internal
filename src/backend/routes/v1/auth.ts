@@ -14,6 +14,7 @@ import { Hono } from "hono";
 
 const authRouterV1 = new Hono()
   .post("/register", async (c) => {
+    const db = c.get("db");
     const { username, password } = await c.req.json();
 
     if (!username || !password) {
@@ -27,8 +28,7 @@ const authRouterV1 = new Hono()
       );
     }
 
-    const [existingUser] = await c
-      .get("db")
+    const [existingUser] = await db
       .select()
       .from(DbSchema.User)
       .where(eq(DbSchema.User.username, username));
@@ -45,14 +45,15 @@ const authRouterV1 = new Hono()
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [newUser] = await c
-      .get("db")
-      .insert(DbSchema.User)
-      .values({
-        username: username,
-        passwordHash: hashedPassword,
-      })
-      .returning();
+    const [newUser] = await db.transaction(async (tx) => {
+      return await tx
+        .insert(DbSchema.User)
+        .values({
+          username: username,
+          passwordHash: hashedPassword,
+        })
+        .returning();
+    });
 
     const tokenPromise = encrypt({
       id: newUser?.id!,

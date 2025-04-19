@@ -3,6 +3,7 @@ import type { RecursivelyReplaceNullWithUndefined } from "@/shared/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { UserRoles } from "../constants";
+import { UserRole } from "../constants/roles";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -100,3 +101,10 @@ export const toStringValue = (
 export function mapUndefinable<T>(value: T | undefined, defaultValue: T): T {
   return value !== undefined ? value : defaultValue;
 }
+
+export const RoleUtils = {
+  isViewer: (role?: string) => role === UserRole.Editor,
+  isEditor: (role?: string) => role === UserRole.Owner,
+  isOwner: (role?: string) => role === UserRole.Owner,
+  isAdmin: (role?: string) => role === UserRole.Admin,
+};

@@ -1,4 +1,4 @@
-import { CreateScrewDto } from "@/backend/schema";
+import type { CreateScrewDto } from "@/backend/schema";
 import {
   DEFAULT_MATERIAL_ID,
   DEFAULT_SIZE_ID,
@@ -12,7 +12,8 @@ import type {
   ServerEnvironment,
 } from "@/shared/types";
 import { nullsToUndefined, tryCatch } from "@/shared/utils";
-import { ScrewDto } from "@/shared/validations";
+import { getCurrentDate } from "@/shared/utils/date";
+import type { ScrewDto } from "@/shared/validations";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { env } from "hono/adapter";
@@ -79,10 +80,15 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
       quantity: newScrew.quantity.toString(),
       componentTypeId: screwType.id,
       materialId: screwMaterial.id,
+      createdAt: getCurrentDate(),
+      updatedAt: getCurrentDate(),
+      isDeleted: false,
     };
 
     const { data: result, error: insertError } = await tryCatch(
-      db.insert(DbSchema.Screw).values(entity).execute(),
+      db.transaction(async (tx) => {
+        return await tx.insert(DbSchema.Screw).values(entity);
+      }),
     );
     if (insertError)
       return c.json(
@@ -141,11 +147,13 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
     screw.materialId = material.id;
     screw.componentTypeId = type.id;
 
-    const [result] = await db
-      .update(DbSchema.Screw)
-      .set(screw)
-      .where(eq(DbSchema.Screw.id, screw.id))
-      .returning();
+    const [result] = await db.transaction(async (tx) => {
+      return await tx
+        .update(DbSchema.Screw)
+        .set(screw)
+        .where(eq(DbSchema.Screw.id, screw.id))
+        .returning();
+    });
 
     if (!result) {
       return c.json(
@@ -182,10 +190,12 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
       );
     }
 
-    const result = await db
-      .update(DbSchema.Screw)
-      .set({ isDeleted: true })
-      .where(eq(DbSchema.Screw.id, screw.id));
+    const result = await db.transaction(async (tx) => {
+      return await tx
+        .update(DbSchema.Screw)
+        .set({ isDeleted: true, updatedAt: getCurrentDate() })
+        .where(eq(DbSchema.Screw.id, screw.id));
+    });
 
     if (!result) {
       return c.json(

@@ -15,6 +15,7 @@ import customerRouterV1 from "./routes/v1/customer";
 import customerCommonRouterV1 from "./routes/v1/customerCommon";
 import fileRouterV1 from "./routes/v1/file";
 import screwRouterV1 from "./routes/v1/screw";
+import userRouteV1 from "./routes/v1/user";
 import screwRouterV2 from "./routes/v2/screw";
 
 // Extend Hono Context types
@@ -43,7 +44,7 @@ const cacheMiddleware = MiddlewareFactory.createCacheMiddleware({
 
 const dbMiddleware = MiddlewareFactory.createDbMiddleware();
 
-const app = new Hono<{Bindings: ServerEnvironment}>().basePath("/api");
+const app = new Hono<{ Bindings: ServerEnvironment }>().basePath("/api");
 
 // --- Global Logging ---
 app.use("*", logger());
@@ -70,7 +71,7 @@ app.onError((err, c) => {
       message: json.error.internalServerError,
       statusCode: 500,
     }),
-    500
+    500,
   );
 });
 
@@ -81,6 +82,7 @@ const route = app
   .route("/v1/screws", screwRouterV1)
   .route("/v1/customers", customerRouterV1)
   .route("/v1/customerCommon", customerCommonRouterV1)
+  .route("/v1/users", userRouteV1)
   .route("/v2/screws", screwRouterV2);
 
 export default app;

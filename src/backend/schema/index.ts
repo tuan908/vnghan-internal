@@ -157,7 +157,7 @@ export const users = pgTable("t_user", {
   id: serial("id").primaryKey(),
   username: text("username"),
   passwordHash: text("password_hash"),
-  role: text("role", {enum: ["001", "002", "003", "004"]}).default("001"), // Viewer, Editor, Owner, Administrator
+  role: text("role", { enum: ["001", "002", "003", "004"] }).default("001"), // Viewer, Editor, Owner, Administrator
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isDeleted: boolean("is_deleted").default(false),
