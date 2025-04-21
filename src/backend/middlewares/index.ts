@@ -1,7 +1,7 @@
-import { createCacheMiddleware } from "./cache";
-import { createDbMiddleware } from "./db";
-import { createJwtMiddleware } from "./jwt";
-import { createRateLimitMiddleware } from "./rate-limit";
+import { createCacheMiddleware } from "./cache.middleware";
+import { createDbMiddleware } from "./db.middleware";
+import { createJwtMiddleware } from "./jwt.middleware";
+import { createRateLimitMiddleware } from "./rate-limit.middleware";
 
 export const MiddlewareFactory = {
   createCacheMiddleware,

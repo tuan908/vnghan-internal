@@ -1,7 +1,7 @@
 import { QUERY_KEY } from "@/shared/constants";
 import { clientApiV1 } from "@/shared/utils/hono-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { errorToast, successToast } from "../components/ui/toast";
+import { errorToast } from "../components/ui/toast";
 
 const mutationFn = async ({ file, type }: { file?: File; type: string }) => {
   const res = await clientApiV1.import.$post({
@@ -23,7 +23,6 @@ export const useImportExcel = () => {
       await queryClient.invalidateQueries({
         queryKey: [QUERY_KEY.SCREW],
       });
-      successToast();
     },
     onError: (error) => errorToast(error.message),
   });

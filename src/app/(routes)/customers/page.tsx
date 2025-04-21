@@ -44,11 +44,10 @@ import { useAdminConfig } from "@/frontend/providers/AdminConfigProvider";
 import { RoleUtils } from "@/shared/utils";
 import { type CustomerDto, CustomerSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { deleteCookie } from "cookies-next";
 import { AnimatePresence } from "framer-motion";
 import { Plus, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 
 type DialogType = "user" | "instruction" | "question" | null;
@@ -73,17 +72,9 @@ export default function CustomerForm() {
   // const { needs } = useGetNeeds();
   const { customers } = useGetCustomers();
   const { createCustomer, isCreatingCustomer } = useCreateCustomer();
-  const { user, isFetchingUser } = useSession();
+  const { user } = useSession();
 
   const { config } = useAdminConfig();
-
-  useEffect(() => {
-    if (!isFetchingUser && !user) {
-      router.push("/auth/signin");
-      deleteCookie("access_token");
-    }
-  }, [user, isFetchingUser]);
-
   const onSubmit = async (data: CustomerDto) => {
     const result = await createCustomer(data);
     if (result) {
@@ -254,9 +245,9 @@ export default function CustomerForm() {
                                   {(platforms ?? []).map((x, i) => (
                                     <SelectItem
                                       key={`${x}#${i}`}
-                                      value={x?.description!}
+                                      value={x?.name!}
                                     >
-                                      {x?.description!}
+                                      {x?.name!}
                                     </SelectItem>
                                   ))}
                                 </SelectGroup>

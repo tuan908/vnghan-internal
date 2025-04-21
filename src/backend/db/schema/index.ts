@@ -1,4 +1,3 @@
-import type { RecursivelyReplaceNullWithUndefined } from "@/shared/types";
 import {
   boolean,
   integer,
@@ -68,7 +67,7 @@ export const Customer = pgTable("t_customer", {
 
 export const Platform = pgTable("t_platform", {
   id: serial("id").primaryKey(),
-  description: text("description"),
+  name: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isDeleted: boolean("is_deleted").default(false),
@@ -162,6 +161,7 @@ export const Need = pgTable("t_need", {
 export const User = pgTable("t_user", {
   id: serial("id").primaryKey(),
   username: text("username"),
+  name: text("name"),
   passwordHash: text("password_hash"),
   role: text("role", { enum: ["001", "002", "003", "004"] }).default("001"), // Viewer, Editor, Owner, Administrator
   createdAt: timestamp("created_at").defaultNow(),
@@ -214,17 +214,3 @@ const DbSchema = {
 };
 
 export { DbSchema };
-export type ScrewEntity = Omit<typeof Screw.$inferSelect, "id">;
-export type CreateScrewDto = RecursivelyReplaceNullWithUndefined<
-  typeof Screw.$inferInsert
->;
-
-// export type NeedDto = Omit<
-//   RecursivelyReplaceNullWithUndefined<typeof DbSchema.Need.$inferSelect>,
-//   "createdAt" | "updatedAt" | "isDeleted"
-// >;
-
-export type PlatformDto = Omit<
-  RecursivelyReplaceNullWithUndefined<typeof Platform.$inferSelect>,
-  "createdAt" | "updatedAt" | "isDeleted"
->;

@@ -1,7 +1,7 @@
 import { ErrorCodes } from "@/shared/constants";
-import { createErrorResponse } from "@/shared/utils/api-response";
 import { Redis } from "@upstash/redis";
 import type { Context, MiddlewareHandler, Next } from "hono";
+import { createErrorResponse } from "../lib/api-response";
 
 interface RedisRateLimitOptions {
   /**

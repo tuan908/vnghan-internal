@@ -1,11 +1,10 @@
-// services/customerImportService.ts
 import { getCurrentDate } from "@/shared/utils/date";
 import { parse as csvParse } from "csv-parse/sync";
 import { and, eq, like } from "drizzle-orm";
 import * as XLSX from "xlsx";
 import { DbSchema } from "../db/schema";
-import type { CustomerModel } from "../models/Customer";
-import { Database } from "../types";
+import type { CustomerModel } from "../models/customer.model";
+import type { Database } from "../types";
 import type {
   CustomerImportOptions,
   CustomerImportResult,
@@ -13,9 +12,9 @@ import type {
   CustomerValidationResult,
   CustomerValidationWarning,
   ImportService,
-} from "./ImportService";
+} from "./interfaces/import-service.interface";
 
-export class CustomerImportServiceImpl implements ImportService {
+export class ImportServiceImpl implements ImportService {
   async importCustomers(
     db: Database,
     file: Buffer | ReadableStream,
@@ -91,7 +90,7 @@ export class CustomerImportServiceImpl implements ImportService {
                       existingCustomer.id
                     ),
                     eq(DbSchema.CustomerPlatform.userId, operatorId),
-                    eq(DbSchema.Platform.description, customerData.platform)
+                    eq(DbSchema.Platform.name, customerData.platform)
                   )
                 );
               customersUpdated++;
@@ -113,7 +112,7 @@ export class CustomerImportServiceImpl implements ImportService {
               id: DbSchema.Platform.id,
             })
             .from(DbSchema.Platform)
-            .where(eq(DbSchema.Platform.description, customerData.platform));
+            .where(eq(DbSchema.Platform.name, customerData.platform));
           await tx
             .insert(DbSchema.CustomerPlatform)
             .values({
@@ -213,7 +212,7 @@ export class CustomerImportServiceImpl implements ImportService {
       const workbook = XLSX.read(buffer, {type: "buffer"});
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName!];
-      const raw = XLSX.utils.sheet_to_json(worksheet!, {defval: ""});
+      const raw = XLSX.utils.sheet_to_json(worksheet!, {defval: "", raw: false});
       const columnMapping = options.columnMapping ?? {};
 
       const result = raw.map((row: any) => {

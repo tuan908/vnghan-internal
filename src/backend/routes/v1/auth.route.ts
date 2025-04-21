@@ -1,20 +1,15 @@
-import { DbSchema } from "@/backend/db/schema";
+import { createErrorResponse, createSuccessResponse } from "@/backend/lib/api-response";
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { tryCatch } from "@/shared/utils";
-import {
-  createErrorResponse,
-  createSuccessResponse,
-} from "@/shared/utils/api-response";
 import { encrypt } from "@/shared/utils/session";
 import type { SignInFormValues } from "@/shared/validations";
 import bcrypt from "bcrypt";
-import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 
 const authRouterV1 = new Hono()
   .post("/register", async (c) => {
-    const db = c.get("db");
+    const userRepository = c.get("userRepository")
     const { username, password } = await c.req.json();
 
     if (!username || !password) {
@@ -28,10 +23,7 @@ const authRouterV1 = new Hono()
       );
     }
 
-    const [existingUser] = await db
-      .select()
-      .from(DbSchema.User)
-      .where(eq(DbSchema.User.username, username));
+    const existingUser = await userRepository.findBy({username})
 
     if (existingUser) {
       return c.json(
@@ -45,14 +37,9 @@ const authRouterV1 = new Hono()
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [newUser] = await db.transaction(async (tx) => {
-      return await tx
-        .insert(DbSchema.User)
-        .values({
-          username: username,
-          passwordHash: hashedPassword,
-        })
-        .returning();
+    const newUser = await userRepository.create({
+      username: username,
+      passwordHash: hashedPassword,
     });
 
     const tokenPromise = encrypt({
@@ -71,7 +58,7 @@ const authRouterV1 = new Hono()
     return c.json(createSuccessResponse({ token }));
   })
   .post("/login", async (c) => {
-    const db = c.get("db");
+    const userRepository = c.get("userRepository");
     const { username, password } = await c.req.json<SignInFormValues>();
 
     if (!username || !password) {
@@ -88,10 +75,7 @@ const authRouterV1 = new Hono()
     let existingUser;
 
     try {
-      const [user] = await db
-        .select()
-        .from(DbSchema.User)
-        .where(eq(DbSchema.User.username, username));
+      const user = await userRepository.findBy({username})
       existingUser = user;
     } catch (error) {
       console.error(error instanceof Error ? error?.cause : error);

@@ -1,6 +1,7 @@
 import { DbSchema } from "@/backend/db/schema";
-import type { CustomerImportOptions } from "@/backend/services/ImportService";
-import { CustomerImportServiceImpl } from "@/backend/services/ImportServiceImpl";
+import { invalidateCache } from "@/backend/lib/cache";
+import { ImportServiceImpl } from "@/backend/services/import.service";
+import type { CustomerImportOptions } from "@/backend/services/interfaces/import-service.interface";
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { eq } from "drizzle-orm";
@@ -12,31 +13,9 @@ import {
 } from "../../lib/api-response";
 import type { ImportFileExtension, ServerEnvironment } from "../../types";
 
-const importService = new CustomerImportServiceImpl();
+const importService = new ImportServiceImpl();
 
 const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
-  .post("/validate", async (c) => {
-    try {
-      const fileBuffer = c.get("fileBuffer");
-      const fileType = c.get("fileType");
-
-      const validationResult = await importService.validateCustomerData(
-        fileBuffer,
-        fileType,
-      );
-
-      return c.json(createSuccessResponse(validationResult), 200);
-    } catch (error) {
-      console.error("Validation error:", error);
-      return c.json(
-        createErrorResponse({
-          code: ErrorCodes.BAD_REQUEST,
-          message: json.error.invalidFile,
-        }),
-        500,
-      );
-    }
-  })
   .post("/", async (c) => {
     const db = c.get("db");
     const user = c.get("user");
@@ -162,6 +141,7 @@ const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
       },
     );
 
+    await invalidateCache();
     return c.json(createSuccessResponse(importResult), 200);
   });
 
