@@ -1,31 +1,38 @@
-import type { CreateScrewDto } from "@/backend/schema";
+import { InsertScrew } from "@/backend/models/screw.model";
+import { ServerEnvironment } from "@/backend/types";
 import {
   DEFAULT_MATERIAL_ID,
   DEFAULT_SIZE_ID,
   DEFAULT_TYPE_ID,
   ErrorCodes,
+  PAGE_SIZE,
 } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
-import type {
-  ScrewMaterialDto,
-  ScrewTypeDto,
-  ServerEnvironment,
-} from "@/shared/types";
-import { nullsToUndefined, tryCatch } from "@/shared/utils";
-import { getCurrentDate } from "@/shared/utils/date";
-import type { ScrewDto } from "@/shared/validations";
-import { eq } from "drizzle-orm";
+import { ScrewMaterialDto, ScrewTypeDto } from "@/shared/types";
+import { nullsToUndefined } from "@/shared/utils";
+import { ScrewDto } from "@/shared/validations";
+import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { env } from "hono/adapter";
+import { DbSchema } from "../../db/schema";
 import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../lib/api-response";
-import DbSchema from "../../schema";
 
-const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
+const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
   .get("/", async (c) => {
     const db = c.get("db");
+    const { page = "0" } = c.req.query();
+    const pageNumber = parseInt(page, 10) || 0;
+
+    const totalCountResult = await db
+      .select({ count: sql`count(*)`.mapWith(Number) })
+      .from(DbSchema.Screw)
+      .where(eq(DbSchema.Screw.isDeleted, false));
+
+    const totalCount = totalCountResult[0]?.count || 0;
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
     const screws = await db
       .select({
@@ -48,13 +55,27 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
         eq(DbSchema.Screw.componentTypeId, DbSchema.ScrewType.id),
       )
       .where(eq(DbSchema.Screw.isDeleted, false))
-      .orderBy(DbSchema.Screw.id);
+      .orderBy(DbSchema.Screw.id)
+      .limit(PAGE_SIZE)
+      .offset(pageNumber * PAGE_SIZE);
 
-    return c.json(createSuccessResponse(screws), 200);
+    return c.json(
+      createSuccessResponse(screws, {
+        pagination: {
+          page: pageNumber,
+          totalPages,
+          totalItems: totalCount,
+          pageSize: PAGE_SIZE,
+          hasNextPage: pageNumber < totalPages - 1,
+          hasPreviousPage: pageNumber > 0,
+        },
+      }),
+      200,
+    );
   })
   .post("/", async (c) => {
-    const db = c.get("db");
     const { REDIS_TOKEN, REDIS_URL } = env(c);
+    const db = c.get("db");
     const newScrew = await c.req.json<ScrewDto>();
 
     const [screwType, screwMaterial] = await Promise.all([
@@ -71,7 +92,7 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
         .then((res) => res[0] || { id: DEFAULT_MATERIAL_ID }),
     ]);
 
-    const entity: CreateScrewDto = {
+    const entity: InsertScrew = {
       sizeId: DEFAULT_SIZE_ID,
       description: newScrew.category,
       name: newScrew.name,
@@ -80,103 +101,20 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
       quantity: newScrew.quantity.toString(),
       componentTypeId: screwType.id,
       materialId: screwMaterial.id,
-      createdAt: getCurrentDate(),
-      updatedAt: getCurrentDate(),
-      isDeleted: false,
     };
 
-    const { data: result, error: insertError } = await tryCatch(
-      db.transaction(async (tx) => {
-        return await tx.insert(DbSchema.Screw).values(entity);
-      }),
-    );
-    if (insertError)
-      return c.json(
-        createErrorResponse({
-          code: ErrorCodes.INTERNAL_SERVER_ERROR,
-          message: json.error.internalServerError,
-        }),
-      );
-
+    const result = await db.insert(DbSchema.Screw).values(entity).execute();
     return c.json(createSuccessResponse({ data: result }), 200);
   })
   .patch("/:id", async (c) => {
-    const db = c.get("db");
     const { REDIS_TOKEN, REDIS_URL } = env(c);
+    const db = c.get("db");
     const body = await c.req.json<ScrewDto>();
-
-    const screwPromise = db
-      .select()
-      .from(DbSchema.Screw)
-      .where(eq(DbSchema.Screw.id, body.id!))
-      .limit(1);
-
-    const screwMaterialPromise = db
-      .select()
-      .from(DbSchema.ScrewMaterial)
-      .where(eq(DbSchema.ScrewMaterial.name, body.material!))
-      .limit(1);
-
-    const screwTypePromise = db
-      .select()
-      .from(DbSchema.ScrewType)
-      .where(eq(DbSchema.ScrewType.name, body.componentType!))
-      .limit(1);
-
-    const [[screw], [material], [type]] = await Promise.all([
-      screwPromise,
-      screwMaterialPromise,
-      screwTypePromise,
-    ]);
-
-    if (!screw || !material || !type) {
-      return c.json(
-        createErrorResponse({
-          code: ErrorCodes.INTERNAL_SERVER_ERROR,
-          message: json.error.unknownError,
-          statusCode: 500,
-        }),
-        404,
-      );
-    }
-
-    screw.name = body.name!;
-    screw.note = body.note!;
-    screw.price = body.price!;
-    screw.quantity = body.quantity!;
-    screw.materialId = material.id;
-    screw.componentTypeId = type.id;
-
-    const [result] = await db.transaction(async (tx) => {
-      return await tx
-        .update(DbSchema.Screw)
-        .set(screw)
-        .where(eq(DbSchema.Screw.id, screw.id))
-        .returning();
-    });
-
-    if (!result) {
-      return c.json(
-        createErrorResponse({
-          code: ErrorCodes.NOT_FOUND,
-          message: json.error.notFound,
-          statusCode: 404,
-        }),
-        404,
-      );
-    }
-
-    return c.json(createSuccessResponse({ data: result }), 200);
-  })
-  .delete("/:id", async (c) => {
-    const { REDIS_TOKEN, REDIS_URL } = env(c);
-    const db = c.get("db");
-    const req = await c.req.json<ScrewDto>();
 
     const [screw] = await db
       .select()
       .from(DbSchema.Screw)
-      .where(eq(DbSchema.Screw.id, req.id!))
+      .where(eq(DbSchema.Screw.id, body.id!))
       .limit(1);
 
     if (!screw) {
@@ -190,12 +128,67 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
       );
     }
 
-    const result = await db.transaction(async (tx) => {
-      return await tx
-        .update(DbSchema.Screw)
-        .set({ isDeleted: true, updatedAt: getCurrentDate() })
-        .where(eq(DbSchema.Screw.id, screw.id));
-    });
+    screw.name = body.name!;
+    screw.note = body.note!;
+    screw.price = body.price!;
+    screw.quantity = body.quantity!;
+
+    const [material] = await db
+      .select()
+      .from(DbSchema.ScrewMaterial)
+      .where(eq(DbSchema.ScrewMaterial.name, body.material!))
+      .limit(1);
+
+    if (!material) {
+      return;
+    }
+    screw.materialId = material.id;
+
+    const [result] = await db
+      .update(DbSchema.Screw)
+      .set(screw)
+      .where(eq(DbSchema.Screw.id, screw.id))
+      .returning();
+
+    if (!result) {
+      return c.json(
+        createErrorResponse({
+          code: ErrorCodes.BAD_REQUEST,
+          message: json.error.operate,
+          statusCode: 400,
+        }),
+        400,
+      );
+    }
+
+    return c.json(createSuccessResponse({ data: result }), 200);
+  })
+  .delete("/:id", async (c) => {
+    const { REDIS_TOKEN, REDIS_URL } = env(c);
+    const db = c.get("db");
+    const body = await c.req.json();
+
+    const [screw] = await db
+      .select()
+      .from(DbSchema.Screw)
+      .where(eq(DbSchema.Screw.name, body.name!))
+      .limit(1);
+
+    if (!screw) {
+      return c.json(
+        createErrorResponse({
+          code: ErrorCodes.NOT_FOUND,
+          message: json.error.notFound,
+          statusCode: 404,
+        }),
+        404,
+      );
+    }
+
+    const result = await db
+      .update(DbSchema.Screw)
+      .set({ isDeleted: true })
+      .where(eq(DbSchema.Screw.id, screw.id));
 
     if (!result) {
       return c.json(
@@ -234,4 +227,4 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
     );
   });
 
-export default screwRouterV1;
+export default screwRouterV2;

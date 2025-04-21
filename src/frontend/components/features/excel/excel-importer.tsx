@@ -1,6 +1,6 @@
 "use client";
 
-import { useImportExcel } from "@/frontend/hooks/useImportExcel";
+import { useImportExcel } from "@/frontend/hooks/useImport";
 import { QUERY_KEY } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { tryCatch } from "@/shared/utils";
@@ -111,7 +111,7 @@ export default function ExcelImporter({
       }, 300);
 
       // Use the provided API endpoint if available
-      const result = await tryCatch(importExcel(file));
+      const result = await tryCatch(importExcel({ file, type }));
 
       clearInterval(progressInterval);
       setUploadProgress(100);

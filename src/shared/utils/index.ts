@@ -108,3 +108,58 @@ export const RoleUtils = {
   isOwner: (role?: string) => role === UserRole.Owner,
   isAdmin: (role?: string) => role === UserRole.Admin,
 };
+
+export async function downloadFileWithSaveDialog(
+  downloadUrl: string,
+  suggestedName: string,
+) {
+  try {
+    // First fetch the file content
+    const response = await fetch(downloadUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+
+    // Try to use the File System Access API (modern browsers)
+    if (typeof window !== "undefined" && "showSaveFilePicker" in window) {
+      try {
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: suggestedName,
+          types: [
+            {
+              description: "Excel Spreadsheet",
+              accept: {
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                  [".xlsx"],
+              },
+            },
+          ],
+        });
+
+        const writableStream = await fileHandle.createWritable();
+        await writableStream.write(blob);
+        await writableStream.close();
+        return;
+      } catch (err) {
+        // User probably canceled the save dialog
+        // Fall back to traditional method
+        console.log("File System Access API failed, falling back:", err);
+      }
+    }
+
+    // Fallback for browsers that don't support File System Access API
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = suggestedName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Download failed:", error);
+    alert("Failed to download the template. Please try again.");
+  }
+}

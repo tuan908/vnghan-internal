@@ -13,6 +13,9 @@ export interface CacheOptions {
   namespace?: string; // Redis key namespace
   REDIS_URL?: string;
   REDIS_TOKEN?: string;
+  maxFileSizeBytes?: number;
+  cacheableFileTypes?: string[];
+  compressFiles?: boolean;
 }
 
 // Define cache entry structure
@@ -22,6 +25,9 @@ export interface CacheEntry {
   status: number;
   createdAt: number;
   contentType: string;
+  isFile?: boolean;
+  fileData?: string; // Base64 encoded file data
+  compressed?: boolean
 }
 
 // Cache store interface
@@ -108,6 +114,8 @@ export const defaultOptions: CacheOptions = {
   varyByHeaders: [],
   cacheControl: "public, max-age=60",
   namespace: "hono-cache:",
+  REDIS_URL: process.env.REDIS_URL,
+  REDIS_TOKEN: process.env.REDIS_TOKEN,
 };
 
 // Helper to encode response body to string

@@ -1,4 +1,4 @@
-import type { PlatformDto } from "@/backend/schema";
+import { PlatformDto } from "@/backend/models/platform.model";
 import { useDeleteCustomer } from "@/frontend/hooks/useDeleteCustomer";
 import { useEditCustomer } from "@/frontend/hooks/useEditCustomer";
 import { useIntlFormatter } from "@/frontend/hooks/useIntlFormatter";
@@ -370,9 +370,9 @@ export function CustomerTable({
                               {(platforms ?? []).map((x, i) => (
                                 <SelectItem
                                   key={`${x}#${i}`}
-                                  value={x?.description!}
+                                  value={x?.name!}
                                 >
-                                  {x?.description!}
+                                  {x?.name!}
                                 </SelectItem>
                               ))}
                             </SelectGroup>

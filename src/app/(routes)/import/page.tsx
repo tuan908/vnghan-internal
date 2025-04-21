@@ -21,19 +21,26 @@ import { useState } from "react";
 export default function ImportPage() {
   const [importType, setImportType] = useState<"screw" | "customer">("screw");
 
-  // Functions to handle template downloads
-  const downloadScrewTemplate = () => {
-    // In a real app, this would download an actual template file
-    console.log("Downloading screw template");
-    // Example of how you would trigger a real download:
-    // window.location.href = "/api/templates/screw-template.xlsx";
+  // Trigger browser download using a hidden <a> element
+  const downloadFile = (url: string, filename: string) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
+  // Call this for Screw template
+  const downloadScrewTemplate = () => {
+    const url = `/api/v1/templates?type=screw`;
+    downloadFile(url, "screw-template.xlsx");
+  };
+
+  // Call this for Customer template
   const downloadCustomerTemplate = () => {
-    // In a real app, this would download an actual template file
-    console.log("Downloading customer template");
-    // Example of how you would trigger a real download:
-    // window.location.href = "/api/templates/customer-template.xlsx";
+    const url = `/api/v1/templates?type=customer`;
+    downloadFile(url, "customer-template.xlsx");
   };
 
   return (
@@ -48,9 +55,7 @@ export default function ImportPage() {
       </Link>
 
       {/* Page Title */}
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">
-        Excel Data Import
-      </h1>
+      {/* <h1 className="text-3xl font-bold mb-8 text-gray-800">Excel Data Import</h1> */}
 
       {/* Tabs Interface */}
       <Tabs
@@ -83,7 +88,7 @@ export default function ImportPage() {
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Template Format</h3>
                   <ul className="text-xs text-gray-500 space-y-1">
-                    <li>• Column A: Product Code</li>
+                    <li>• Column A: Product </li>
                     <li>• Column B: Description</li>
                     <li>• Column C: Size (mm)</li>
                     <li>• Column D: Material</li>
@@ -124,12 +129,13 @@ export default function ImportPage() {
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Template Format</h3>
                   <ul className="text-xs text-gray-500 space-y-1">
-                    <li>• Column A: Customer ID</li>
-                    <li>• Column B: Company Name</li>
-                    <li>• Column C: Contact Person</li>
-                    <li>• Column D: Email</li>
-                    <li>• Column E: Phone</li>
-                    <li>• Column F: Address</li>
+                    <li>• Column A: Tên khách hàng</li>
+                    <li>• Column B: SĐT</li>
+                    <li>• Column C: Địa chỉ</li>
+                    <li>• Column D: Nền tàng</li>
+                    <li>• Column E: Nhu cầu</li>
+                    <li>• Column F: Tiền</li>
+                    <li>• Column G: Thời gian nhắn lại</li>
                   </ul>
                 </div>
                 <Button

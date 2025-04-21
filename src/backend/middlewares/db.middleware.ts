@@ -1,8 +1,16 @@
-import type { ServerEnvironment } from "@/shared/types";
 import { neon, Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import type { MiddlewareHandler } from "hono";
-import DbSchema from "../schema";
+import { DbSchema } from "../db/schema";
+import { CustomerRepositoryImpl } from "../repositories/customer.repository";
+import { ExcelTemplateHeaderRepositoryImpl } from "../repositories/exceltemplate-header.repository";
+import { ExcelTemplateRepositoryImpl } from "../repositories/exceltemplate.repository";
+import { PlatformRepositoryImpl } from "../repositories/platform.repository";
+import ScrewRepositoryImpl from "../repositories/screw.repository";
+import { ScrewMaterialRepositoryImpl } from "../repositories/screwmaterial-repository";
+import { ScrewTypeRepositoryImpl } from "../repositories/screwtype-repository";
+import { UserRepositoryImpl } from "../repositories/user.repository";
+import type { ContextVariableMap, ServerEnvironment } from "../types";
 
 /**
  * Create a Hono middleware for database access using Neon's HTTP client
@@ -15,7 +23,7 @@ export const createDbMiddleware = (
   connectionStringOverride?: string,
 ): MiddlewareHandler<{
   Bindings: ServerEnvironment;
-  Variables: { db: ReturnType<typeof drizzle> };
+  Variables: ContextVariableMap;
 }> => {
   return async (c, next) => {
     const start = Date.now();
@@ -40,6 +48,15 @@ export const createDbMiddleware = (
 
       // Add to context
       c.set("db", db);
+      c.set("customerRepository", new CustomerRepositoryImpl(db));
+      c.set("excelTemplateRepository", new ExcelTemplateRepositoryImpl(db));
+      c.set("excelTemplateHeaderRepository", new ExcelTemplateHeaderRepositoryImpl(db));
+      c.set("platformRepository", new PlatformRepositoryImpl(db));
+      c.set("screwRepository", new ScrewRepositoryImpl(db));
+      c.set("screwMaterialRepository", new ScrewMaterialRepositoryImpl(db));
+      c.set("screwTypeRepository", new ScrewTypeRepositoryImpl(db)); // Inject db
+      c.set("platformRepository", new PlatformRepositoryImpl(db));
+      c.set("userRepository", new UserRepositoryImpl(db)); // Inject db
 
       // Continue to next middleware/handler
       await next();

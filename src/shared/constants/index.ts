@@ -57,3 +57,9 @@ export const UserRoles = {
 };
 
 export const DATE_FORMAT_DD_MM_YYYY_WITH_SLASH = "dd/MM/yyyy";
+export const DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS = "yyyyMMddHHmmsssss"
+
+export const TemplateTypes = {
+  Customer: "customer",
+  Screw: "screw"
+}

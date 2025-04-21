@@ -1,5 +1,6 @@
 "use client";
 
+import type { ImportFileExtension } from "@/backend/types";
 import { Button } from "@/frontend/components/ui/button";
 import {
   DropdownMenu,
@@ -8,21 +9,31 @@ import {
   DropdownMenuTrigger,
 } from "@/frontend/components/ui/dropdown-menu";
 import { FileText, Sheet } from "lucide-react";
+import type { MouseEvent } from "react";
 
-export function ExportOptionDropdown() {
+interface ExportOptionDropdownProps {
+  downloadUrl: string;
+}
+
+export function ExportOptionDropdown({downloadUrl}: ExportOptionDropdownProps) {
+  const downloadFile = (e: MouseEvent, fileType: ImportFileExtension) => {
+    e.preventDefault();
+    window.location.href = `${downloadUrl}?format=${encodeURIComponent(fileType)}`;
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">Xuất dữ liệu</Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
-        <DropdownMenuItem>
+      <DropdownMenuContent className="w-32">
+        <DropdownMenuItem onClick={e => downloadFile(e, "excel")}>
           <Sheet />
           <span>Excel</span>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={e => downloadFile(e, "csv")}>
           <FileText />
-          <span>PDF</span>
+          <span>CSV</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
