@@ -46,7 +46,7 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
     const user = c.get("user") as Session; // Assuming user session is in context
 
     let raw: any[] = [];
-    let filename = `export_customers_${new Date().toISOString()}`;
+    let filename = `export_customers_${formatDateToString()}`;
 
     if (!user) {
       return c.json(
@@ -61,7 +61,7 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
     raw = await customerRepository.findAll({
       filter: {operatorId: user.id, isAdmin},
     }); // Corrected method call
-    filename = `export_customers_${formatDate(new Date(), DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS)}`;
+    filename = `export_customers_${formatDateToString()}`;
     const dbColumns = await excelTemplateHeaderRepository.findBy({
       templateName: TemplateTypes.Customer,
     });
@@ -125,13 +125,13 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
     const screwRepository = c.get("screwRepository"); // Assuming screwRepository is in context
 
     let raw: any[] = [];
-    let filename = `export_screws_${new Date().toISOString()}`;
+    let filename = `export_screws_${formatDateToString()}`;
 
     // Assuming ScrewRepository has a findAll method
     // Need to check if screwRepository exists and has findAll
     if (screwRepository && typeof screwRepository.findAll === "function") {
       raw = await screwRepository.findAll(); // Corrected method call
-      filename = `export_screws_${new Date().toISOString()}`;
+      filename = `export_screws_${formatDateToString()}`;
     } else {
       console.error("ScrewRepository or findAll method not available");
       return c.json(
@@ -146,7 +146,7 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
       "excelTemplateHeaderRepository"
     );
     const dbColumns = await excelTemplateHeaderRepository.findBy({
-      templateName: TemplateTypes.Customer,
+      templateName: TemplateTypes.Screw,
     });
     const data = mapData(dbColumns, raw);
 
@@ -198,4 +198,10 @@ const mapData = (dbColumns: ExcelTemplateHeaderModel[], data: any[]) => {
     });
     return newRow;
   });
+};
+
+const formatDateToString = (
+  formatStr: string = DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS
+) => {
+  return formatDate(new Date(), formatStr);
 };
