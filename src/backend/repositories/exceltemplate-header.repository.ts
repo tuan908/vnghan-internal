@@ -1,8 +1,8 @@
 import { nullsToUndefined } from "@/shared/utils";
 import { and, eq } from "drizzle-orm";
-import { ExcelTemplateHeader } from "../db/schema";
+import { ExcelTemplate, ExcelTemplateHeader } from "../db/schema";
 import type { Database, QueryOptions } from "../types";
-import { ExcelTemplateHeaderRepository } from "./interfaces/exceltemplate-header-repository.interface";
+import type { ExcelTemplateHeaderRepository } from "./interfaces/exceltemplate-header-repository.interface";
 
 export class ExcelTemplateHeaderRepositoryImpl
   implements ExcelTemplateHeaderRepository
@@ -14,7 +14,7 @@ export class ExcelTemplateHeaderRepositoryImpl
   }
 
   async findBy(filters: Record<string, any>) {
-    const {id, label, templateId} = filters;
+    const {id, label, templateId, templateName} = filters;
     const defaultConditions = [eq(ExcelTemplateHeader.isDeleted, false)];
     const conditions = [];
 
@@ -30,11 +30,23 @@ export class ExcelTemplateHeaderRepositoryImpl
       conditions.push(eq(ExcelTemplateHeader.label, label));
     }
 
-    const [templateHeader] = await this.db
-      .select({id: ExcelTemplateHeader.id, label: ExcelTemplateHeader.label})
+    if (templateName) {
+      conditions.push(eq(ExcelTemplate.name, templateName));
+    }
+
+    const templateHeaders = await this.db
+      .select({
+        id: ExcelTemplateHeader.id,
+        label: ExcelTemplateHeader.label,
+        key: ExcelTemplateHeader.key,
+      })
       .from(ExcelTemplateHeader)
+      .innerJoin(
+        ExcelTemplate,
+        eq(ExcelTemplateHeader.templateId, ExcelTemplate.id)
+      )
       .where(and(...conditions, ...defaultConditions));
-    return nullsToUndefined(templateHeader);
+    return nullsToUndefined(templateHeaders);
   }
 
   async findAll(options: QueryOptions) {
@@ -54,7 +66,11 @@ export class ExcelTemplateHeaderRepositoryImpl
     }
 
     const templateHeaders = await this.db
-      .select({id: ExcelTemplateHeader.id, label: ExcelTemplateHeader.label})
+      .select({
+        id: ExcelTemplateHeader.id,
+        label: ExcelTemplateHeader.label,
+        key: ExcelTemplateHeader.key,
+      })
       .from(ExcelTemplateHeader)
       .where(and(...defaultConditions, ...conditions));
 

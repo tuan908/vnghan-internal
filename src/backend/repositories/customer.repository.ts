@@ -2,8 +2,8 @@ import { Customer, CustomerPlatform, Platform } from "@/backend/db/schema";
 import { nullsToUndefined } from "@/shared/utils";
 import { and, desc, eq } from "drizzle-orm";
 import { SelectCustomer } from "../models/customer.model";
-import { Database } from "../types";
-import { CustomerRepository } from "./interfaces/customer-repository.interface";
+import type { Database, QueryOptions } from "../types";
+import type { CustomerRepository } from "./interfaces/customer-repository.interface";
 
 export class CustomerRepositoryImpl implements CustomerRepository {
   private db: Database;
@@ -81,14 +81,14 @@ export class CustomerRepositoryImpl implements CustomerRepository {
     throw new Error("Method not implemented.");
   }
 
-  async findAll(filters: Record<string, any>) {
-    const {assignedTo, isAdmin} = filters;
-
+  async findAll(options: QueryOptions) {
     const defaultConditions = [eq(Customer.isDeleted, false)];
     const conditions = [];
-
-    if (isAdmin) {
-      conditions.push(eq(Customer.assignedTo, assignedTo));
+    if(options.filter) {
+      const {isAdmin, operatorId} = options.filter
+      if (!isAdmin) {
+        conditions.push(eq(Customer.assignedTo, operatorId));
+      }
     }
 
     const customers = await this.db
@@ -107,7 +107,6 @@ export class CustomerRepositoryImpl implements CustomerRepository {
       .innerJoin(CustomerPlatform, eq(Customer.id, CustomerPlatform.customerId))
       .innerJoin(Platform, eq(CustomerPlatform.platformId, Platform.id))
       .where(and(...defaultConditions, ...conditions))
-
       .orderBy(desc(Customer.updatedAt));
     return nullsToUndefined(customers);
   }

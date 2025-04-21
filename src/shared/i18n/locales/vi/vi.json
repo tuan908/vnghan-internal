@@ -26,7 +26,8 @@
     "passwordMismatch": "Mật khẩu không khớp",
     "weakPassword": "Mật khẩu quá yếu",
     "accountLocked": "Tài khoản đã bị khóa",
-    "accountNotActivated": "Tài khoản chưa được kích hoạt"
+    "accountNotActivated": "Tài khoản chưa được kích hoạt",
+    "invalidQueryParams": "Tham số truy vấn không hợp lệ hoặc bị thiếu"
   },
   "success": {
     "created": "Tạo mới thành công",

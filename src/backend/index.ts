@@ -1,29 +1,20 @@
+import type { Session } from "@/shared/utils/session";
 import { type Context, Hono } from "hono";
 import { logger } from "hono/logger";
-
-import type { Session } from "@/shared/utils/session";
-import type { Database, ServerEnvironment } from "./types";
-
-// Middleware + Routes
 import { errorHandler } from "./error.handler";
 import { MiddlewareFactory } from "./middlewares";
-import { CustomerRepository } from "./repositories/interfaces/customer-repository.interface";
-import { ExcelTemplateHeaderRepository } from "./repositories/interfaces/exceltemplate-header-repository.interface";
-import { ExcelTemplateRepository } from "./repositories/interfaces/exceltemplate-repository.interface";
-import { PlatformRepository } from "./repositories/interfaces/platform-repository.interface";
-import { ScrewRepository } from "./repositories/interfaces/screw-repository.interface";
-import { ScrewMaterialRepository } from "./repositories/interfaces/screwmaterial-repository.interface";
-import { ScrewTypeRepository } from "./repositories/interfaces/screwtype-repository.interface";
-import { UserRepository } from "./repositories/interfaces/user-repository.interface";
-import authRouterV1 from "./routes/v1/auth.route";
-import customerRouterV1 from "./routes/v1/customer.route";
-import importRouterV1 from "./routes/v1/import.route";
-import platformRouterV1 from "./routes/v1/platform.route";
-import screwRouterV1 from "./routes/v1/screw.route";
-import templateRouterV1 from "./routes/v1/template.route";
-import userRouteV1 from "./routes/v1/user.route";
-import screwRouterV2 from "./routes/v2/screw.route";
-import type { ImportFileExtension } from "./types";
+import type {
+  CustomerRepository,
+  ExcelTemplateHeaderRepository,
+  ExcelTemplateRepository,
+  PlatformRepository,
+  ScrewMaterialRepository,
+  ScrewRepository,
+  ScrewTypeRepository,
+  UserRepository,
+} from "./repositories/interfaces";
+import { Routes } from "./routes";
+import type { Database, ImportFileExtension, ServerEnvironment } from "./types";
 
 // Extend Hono Context types
 declare module "hono" {
@@ -74,6 +65,20 @@ app.use("*", async (c, next) => {
 
 app.use("*", async (c, next) => {
   if (isAuthRoute(c)) return next();
+  if (c.req.path.startsWith("/api/v1/export")) {
+    const fileCache = MiddlewareFactory.createCacheMiddleware({
+      ttl: 3600, // 1 hour cache
+      maxFileSizeBytes: 10 * 1024 * 1024, // 10MB limit
+      cacheableFileTypes: [
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      ],
+      compressFiles: true,
+    });
+    return await fileCache(c, next);
+  }
   return await cache(c, next);
 });
 
@@ -85,14 +90,15 @@ app.onError(errorHandler);
 
 // --- API Routes ---
 const route = app
-  .route("/v1/auth", authRouterV1)
-  .route("/v1/templates", templateRouterV1)
-  .route("/v1/screws", screwRouterV1)
-  .route("/v1/customers", customerRouterV1)
-  .route("/v1/platforms", platformRouterV1)
-  .route("/v1/import", importRouterV1)
-  .route("/v1/users", userRouteV1)
-  .route("/v2/screws", screwRouterV2);
+  .route("/v1/auth", Routes.V1.Auth)
+  .route("/v1/templates", Routes.V1.Templates)
+  .route("/v1/screws", Routes.V1.Screws)
+  .route("/v1/customers", Routes.V1.Customers)
+  .route("/v1/platforms", Routes.V1.Platforms)
+  .route("/v1/import", Routes.V1.Import)
+  .route("/v1/users", Routes.V1.Users)
+  .route("/v1/export", Routes.V1.Export)
+  .route("/v2/screws", Routes.V2.Screws);
 
 export default app;
 export type AppRoute = typeof route;

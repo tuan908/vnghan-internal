@@ -19,13 +19,35 @@ let cacheStore: RedisCacheStore | null = null;
 
 // Cache middleware factory
 export const createCacheMiddleware = (
-  options: CacheOptions = {},
-): MiddlewareHandler<{ Bindings: ServerEnvironment }> => {
+  options: CacheOptions = {}
+): MiddlewareHandler<{Bindings: ServerEnvironment}> => {
   // Merge provided options with defaults
-  const opts = { ...defaultOptions, ...options };
+  const defaultFileOptions = {
+    maxFileSizeBytes: 5 * 1024 * 1024, // 5MB default limit
+    cacheableFileTypes: [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "text/csv",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/msword",
+      "application/zip",
+    ],
+    compressFiles: true,
+  };
+
+  const opts = {
+    ...defaultOptions,
+    ...defaultFileOptions,
+    ...options,
+  };
 
   return async (c: Context, next: Next) => {
-    const { REDIS_URL, REDIS_TOKEN } = options;
+    const {REDIS_URL, REDIS_TOKEN} = opts;
     const user = c.get("user");
 
     if (!REDIS_URL || !REDIS_TOKEN) {
@@ -54,13 +76,13 @@ export const createCacheMiddleware = (
     // Add vary headers to cache key if specified
     if (opts.varyByHeaders?.length) {
       const varyValues = opts.varyByHeaders
-        .map((header) => c.req.header(header) || "")
+        .map(header => c.req.header(header) || "")
         .join(":");
       cacheKey += `:${varyValues}`;
     }
 
     // Check if we have a valid cached response
-    const cachedEntry = await cacheStore.get(cacheKey);
+    const cachedEntry = (await cacheStore.get(cacheKey)) as CacheEntry;
 
     if (cachedEntry) {
       // Return cached response
@@ -75,19 +97,43 @@ export const createCacheMiddleware = (
         }
       });
 
-      const decodedBody = JSON.parse(cachedEntry.body) as ApiResponse; // No need to decode if we store properly
-      const actualResponseBody = {
-        ...decodedBody,
-        timestamp: generateTimestamp(),
-        requestId: generateRequestId(),
-      };
-      const status = cachedEntry.status as ContentfulStatusCode;
-
-      // Set content-type header to ensure proper handling in Next.js
-
       c.header("Content-Type", cachedEntry.contentType);
 
-      return c.json(actualResponseBody, status);
+      // Handle file vs JSON response
+      if (cachedEntry.isFile && cachedEntry.fileData) {
+        // For file responses, decode the base64 file data
+        let fileBuffer = Buffer.from(cachedEntry.fileData, "base64");
+
+        // If compression is enabled, decompress the data
+        if (opts.compressFiles && cachedEntry.compressed) {
+          try {
+            const zlib = await import("zlib");
+            const util = await import("util");
+            const inflate = util.promisify<Buffer, Buffer>((input, callback) =>
+              zlib.inflate(input, callback)
+            );
+            const decompressedBuffer = await inflate(fileBuffer);
+            fileBuffer = Buffer.from(decompressedBuffer);
+          } catch (error) {
+            console.error("Error decompressing file data:", error);
+            // Continue with the compressed data as fallback
+          }
+        }
+
+        return c.body(fileBuffer, cachedEntry.status as ContentfulStatusCode);
+      } else {
+        // For JSON responses, use the existing logic
+        const decodedBody = JSON.parse(cachedEntry.body) as ApiResponse;
+        const actualResponseBody = {
+          ...decodedBody,
+          timestamp: generateTimestamp(),
+          requestId: generateRequestId(),
+        };
+        return c.json(
+          actualResponseBody,
+          cachedEntry.status as ContentfulStatusCode
+        );
+      }
     }
 
     // Cache miss - proceed with request
@@ -103,43 +149,102 @@ export const createCacheMiddleware = (
         // Get content type for proper handling later
         const contentType = clonedRes.headers.get("content-type") || "";
 
-        // Extract the response body based on content type
-        let responseBody: any;
-
-        if (contentType.includes("application/json")) {
-          // Handle JSON response
-          responseBody = await clonedRes.json();
-        }
-
         // Extract headers to cache
         const headers: Record<string, string> = {};
         clonedRes.headers.forEach((value, key) => {
           // Skip certain headers
           if (
             !["set-cookie", "connection", "keep-alive"].includes(
-              key.toLowerCase(),
+              key.toLowerCase()
             )
           ) {
             headers[key] = value;
           }
         });
 
-        // Store in cache
         const cacheEntry: CacheEntry = {
-          body: JSON.stringify(responseBody), // Store as-is to avoid encoding issues
           headers,
           status: clonedRes.status,
           createdAt: Date.now(),
-          contentType: contentType, // Store content type for proper reconstruction
+          contentType: contentType,
+          body: "", // Will be populated based on content type
         };
 
-        await cacheStore.set(cacheKey, cacheEntry, opts.ttl!).catch((error) => {
-          console.error("Cache storage error:", error);
-        });
+        // Handle different content types
+        if (contentType.includes("application/json")) {
+          // Handle JSON response
+          const responseBody = await clonedRes.json();
+          cacheEntry.body = JSON.stringify(responseBody);
+          cacheEntry.isFile = false;
+        }
+        // Check if this is a file type we want to cache
+        else if (
+          opts.cacheableFileTypes.some(type => contentType.includes(type))
+        ) {
+          // Get file size from content-length header if available
+          const contentLength = parseInt(
+            clonedRes.headers.get("content-length") || "0"
+          );
+
+          // Skip caching if file is too large
+          if (contentLength > 0 && contentLength > opts.maxFileSizeBytes) {
+            console.log(
+              `File too large to cache (${contentLength} bytes), skipping cache`
+            );
+            return;
+          }
+
+          // Handle file response
+          const fileBuffer = await clonedRes.arrayBuffer();
+          const fileData = Buffer.from(fileBuffer);
+
+          // Skip caching if file size exceeds limit
+          if (fileData.length > opts.maxFileSizeBytes) {
+            console.log(
+              `File too large to cache (${fileData.length} bytes), skipping cache`
+            );
+            return;
+          }
+
+          // Apply compression if enabled
+          if (opts.compressFiles) {
+            try {
+              const zlib = await import("zlib");
+              const util = await import("util");
+              const deflate = util.promisify(zlib.deflate);
+              const compressedData = await deflate(fileData);
+              cacheEntry.fileData = compressedData.toString("base64");
+              cacheEntry.compressed = true;
+            } catch (error) {
+              console.error("Error compressing file data:", error);
+              // Fall back to uncompressed data
+              cacheEntry.fileData = fileData.toString("base64");
+              cacheEntry.compressed = false;
+            }
+          } else {
+            cacheEntry.fileData = fileData.toString("base64");
+            cacheEntry.compressed = false;
+          }
+
+          cacheEntry.isFile = true;
+          cacheEntry.body = ""; // Not used for files
+        }
+        // For other content types, don't cache the body
+        else {
+          // For other content types, just store minimal info
+          cacheEntry.body = "";
+          cacheEntry.isFile = false;
+        }
+
+        // Store in cache if we have content to cache
+        if (cacheEntry.isFile === true || cacheEntry.body) {
+          await cacheStore.set(cacheKey, cacheEntry, opts.ttl!).catch(error => {
+            console.error("Cache storage error:", error);
+          });
+        }
       } catch (error) {
         console.error("Error caching response:", error);
         // Continue without caching rather than failing the request
-        await next();
       }
     }
   };
