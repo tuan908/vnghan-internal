@@ -1,5 +1,5 @@
 import { nullsToUndefined } from "@/shared/utils";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { ExcelTemplate, ExcelTemplateHeader } from "../db/schema";
 import type { Database, QueryOptions } from "../types";
 import type { ExcelTemplateHeaderRepository } from "./interfaces/exceltemplate-header-repository.interface";
@@ -72,7 +72,8 @@ export class ExcelTemplateHeaderRepositoryImpl
         key: ExcelTemplateHeader.key,
       })
       .from(ExcelTemplateHeader)
-      .where(and(...defaultConditions, ...conditions));
+      .where(and(...defaultConditions, ...conditions))
+      .orderBy(asc(ExcelTemplateHeader.id));
 
     return nullsToUndefined(templateHeaders);
   }
