@@ -10,5 +10,5 @@ export type PlatformCustomer = RecursivelyReplaceNullWithUndefined<
 
 export interface PlatformDto {
   id: number;
-  description?: string
+  description?: string;
 }

@@ -1,4 +1,7 @@
-import type { RawCustomer, SelectCustomer } from "@/backend/models/customer.model";
+import type {
+  RawCustomer,
+  SelectCustomer,
+} from "@/backend/models/customer.model";
 import type { QueryOptions } from "@/backend/types";
 
 export interface CustomerRepository {

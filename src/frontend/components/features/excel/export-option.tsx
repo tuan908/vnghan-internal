@@ -15,7 +15,9 @@ interface ExportOptionDropdownProps {
   downloadUrl: string;
 }
 
-export function ExportOptionDropdown({downloadUrl}: ExportOptionDropdownProps) {
+export function ExportOptionDropdown({
+  downloadUrl,
+}: ExportOptionDropdownProps) {
   const downloadFile = (e: MouseEvent, fileType: ImportFileExtension) => {
     e.preventDefault();
     window.location.href = `${downloadUrl}?format=${encodeURIComponent(fileType)}`;
@@ -27,11 +29,11 @@ export function ExportOptionDropdown({downloadUrl}: ExportOptionDropdownProps) {
         <Button variant="outline">Xuất dữ liệu</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-32">
-        <DropdownMenuItem onClick={e => downloadFile(e, "excel")}>
+        <DropdownMenuItem onClick={(e) => downloadFile(e, "excel")}>
           <Sheet />
           <span>Excel</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={e => downloadFile(e, "csv")}>
+        <DropdownMenuItem onClick={(e) => downloadFile(e, "csv")}>
           <FileText />
           <span>CSV</span>
         </DropdownMenuItem>

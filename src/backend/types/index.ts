@@ -24,6 +24,6 @@ export interface QueryOptions {
   limit?: number;
   offset?: number;
   orderBy?: string;
-  sortDirection?: 'asc' | 'desc';
+  sortDirection?: "asc" | "desc";
   filter?: Record<string, any>;
 }

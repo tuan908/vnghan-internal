@@ -15,11 +15,11 @@ import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { z } from "zod";
 
-const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
-  .get("/customers", async c => {
+const exportRouterV1 = new Hono<{ Variables: ContextVariableMap }>()
+  .get("/customers", async (c) => {
     const customerRepository = c.get("customerRepository");
     const excelTemplateHeaderRepository = c.get(
-      "excelTemplateHeaderRepository"
+      "excelTemplateHeaderRepository",
     );
     const querySchema = z.object({
       format: z.enum(["csv", "excel"]),
@@ -32,17 +32,17 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
         createErrorResponse({
           code: "BAD_REQUEST",
           message: "Invalid query parameters",
-          errors: parseResult.error.errors.map(err => ({
+          errors: parseResult.error.errors.map((err) => ({
             code: "INVALID_INPUT",
             field: err.path.join("."),
             message: err.message,
           })), // Zod error mapping
         }),
-        400
+        400,
       );
     }
 
-    const {format} = parseResult.data;
+    const { format } = parseResult.data;
     const user = c.get("user") as Session; // Assuming user session is in context
 
     let raw: any[] = [];
@@ -54,12 +54,12 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
           code: ErrorCodes.UNAUTHORIZED,
           message: json.error.unauthorized,
         }),
-        401
+        401,
       );
     }
     const isAdmin = user.role === UserRole.Admin;
     raw = await customerRepository.findAll({
-      filter: {operatorId: user.id, isAdmin},
+      filter: { operatorId: user.id, isAdmin },
     }); // Corrected method call
     filename = `export_customers_${formatDateToString()}`;
     const dbColumns = await excelTemplateHeaderRepository.findBy({
@@ -84,7 +84,7 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
 
       c.header(
         "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       );
       c.header("Content-Disposition", `attachment; filename=${filename}.xlsx`);
       return c.body(excelBuffer);
@@ -96,10 +96,10 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
         code: ErrorCodes.BAD_REQUEST,
         message: json.error.invalidFormat,
       }),
-      400
+      400,
     );
   })
-  .get("/screws", async c => {
+  .get("/screws", async (c) => {
     const querySchema = z.object({
       format: z.enum(["csv", "excel"]),
     });
@@ -111,17 +111,17 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
         createErrorResponse({
           code: ErrorCodes.BAD_REQUEST,
           message: json.error.invalidQueryParams,
-          errors: parseResult.error.errors.map(err => ({
+          errors: parseResult.error.errors.map((err) => ({
             code: ErrorCodes.BAD_REQUEST,
             field: err.path.join("."),
             message: err.message,
           })), // Zod error mapping
         }),
-        400
+        400,
       );
     }
 
-    const {format} = parseResult.data;
+    const { format } = parseResult.data;
     const screwRepository = c.get("screwRepository"); // Assuming screwRepository is in context
 
     let raw: any[] = [];
@@ -139,11 +139,11 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
           code: "INTERNAL_SERVER_ERROR",
           message: "Screw data source not configured correctly",
         }),
-        500
+        500,
       );
     }
     const excelTemplateHeaderRepository = c.get(
-      "excelTemplateHeaderRepository"
+      "excelTemplateHeaderRepository",
     );
     const dbColumns = await excelTemplateHeaderRepository.findBy({
       templateName: TemplateTypes.Screw,
@@ -166,7 +166,7 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
 
       c.header(
         "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       );
       c.header("Content-Disposition", `attachment; filename=${filename}.xlsx`);
       return c.body(excelBuffer);
@@ -178,7 +178,7 @@ const exportRouterV1 = new Hono<{Variables: ContextVariableMap}>()
         code: ErrorCodes.BAD_REQUEST,
         message: json.error.invalidFormat,
       }),
-      400
+      400,
     );
   });
 
@@ -190,9 +190,9 @@ const mapData = (dbColumns: ExcelTemplateHeaderModel[], data: any[]) => {
     columnMapping[dbColumn.key!] = dbColumn.label;
   }
 
-  return data.map(row => {
+  return data.map((row) => {
     const newRow: Record<string, any> = {};
-    Object.keys(columnMapping).forEach(sourceField => {
+    Object.keys(columnMapping).forEach((sourceField) => {
       const targetField = columnMapping[sourceField];
       newRow[targetField] = row[sourceField];
     });
@@ -201,7 +201,7 @@ const mapData = (dbColumns: ExcelTemplateHeaderModel[], data: any[]) => {
 };
 
 const formatDateToString = (
-  formatStr: string = DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS
+  formatStr: string = DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS,
 ) => {
   return formatDate(new Date(), formatStr);
 };

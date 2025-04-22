@@ -15,14 +15,14 @@ export class PlatformRepositoryImpl implements PlatformRepository {
   async findAll(): Promise<PlatformDto[]> {
     const defaultConditions = [eq(Platform.isDeleted, false)];
     const result = await this.db
-      .select({id: Platform.id, name: Platform.name})
+      .select({ id: Platform.id, name: Platform.name })
       .from(Platform)
       .where(and(...defaultConditions));
     return nullsToUndefined(result);
   }
 
   async findBy(filters: Record<string, any>) {
-    const {id, name} = filters;
+    const { id, name } = filters;
     const defaultConditions = [eq(Platform.isDeleted, false)];
     const conditions = [];
 

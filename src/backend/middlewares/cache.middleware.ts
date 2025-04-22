@@ -19,8 +19,8 @@ let cacheStore: RedisCacheStore | null = null;
 
 // Cache middleware factory
 export const createCacheMiddleware = (
-  options: CacheOptions = {}
-): MiddlewareHandler<{Bindings: ServerEnvironment}> => {
+  options: CacheOptions = {},
+): MiddlewareHandler<{ Bindings: ServerEnvironment }> => {
   // Merge provided options with defaults
   const defaultFileOptions = {
     maxFileSizeBytes: 5 * 1024 * 1024, // 5MB default limit
@@ -47,7 +47,7 @@ export const createCacheMiddleware = (
   };
 
   return async (c: Context, next: Next) => {
-    const {REDIS_URL, REDIS_TOKEN} = opts;
+    const { REDIS_URL, REDIS_TOKEN } = opts;
     const user = c.get("user");
 
     if (!REDIS_URL || !REDIS_TOKEN) {
@@ -76,7 +76,7 @@ export const createCacheMiddleware = (
     // Add vary headers to cache key if specified
     if (opts.varyByHeaders?.length) {
       const varyValues = opts.varyByHeaders
-        .map(header => c.req.header(header) || "")
+        .map((header) => c.req.header(header) || "")
         .join(":");
       cacheKey += `:${varyValues}`;
     }
@@ -110,7 +110,7 @@ export const createCacheMiddleware = (
             const zlib = await import("zlib");
             const util = await import("util");
             const inflate = util.promisify<Buffer, Buffer>((input, callback) =>
-              zlib.inflate(input, callback)
+              zlib.inflate(input, callback),
             );
             const decompressedBuffer = await inflate(fileBuffer);
             fileBuffer = Buffer.from(decompressedBuffer);
@@ -131,7 +131,7 @@ export const createCacheMiddleware = (
         };
         return c.json(
           actualResponseBody,
-          cachedEntry.status as ContentfulStatusCode
+          cachedEntry.status as ContentfulStatusCode,
         );
       }
     }
@@ -155,7 +155,7 @@ export const createCacheMiddleware = (
           // Skip certain headers
           if (
             !["set-cookie", "connection", "keep-alive"].includes(
-              key.toLowerCase()
+              key.toLowerCase(),
             )
           ) {
             headers[key] = value;
@@ -179,17 +179,17 @@ export const createCacheMiddleware = (
         }
         // Check if this is a file type we want to cache
         else if (
-          opts.cacheableFileTypes.some(type => contentType.includes(type))
+          opts.cacheableFileTypes.some((type) => contentType.includes(type))
         ) {
           // Get file size from content-length header if available
           const contentLength = parseInt(
-            clonedRes.headers.get("content-length") || "0"
+            clonedRes.headers.get("content-length") || "0",
           );
 
           // Skip caching if file is too large
           if (contentLength > 0 && contentLength > opts.maxFileSizeBytes) {
             console.log(
-              `File too large to cache (${contentLength} bytes), skipping cache`
+              `File too large to cache (${contentLength} bytes), skipping cache`,
             );
             return;
           }
@@ -201,7 +201,7 @@ export const createCacheMiddleware = (
           // Skip caching if file size exceeds limit
           if (fileData.length > opts.maxFileSizeBytes) {
             console.log(
-              `File too large to cache (${fileData.length} bytes), skipping cache`
+              `File too large to cache (${fileData.length} bytes), skipping cache`,
             );
             return;
           }
@@ -238,9 +238,11 @@ export const createCacheMiddleware = (
 
         // Store in cache if we have content to cache
         if (cacheEntry.isFile === true || cacheEntry.body) {
-          await cacheStore.set(cacheKey, cacheEntry, opts.ttl!).catch(error => {
-            console.error("Cache storage error:", error);
-          });
+          await cacheStore
+            .set(cacheKey, cacheEntry, opts.ttl!)
+            .catch((error) => {
+              console.error("Cache storage error:", error);
+            });
         }
       } catch (error) {
         console.error("Error caching response:", error);

@@ -52,7 +52,7 @@ const cache = MiddlewareFactory.createCacheMiddleware({
 
 const db = MiddlewareFactory.createDbMiddleware();
 
-const app = new Hono<{Bindings: ServerEnvironment}>().basePath("/api");
+const app = new Hono<{ Bindings: ServerEnvironment }>().basePath("/api");
 
 // --- Global Logging ---
 app.use("*", logger());

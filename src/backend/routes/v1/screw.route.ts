@@ -19,8 +19,8 @@ import {
 } from "../../lib/api-response";
 import type { ServerEnvironment } from "../../types";
 
-const screwRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
-  .get("/", async c => {
+const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
+  .get("/", async (c) => {
     const db = c.get("db");
 
     const screws = await db
@@ -37,18 +37,18 @@ const screwRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
       .from(DbSchema.Screw)
       .innerJoin(
         DbSchema.ScrewMaterial,
-        eq(DbSchema.Screw.materialId, DbSchema.ScrewMaterial.id)
+        eq(DbSchema.Screw.materialId, DbSchema.ScrewMaterial.id),
       )
       .innerJoin(
         DbSchema.ScrewType,
-        eq(DbSchema.Screw.componentTypeId, DbSchema.ScrewType.id)
+        eq(DbSchema.Screw.componentTypeId, DbSchema.ScrewType.id),
       )
       .where(eq(DbSchema.Screw.isDeleted, false))
       .orderBy(DbSchema.Screw.id);
 
     return c.json(createSuccessResponse(screws), 200);
   })
-  .post("/", async c => {
+  .post("/", async (c) => {
     const screwRepository = c.get("screwRepository");
     const screwTypeRepository = c.get("screwTypeRepository");
     const screwMaterialRepository = c.get("screwMaterialRepository");
@@ -78,20 +78,20 @@ const screwRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
       isDeleted: false,
     };
 
-    const {data: result, error: insertError} = await tryCatch(
-      screwRepository.create(entity)
+    const { data: result, error: insertError } = await tryCatch(
+      screwRepository.create(entity),
     );
     if (insertError)
       return c.json(
         createErrorResponse({
           code: ErrorCodes.INTERNAL_SERVER_ERROR,
           message: json.error.internalServerError,
-        })
+        }),
       );
 
-    return c.json(createSuccessResponse({data: result}), 200);
+    return c.json(createSuccessResponse({ data: result }), 200);
   })
-  .patch("/:id", async c => {
+  .patch("/:id", async (c) => {
     const db = c.get("db");
     const screwRepository = c.get("screwRepository");
     const screwTypeRepository = c.get("screwTypeRepository");
@@ -99,7 +99,7 @@ const screwRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
     const body = await c.req.json<ScrewDto>();
 
     const [screw, screwType, screwMaterial] = await Promise.all([
-      screwRepository.findBy({id: body.id}),
+      screwRepository.findBy({ id: body.id }),
       screwTypeRepository.findBy({
         name: body.componentType,
       }),
@@ -115,7 +115,7 @@ const screwRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
           message: json.error.unknownError,
           statusCode: 500,
         }),
-        404
+        404,
       );
     }
 
@@ -126,7 +126,7 @@ const screwRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
     screw.materialId = screwType.id;
     screw.componentTypeId = screwMaterial.id;
 
-    const result = await db.transaction(async tx => {
+    const result = await db.transaction(async (tx) => {
       return await screwRepository.update(screw);
     });
 
@@ -137,17 +137,17 @@ const screwRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
           message: json.error.notFound,
           statusCode: 404,
         }),
-        404
+        404,
       );
     }
 
-    return c.json(createSuccessResponse({data: result}), 200);
+    return c.json(createSuccessResponse({ data: result }), 200);
   })
-  .delete("/:id", async c => {
+  .delete("/:id", async (c) => {
     const screwRepository = c.get("screwRepository");
     const req = await c.req.json<ScrewDto>();
 
-    const screw = await screwRepository.findBy({id: req.id});
+    const screw = await screwRepository.findBy({ id: req.id });
 
     if (!screw) {
       return c.json(
@@ -156,7 +156,7 @@ const screwRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
           message: json.error.notFound,
           statusCode: 404,
         }),
-        404
+        404,
       );
     }
 
@@ -169,26 +169,26 @@ const screwRouterV1 = new Hono<{Bindings: ServerEnvironment}>()
           message: json.error.operate,
           statusCode: 400,
         }),
-        400
+        400,
       );
     }
 
-    return c.json(createSuccessResponse({data: result}), 200);
+    return c.json(createSuccessResponse({ data: result }), 200);
   })
-  .get("/types", async c => {
+  .get("/types", async (c) => {
     const screwTypeRepository = c.get("screwTypeRepository");
     const response = await screwTypeRepository.findAll();
     return c.json(
       createSuccessResponse<ScrewTypeDto[]>(nullsToUndefined(response)),
-      200
+      200,
     );
   })
-  .get("/materials", async c => {
+  .get("/materials", async (c) => {
     const screwMaterialRepository = c.get("screwMaterialRepository");
     const response = await screwMaterialRepository.findAll();
     return c.json(
       createSuccessResponse<ScrewMaterialDto[]>(nullsToUndefined(response)),
-      200
+      200,
     );
   });
 

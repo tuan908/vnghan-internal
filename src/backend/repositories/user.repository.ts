@@ -14,7 +14,7 @@ export class UserRepositoryImpl implements UserRepository {
   }
 
   async findBy(filters: Record<string, any>) {
-    const {id, username} = filters;
+    const { id, username } = filters;
     const defaultConditions = [eq(User.isDeleted, false)];
     const conditions = [];
 
@@ -40,7 +40,7 @@ export class UserRepositoryImpl implements UserRepository {
 
     if (!user) return undefined;
 
-    const [newUser] = await this.db.transaction(async tx => {
+    const [newUser] = await this.db.transaction(async (tx) => {
       const insertValue = {
         ...dto,
         createdAt: getCurrentDate(),

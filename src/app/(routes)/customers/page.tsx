@@ -67,14 +67,14 @@ export default function CustomerForm() {
   });
   const [activeDialog, setActiveDialog] = useState<DialogType>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const {platforms} = useGetPlatforms();
+  const { platforms } = useGetPlatforms();
   // const { needs } = useGetNeeds();
-  const {customers} = useGetCustomers();
-  const {createCustomer, isCreatingCustomer} = useCreateCustomer();
-  const {user} = useSession();
+  const { customers } = useGetCustomers();
+  const { createCustomer, isCreatingCustomer } = useCreateCustomer();
+  const { user } = useSession();
   const downloadUrl = clientApiV1.export.customers.$url().toString();
 
-  const {config} = useAdminConfig();
+  const { config } = useAdminConfig();
   const onSubmit = async (data: CustomerDto) => {
     const result = await createCustomer(data);
     if (result) {
@@ -110,7 +110,7 @@ export default function CustomerForm() {
         isAdmin={RoleUtils.isAdmin(user?.role!)}
       />
     ),
-    [customers, platforms, user, config]
+    [customers, platforms, user, config],
   );
 
   return (
@@ -140,13 +140,13 @@ export default function CustomerForm() {
           <Dialog open={!!activeDialog} onOpenChange={handleOpenChange}>
             <DialogContent
               className="sm:max-w-[48rem] overflow-hidden"
-              onEscapeKeyDown={e => {
+              onEscapeKeyDown={(e) => {
                 if (hasUnsavedChanges) {
                   e.preventDefault();
                   setActiveDialog(null);
                 }
               }}
-              onInteractOutside={e => {
+              onInteractOutside={(e) => {
                 if (hasUnsavedChanges) {
                   e.preventDefault();
                 }
@@ -166,7 +166,7 @@ export default function CustomerForm() {
                         control={createCustomerForm.control}
                         name="name"
                         disabled={isCreatingCustomer}
-                        render={({field}) => (
+                        render={({ field }) => (
                           <FormItem className="flex flex-col gap-y-2">
                             <FormLabel>Tên KH</FormLabel>
                             <FormControl>
@@ -180,7 +180,7 @@ export default function CustomerForm() {
                         control={createCustomerForm.control}
                         name="phone"
                         disabled={isCreatingCustomer}
-                        render={({field}) => (
+                        render={({ field }) => (
                           <FormItem className="flex flex-col gap-y-2">
                             <FormLabel>SĐT</FormLabel>
                             <FormControl>
@@ -195,7 +195,7 @@ export default function CustomerForm() {
                         control={createCustomerForm.control}
                         name="address"
                         disabled={isCreatingCustomer}
-                        render={({field}) => (
+                        render={({ field }) => (
                           <FormItem className="flex flex-col gap-y-2">
                             <FormLabel>Địa chỉ</FormLabel>
                             <FormControl>
@@ -213,7 +213,7 @@ export default function CustomerForm() {
                         control={createCustomerForm.control}
                         name="money"
                         disabled={isCreatingCustomer}
-                        render={({field}) => (
+                        render={({ field }) => (
                           <FormItem className="flex flex-col gap-y-2">
                             <FormLabel>Tiền (VND)</FormLabel>
                             <FormControl>
@@ -228,7 +228,7 @@ export default function CustomerForm() {
                         control={createCustomerForm.control}
                         name="platform"
                         disabled={isCreatingCustomer}
-                        render={({field}) => (
+                        render={({ field }) => (
                           <FormItem className="flex flex-col gap-y-2">
                             <FormLabel>Nền tảng</FormLabel>
                             <Select
@@ -263,7 +263,7 @@ export default function CustomerForm() {
                         control={createCustomerForm.control}
                         name="need"
                         disabled={isCreatingCustomer}
-                        render={({field}) => (
+                        render={({ field }) => (
                           <FormItem className="flex flex-col gap-y-2">
                             <FormLabel>Nhu cầu</FormLabel>
                             <Textarea
@@ -277,13 +277,13 @@ export default function CustomerForm() {
                         control={createCustomerForm.control}
                         name="nextMessageTime"
                         disabled={isCreatingCustomer}
-                        render={({field}) => (
+                        render={({ field }) => (
                           <FormItem className="col-span-1 md:col-span-2 flex flex-col gap-y-2">
                             <FormLabel>Thời gian nhắn lại</FormLabel>
                             <FormControl>
                               <DatePicker
                                 date={field.value}
-                                onChange={date => field.onChange(date)}
+                                onChange={(date) => field.onChange(date)}
                               />
                             </FormControl>
                             <FormMessage />

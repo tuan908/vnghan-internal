@@ -14,7 +14,7 @@ export class ScrewMaterialRepositoryImpl implements ScrewMaterialRepository {
     const defaultConditions = [eq(ScrewMaterial.isDeleted, false)];
 
     const result = await this.db
-      .select({id: ScrewMaterial.id, name: ScrewMaterial.name})
+      .select({ id: ScrewMaterial.id, name: ScrewMaterial.name })
       .from(ScrewMaterial)
       .where(and(...defaultConditions));
 
@@ -25,7 +25,7 @@ export class ScrewMaterialRepositoryImpl implements ScrewMaterialRepository {
     const defaultConditions = [eq(ScrewMaterial.isDeleted, false)];
     const conditions = [];
 
-    const {id, name} = filters;
+    const { id, name } = filters;
 
     if (id) {
       conditions.push(eq(ScrewMaterial.id, id));
@@ -36,7 +36,7 @@ export class ScrewMaterialRepositoryImpl implements ScrewMaterialRepository {
     }
 
     const [material] = await this.db
-      .select({id: ScrewMaterial.id, name: ScrewMaterial.name})
+      .select({ id: ScrewMaterial.id, name: ScrewMaterial.name })
       .from(ScrewMaterial)
       .where(and(...defaultConditions, ...conditions));
 

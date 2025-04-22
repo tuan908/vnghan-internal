@@ -14,19 +14,19 @@ export class ScrewTypeRepositoryImpl implements ScrewTypeRepository {
   async findAll(): Promise<ScrewTypeDto[]> {
     const defaultConditions = [eq(ScrewType.isDeleted, false)];
     const result = await this.db
-      .select({id: ScrewType.id, name: ScrewType.name})
+      .select({ id: ScrewType.id, name: ScrewType.name })
       .from(ScrewType)
       .where(and(...defaultConditions));
     return nullsToUndefined(result);
   }
 
   async findBy(
-    filters: Record<string, any>
+    filters: Record<string, any>,
   ): Promise<ScrewTypeDto | undefined> {
     const defaultConditions = [eq(ScrewType.isDeleted, false)];
     const conditions = [];
 
-    const {id, name} = filters;
+    const { id, name } = filters;
 
     if (id) {
       conditions.push(eq(ScrewType.id, id));
@@ -37,7 +37,7 @@ export class ScrewTypeRepositoryImpl implements ScrewTypeRepository {
     }
 
     const [material] = await this.db
-      .select({id: ScrewType.id, name: ScrewType.name})
+      .select({ id: ScrewType.id, name: ScrewType.name })
       .from(ScrewType)
       .where(and(...defaultConditions, ...conditions));
 

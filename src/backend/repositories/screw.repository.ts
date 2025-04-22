@@ -34,7 +34,7 @@ export default class ScrewRepositoryImpl implements ScrewRepository {
   }
 
   async findBy(filters: Record<string, any>): Promise<SelectScrew | undefined> {
-    const {id} = filters;
+    const { id } = filters;
     const defaultConditions = [eq(Screw.isDeleted, false)];
     const conditions = [];
 
@@ -51,7 +51,7 @@ export default class ScrewRepositoryImpl implements ScrewRepository {
   }
 
   async create(entity: InsertScrew) {
-    const [newScrew] = await this.db.transaction(async tx => {
+    const [newScrew] = await this.db.transaction(async (tx) => {
       const newScrew = await tx.insert(Screw).values(entity).returning();
       return newScrew;
     });
@@ -59,9 +59,9 @@ export default class ScrewRepositoryImpl implements ScrewRepository {
   }
 
   async update(dto: InsertScrew) {
-    const screw = await this.findBy({id: dto.id!})
+    const screw = await this.findBy({ id: dto.id! });
     if (!screw) return undefined;
-    const [result] = await this.db.transaction(async tx => {
+    const [result] = await this.db.transaction(async (tx) => {
       return await tx
         .update(Screw)
         .set(screw)
@@ -74,7 +74,7 @@ export default class ScrewRepositoryImpl implements ScrewRepository {
   async delete(id: number): Promise<SelectScrew | undefined> {
     const [result] = await this.db
       .update(Screw)
-      .set({isDeleted: true})
+      .set({ isDeleted: true })
       .where(eq(Screw.id, id))
       .returning();
     return result;

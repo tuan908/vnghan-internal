@@ -368,10 +368,7 @@ export function CustomerTable({
                             <SelectGroup>
                               <SelectLabel>Nền tảng</SelectLabel>
                               {(platforms ?? []).map((x, i) => (
-                                <SelectItem
-                                  key={`${x}#${i}`}
-                                  value={x?.name!}
-                                >
+                                <SelectItem key={`${x}#${i}`} value={x?.name!}>
                                   {x?.name!}
                                 </SelectItem>
                               ))}

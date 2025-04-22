@@ -11,6 +11,6 @@ export const errorHandler: ErrorHandler = async (err, c) => {
       message: json.error.internalServerError,
       statusCode: 500,
     }),
-    500
+    500,
   );
 };

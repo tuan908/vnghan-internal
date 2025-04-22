@@ -27,7 +27,7 @@ export interface CacheEntry {
   contentType: string;
   isFile?: boolean;
   fileData?: string; // Base64 encoded file data
-  compressed?: boolean
+  compressed?: boolean;
 }
 
 // Cache store interface

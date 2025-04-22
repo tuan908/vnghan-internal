@@ -1,4 +1,7 @@
-import { createErrorResponse, createSuccessResponse } from "@/backend/lib/api-response";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/backend/lib/api-response";
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { tryCatch } from "@/shared/utils";
@@ -9,7 +12,7 @@ import { Hono } from "hono";
 
 const authRouterV1 = new Hono()
   .post("/register", async (c) => {
-    const userRepository = c.get("userRepository")
+    const userRepository = c.get("userRepository");
     const { username, password } = await c.req.json();
 
     if (!username || !password) {
@@ -23,7 +26,7 @@ const authRouterV1 = new Hono()
       );
     }
 
-    const existingUser = await userRepository.findBy({username})
+    const existingUser = await userRepository.findBy({ username });
 
     if (existingUser) {
       return c.json(
@@ -75,7 +78,7 @@ const authRouterV1 = new Hono()
     let existingUser;
 
     try {
-      const user = await userRepository.findBy({username})
+      const user = await userRepository.findBy({ username });
       existingUser = user;
     } catch (error) {
       console.error(error instanceof Error ? error?.cause : error);

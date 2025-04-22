@@ -20,7 +20,7 @@ export class ImportServiceImpl implements ImportService {
     file: Buffer | ReadableStream,
     fileType: "csv" | "excel",
     operatorId: number,
-    options: CustomerImportOptions = {}
+    options: CustomerImportOptions = {},
   ): Promise<CustomerImportResult> {
     // Parse the file based on type
     const data = await this.parseFile(file, fileType, options);
@@ -29,16 +29,16 @@ export class ImportServiceImpl implements ImportService {
     const validationResult = await this.validateCustomerData(
       file,
       fileType,
-      options
+      options,
     );
     if (!validationResult.valid) {
       throw new Error(
-        "Validation failed: " + JSON.stringify(validationResult.errors)
+        "Validation failed: " + JSON.stringify(validationResult.errors),
       );
     }
 
     // Start a transaction
-    return await db.transaction(async tx => {
+    return await db.transaction(async (tx) => {
       let customersCreated = 0;
       let customersUpdated = 0;
 
@@ -62,7 +62,7 @@ export class ImportServiceImpl implements ImportService {
               // Use onConflictDoUpdate for existing record
               await tx
                 .insert(DbSchema.Customer)
-                .values({...customerData, id: existingCustomer.id})
+                .values({ ...customerData, id: existingCustomer.id })
                 .onConflictDoUpdate({
                   target: DbSchema.Customer.id,
                   set: {
@@ -81,17 +81,20 @@ export class ImportServiceImpl implements ImportService {
                 .from(DbSchema.CustomerPlatform)
                 .innerJoin(
                   DbSchema.Platform,
-                  eq(DbSchema.CustomerPlatform.platformId, DbSchema.Platform.id)
+                  eq(
+                    DbSchema.CustomerPlatform.platformId,
+                    DbSchema.Platform.id,
+                  ),
                 )
                 .where(
                   and(
                     eq(
                       DbSchema.CustomerPlatform.customerId,
-                      existingCustomer.id
+                      existingCustomer.id,
                     ),
                     eq(DbSchema.CustomerPlatform.userId, operatorId),
-                    eq(DbSchema.Platform.name, customerData.platform)
-                  )
+                    eq(DbSchema.Platform.name, customerData.platform),
+                  ),
                 );
               customersUpdated++;
               continue;
@@ -137,7 +140,7 @@ export class ImportServiceImpl implements ImportService {
   async validateCustomerData(
     file: Buffer | ReadableStream,
     fileType: "csv" | "excel",
-    options: CustomerImportOptions = {}
+    options: CustomerImportOptions = {},
   ): Promise<CustomerValidationResult> {
     const data = await this.parseFile(file, fileType, options);
     const errors: CustomerValidationError[] = [];
@@ -180,7 +183,7 @@ export class ImportServiceImpl implements ImportService {
   private async parseFile(
     file: Buffer | ReadableStream,
     fileType: "csv" | "excel",
-    options: CustomerImportOptions = {}
+    options: CustomerImportOptions = {},
   ): Promise<any[]> {
     let buffer: Buffer;
 
@@ -209,10 +212,13 @@ export class ImportServiceImpl implements ImportService {
       });
       return records;
     } else if (fileType === "excel") {
-      const workbook = XLSX.read(buffer, {type: "buffer"});
+      const workbook = XLSX.read(buffer, { type: "buffer" });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName!];
-      const raw = XLSX.utils.sheet_to_json(worksheet!, {defval: "", raw: false});
+      const raw = XLSX.utils.sheet_to_json(worksheet!, {
+        defval: "",
+        raw: false,
+      });
       const columnMapping = options.columnMapping ?? {};
 
       const result = raw.map((row: any) => {
@@ -236,7 +242,7 @@ export class ImportServiceImpl implements ImportService {
 
   private mapToCustomerModel(
     record: any,
-    columnMapping?: Record<string, string>
+    columnMapping?: Record<string, string>,
   ): CustomerModel {
     if (!columnMapping) {
       // Default mapping assumes column names match model properties
@@ -246,7 +252,7 @@ export class ImportServiceImpl implements ImportService {
     const customer: any = {};
 
     // Apply custom column mapping
-    Object.keys(columnMapping).forEach(sourceField => {
+    Object.keys(columnMapping).forEach((sourceField) => {
       const targetField = columnMapping[sourceField];
       customer[targetField!] = record[sourceField];
     });

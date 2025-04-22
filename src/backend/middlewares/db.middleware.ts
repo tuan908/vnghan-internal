@@ -50,7 +50,10 @@ export const createDbMiddleware = (
       c.set("db", db);
       c.set("customerRepository", new CustomerRepositoryImpl(db));
       c.set("excelTemplateRepository", new ExcelTemplateRepositoryImpl(db));
-      c.set("excelTemplateHeaderRepository", new ExcelTemplateHeaderRepositoryImpl(db));
+      c.set(
+        "excelTemplateHeaderRepository",
+        new ExcelTemplateHeaderRepositoryImpl(db),
+      );
       c.set("platformRepository", new PlatformRepositoryImpl(db));
       c.set("screwRepository", new ScrewRepositoryImpl(db));
       c.set("screwMaterialRepository", new ScrewMaterialRepositoryImpl(db));

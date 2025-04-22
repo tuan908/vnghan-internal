@@ -13,7 +13,7 @@ export class ExcelTemplateRepositoryImpl implements ExcelTemplateRepository {
     this.db = db;
   }
   async findAll(
-    options: QueryOptions
+    options: QueryOptions,
   ): Promise<RecursivelyReplaceNullWithUndefined<ExcelTemplateModel>[]> {
     const defaultConditions = [
       eq(ExcelTemplate.isActive, true),
@@ -21,15 +21,15 @@ export class ExcelTemplateRepositoryImpl implements ExcelTemplateRepository {
     ];
 
     const templates = await this.db
-      .select({id: ExcelTemplate.id, label: ExcelTemplate.name})
+      .select({ id: ExcelTemplate.id, label: ExcelTemplate.name })
       .from(ExcelTemplate)
-      .where(and(...defaultConditions))
+      .where(and(...defaultConditions));
 
     return nullsToUndefined(templates);
   }
 
   async findBy(filters: Record<string, any>) {
-    const {id, name} = filters;
+    const { id, name } = filters;
     const defaultConditions = [
       eq(ExcelTemplate.isDeleted, false),
       eq(ExcelTemplate.isActive, true),

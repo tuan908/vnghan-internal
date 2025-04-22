@@ -13,7 +13,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   async findBy(filters: Record<string, any>) {
-    const {id, name, assignedTo, isAdmin} = filters;
+    const { id, name, assignedTo, isAdmin } = filters;
 
     const defaultConditions = [eq(Customer.isDeleted, false)];
     const conditions = [];
@@ -55,7 +55,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
   }
   update(
     id: number,
-    entity: SelectCustomer
+    entity: SelectCustomer,
   ): Promise<
     | {
         id: number;
@@ -84,8 +84,8 @@ export class CustomerRepositoryImpl implements CustomerRepository {
   async findAll(options: QueryOptions) {
     const defaultConditions = [eq(Customer.isDeleted, false)];
     const conditions = [];
-    if(options.filter) {
-      const {isAdmin, operatorId} = options.filter
+    if (options.filter) {
+      const { isAdmin, operatorId } = options.filter;
       if (!isAdmin) {
         conditions.push(eq(Customer.assignedTo, operatorId));
       }

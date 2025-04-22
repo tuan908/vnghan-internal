@@ -14,7 +14,7 @@ export class ExcelTemplateHeaderRepositoryImpl
   }
 
   async findBy(filters: Record<string, any>) {
-    const {id, label, templateId, templateName} = filters;
+    const { id, label, templateId, templateName } = filters;
     const defaultConditions = [eq(ExcelTemplateHeader.isDeleted, false)];
     const conditions = [];
 
@@ -43,7 +43,7 @@ export class ExcelTemplateHeaderRepositoryImpl
       .from(ExcelTemplateHeader)
       .innerJoin(
         ExcelTemplate,
-        eq(ExcelTemplateHeader.templateId, ExcelTemplate.id)
+        eq(ExcelTemplateHeader.templateId, ExcelTemplate.id),
       )
       .where(and(...conditions, ...defaultConditions));
     return nullsToUndefined(templateHeaders);
@@ -54,7 +54,7 @@ export class ExcelTemplateHeaderRepositoryImpl
     const conditions = [];
 
     if (options.filter) {
-      const {id, templateId} = options.filter;
+      const { id, templateId } = options.filter;
 
       if (id) {
         conditions.push(eq(ExcelTemplateHeader.id, id));

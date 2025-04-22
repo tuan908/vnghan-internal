@@ -15,8 +15,9 @@ import type { ImportFileExtension, ServerEnvironment } from "../../types";
 
 const importService = new ImportServiceImpl();
 
-const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
-  .post("/", async (c) => {
+const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>().post(
+  "/",
+  async (c) => {
     const db = c.get("db");
     const user = c.get("user");
     const formData = await c.req.formData();
@@ -143,6 +144,7 @@ const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
 
     await invalidateCache();
     return c.json(createSuccessResponse(importResult), 200);
-  });
+  },
+);
 
 export default importRouterV1;
