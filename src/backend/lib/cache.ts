@@ -36,22 +36,37 @@ export interface CacheStore {
   set(key: string, value: CacheEntry, ttl: number): Promise<void>;
   delete(key: string): Promise<void>;
   clear(pattern?: string): Promise<void>;
+  ping(): Promise<boolean>; // New method to check connection health
 }
+
+// Connection pool to manage Redis connections
+const redisConnections = new Map<string, Redis>();
 
 // Redis implementation of CacheStore
 export class RedisCacheStore implements CacheStore {
   private redis: Redis;
   private namespace: string;
+  private connectionKey: string;
 
   constructor(
     redisUrl: string,
     redisToken: string,
     namespace: string = "hono-cache:",
   ) {
-    this.redis = new Redis({
-      url: redisUrl,
-      token: redisToken,
-    });
+    this.connectionKey = `${redisUrl}:${namespace}`;
+
+    // Reuse connection if it exists
+    if (redisConnections.has(this.connectionKey)) {
+      this.redis = redisConnections.get(this.connectionKey)!;
+    } else {
+      this.redis = new Redis({
+        url: redisUrl,
+        token: redisToken,
+        automaticDeserialization: true,
+      });
+      redisConnections.set(this.connectionKey, this.redis);
+    }
+
     this.namespace = namespace;
   }
 
@@ -59,15 +74,28 @@ export class RedisCacheStore implements CacheStore {
     return `${this.namespace}${key}`;
   }
 
+  // New method to check connection health
+  async ping(): Promise<boolean> {
+    try {
+      const result = await this.redis.ping();
+      return result === "PONG";
+    } catch (error) {
+      console.error("Redis ping error:", error);
+      return false;
+    }
+  }
+
   async get(key: string): Promise<CacheEntry | null> {
-    const promise = this.redis.get<string>(this.getNamespacedKey(key));
+    const promise = this.redis.get<CacheEntry | string>(
+      this.getNamespacedKey(key),
+    );
     const { data } = await tryCatch(promise);
     if (!data) return null;
 
     if (typeof data === "object") {
       return data as CacheEntry;
     }
-    return JSON.parse(data) as CacheEntry;
+    return JSON.parse(data as string) as CacheEntry;
   }
 
   async set(key: string, value: CacheEntry, ttl: number): Promise<void> {
@@ -102,6 +130,11 @@ export class RedisCacheStore implements CacheStore {
       console.error("Redis cache clear error:", error);
     }
   }
+
+  // Get the underlying Redis client
+  getClient(): Redis {
+    return this.redis;
+  }
 }
 
 // Default options
@@ -135,19 +168,42 @@ export function decodeBody(bodyString: string): Promise<ArrayBuffer> {
   });
 }
 
-// Cache invalidation helper
-export const invalidateCache = (
-  redisUrl: string | undefined = process.env.REDIS_URL,
-  redisToken: string | undefined = process.env.REDIS_TOKEN,
-  pattern?: string,
+// Updated cache invalidation helper - can now accept a cache store instance
+export const invalidateCache = async (
+  cacheStoreOrRedisUrl?: RedisCacheStore | string,
+  redisTokenOrPattern?: string,
+  patternOrNamespace?: string,
   namespace: string = "hono-cache:",
 ): Promise<void> => {
-  if (!redisUrl || !redisToken) {
-    throw new Error(json.error.missingEnvironmentVariables);
+  // Handle different parameter scenarios
+  let cacheStore: RedisCacheStore;
+  let pattern: string | undefined;
+
+  if (cacheStoreOrRedisUrl instanceof RedisCacheStore) {
+    // First parameter is a cache store instance
+    cacheStore = cacheStoreOrRedisUrl;
+    pattern = redisTokenOrPattern;
+  } else {
+    // First parameter is a Redis URL
+    const redisUrl = cacheStoreOrRedisUrl || process.env.REDIS_URL;
+    const redisToken = redisTokenOrPattern || process.env.REDIS_TOKEN;
+    pattern = patternOrNamespace;
+
+    if (!redisUrl || !redisToken) {
+      throw new Error(json.error.missingEnvironmentVariables);
+    }
+
+    cacheStore = new RedisCacheStore(redisUrl, redisToken, namespace);
   }
 
-  const cacheStore = new RedisCacheStore(redisUrl, redisToken, namespace);
   return cacheStore.clear(pattern);
+};
+
+// New function to cleanup Redis connections
+export const cleanupConnections = async (): Promise<void> => {
+  // Upstash Redis doesn't have explicit close method
+  // Clear the connections map to allow garbage collection
+  redisConnections.clear();
 };
 
 /**

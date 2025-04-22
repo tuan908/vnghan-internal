@@ -99,9 +99,7 @@ export const CustomerSchema = z.object({
     .string({
       message: format(json.error.fieldRequired, json.form.createCustomer.need),
     })
-    .min(1, {
-      message: format(json.error.fieldRequired, json.form.createCustomer.need),
-    }),
+    .optional(),
   money: z
     .string({
       message: format(json.error.fieldRequired, json.form.createCustomer.money),
