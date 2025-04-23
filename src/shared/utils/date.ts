@@ -1,7 +1,7 @@
-import { isSameDay } from "date-fns";
+import dayjs from "dayjs";
 
-export const isToday = (date: Date | string | number): boolean => {
-  return isSameDay(new Date(date), new Date());
+export const isToday = async (date: Date | string | number) => {
+  return dayjs(date).isSame(dayjs(new Date()));
 };
 
 export const getCurrentDate = () => new Date();

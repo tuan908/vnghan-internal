@@ -9,7 +9,7 @@ import {
 import { UserRole } from "@/shared/constants/roles";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import type { Session } from "@/shared/utils/session";
-import { formatDate } from "date-fns";
+import dayjs from "dayjs";
 import { Hono } from "hono";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
@@ -203,5 +203,5 @@ const mapData = (dbColumns: ExcelTemplateHeaderModel[], data: any[]) => {
 const formatDateToString = (
   formatStr: string = DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS,
 ) => {
-  return formatDate(new Date(), formatStr);
+  return dayjs(new Date(), formatStr);
 };

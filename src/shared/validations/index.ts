@@ -127,6 +127,10 @@ export const CustomerSchema = z.object({
     }),
   nextMessageTime: z
     .date({
+      invalid_type_error: format(
+        json.error.fieldRequired,
+        json.form.createCustomer.nextMessageTime,
+      ),
       required_error: format(
         json.error.fieldRequired,
         json.form.createCustomer.nextMessageTime,

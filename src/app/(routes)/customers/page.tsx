@@ -4,7 +4,7 @@ import { CustomerTable } from "@/frontend/components/features/customer/customer-
 import { ExportOptionDropdown } from "@/frontend/components/features/excel/export-option";
 import { Button } from "@/frontend/components/ui/button";
 import { Card, CardContent } from "@/frontend/components/ui/card";
-import { DatePicker } from "@/frontend/components/ui/date-picker";
+import { DateTimePicker } from "@/frontend/components/ui/datetime-picker";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ import { useGetCustomers } from "@/frontend/hooks/useGetCustomers";
 import { useGetPlatforms } from "@/frontend/hooks/useGetPlatforms";
 import { useSession } from "@/frontend/hooks/useSession";
 import { useAdminConfig } from "@/frontend/providers/AdminConfigProvider";
+import json from "@/shared/i18n/locales/vi/vi.json";
 import { RoleUtils } from "@/shared/utils";
 import { clientApiV1 } from "@/shared/utils/hono-client";
 import { type CustomerDto, CustomerSchema } from "@/shared/validations";
@@ -100,18 +101,21 @@ export default function CustomerForm() {
     }
   };
 
-  const MemoizedTable = useCallback(
-    () => (
+  const MemoizedTable = useCallback(() => {
+    const transformedCustomers = customers ?? [];
+    const transformedPlatforms = platforms ?? [];
+    const isAdmin = RoleUtils.isAdmin(user?.role!);
+
+    return (
       <CustomerTable
-        customers={customers ?? []}
+        customers={transformedCustomers}
         // needs={needs ?? []}
-        platforms={platforms ?? []}
+        platforms={transformedPlatforms}
         config={config}
-        isAdmin={RoleUtils.isAdmin(user?.role!)}
+        isAdmin={isAdmin}
       />
-    ),
-    [customers, platforms, user, config],
-  );
+    );
+  }, [customers, platforms, user, config]);
 
   return (
     <>
@@ -273,23 +277,13 @@ export default function CustomerForm() {
                           </FormItem>
                         )}
                       />
-                      <FormField
+                      <DateTimePicker
                         control={createCustomerForm.control}
                         name="nextMessageTime"
+                        label={json.form.createCustomer.nextMessageTime}
                         disabled={isCreatingCustomer}
-                        render={({ field }) => (
-                          <FormItem className="col-span-1 md:col-span-2 flex flex-col gap-y-2">
-                            <FormLabel>Thời gian nhắn lại</FormLabel>
-                            <FormControl>
-                              <DatePicker
-                                date={field.value}
-                                onChange={(date) => field.onChange(date)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
                       />
+
                       <div className="col-span-1 md:col-span-2 text-right">
                         <Button type="submit">Lưu</Button>
                       </div>

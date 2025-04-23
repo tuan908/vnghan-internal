@@ -56,8 +56,11 @@ export const UserRoles = {
   Administrator: "004",
 };
 
-export const DATE_FORMAT_DD_MM_YYYY_WITH_SLASH = "dd/MM/yyyy";
-export const DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS = "yyyyMMddHHmmsssss";
+export const DATE_FORMAT_DD_MM_YYYY_WITH_SLASH = "DD/MM/YYYY";
+export const DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS = "YYYYMMDDHHmmssSSS";
+export const DATETIME_FORMAT_DD_MM_YYYY_HH_MM_SS_WITH_SLASH =
+  "DD/MM/YYYY HH:mm:ss";
+export const MONTH_FORMAT_MM_YYYY_SLASH = "MM/YYYY";
 
 export const TemplateTypes = {
   Customer: "customer",

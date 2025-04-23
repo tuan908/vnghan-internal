@@ -3,10 +3,9 @@ import { useDeleteCustomer } from "@/frontend/hooks/useDeleteCustomer";
 import { useEditCustomer } from "@/frontend/hooks/useEditCustomer";
 import { useIntlFormatter } from "@/frontend/hooks/useIntlFormatter";
 import type { AdminConfig } from "@/frontend/providers/AdminConfigProvider";
-import { DATE_FORMAT_DD_MM_YYYY_WITH_SLASH } from "@/shared/constants";
+import { DATETIME_FORMAT_DD_MM_YYYY_HH_MM_SS_WITH_SLASH } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { cn } from "@/shared/utils";
-import { isToday } from "@/shared/utils/date";
 import { type CustomerDto, CustomerSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type {
@@ -16,14 +15,14 @@ import type {
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
-import { format } from "date-fns/format";
+import dayjs from "dayjs";
 import { AnimatePresence } from "framer-motion";
 import { Pencil, Trash2 } from "lucide-react";
 import { startTransition, useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "../../ui/button";
 import { DataTable, fuzzySort } from "../../ui/data-table";
-import { DatePicker } from "../../ui/date-picker";
+import { DateTimePicker } from "../../ui/datetime-picker";
 import {
   Dialog,
   DialogContent,
@@ -185,10 +184,9 @@ export function CustomerTable({
         header: "Thời gian nhắn lại",
         accessorKey: "nextMessageTime",
         cell: ({ row }) => {
-          const formattedNextMessageTime = format(
+          const formattedNextMessageTime = dayjs(
             new Date(row.getValue("nextMessageTime")),
-            DATE_FORMAT_DD_MM_YYYY_WITH_SLASH,
-          );
+          ).format(DATETIME_FORMAT_DD_MM_YYYY_HH_MM_SS_WITH_SLASH);
           return <div className="text-center">{formattedNextMessageTime}</div>;
         },
         sortDescFirst: false,
@@ -231,10 +229,10 @@ export function CustomerTable({
   const getRowStyles = useCallback(
     (row: Row<CustomerDto>): string => {
       const nextMessageTime = row.original.nextMessageTime;
-      if (isToday(nextMessageTime) && isAdmin) {
-        return config.todayHighlightColor;
+      if (!dayjs().isSame(nextMessageTime, "date") || !isAdmin) {
+        return "";
       }
-      return "";
+      return config.todayHighlightColor;
     },
     [config.todayHighlightColor],
   );
@@ -393,22 +391,11 @@ export function CustomerTable({
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={editCustomerForm.control}
+                  <DateTimePicker
                     name="nextMessageTime"
+                    label={json.form.createCustomer.nextMessageTime}
+                    control={editCustomerForm.control}
                     disabled={isEditingCustomer}
-                    render={({ field }) => (
-                      <FormItem className="col-span-1 md:col-span-2 flex flex-col gap-y-2">
-                        <FormLabel>Thời gian nhắn lại</FormLabel>
-                        <FormControl>
-                          <DatePicker
-                            date={field.value}
-                            onChange={(date) => field.onChange(date)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
                   />
                   <div className="col-span-1 md:col-span-2 text-right">
                     <Button type="submit">Lưu</Button>
