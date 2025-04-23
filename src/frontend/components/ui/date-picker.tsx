@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
 import { Button } from "@/frontend/components/ui/button";
@@ -12,6 +11,7 @@ import {
 } from "@/frontend/components/ui/popover";
 import { DATE_FORMAT_DD_MM_YYYY_WITH_SLASH } from "@/shared/constants";
 import { cn } from "@/shared/utils";
+import dayjs from "dayjs";
 
 interface DayPickerProps {
   date: Date;
@@ -31,7 +31,7 @@ export function DatePicker({ date, onChange }: DayPickerProps) {
         >
           <CalendarIcon />
           {date ? (
-            format(date, DATE_FORMAT_DD_MM_YYYY_WITH_SLASH)
+            dayjs(date).format(DATE_FORMAT_DD_MM_YYYY_WITH_SLASH)
           ) : (
             <span>Chọn ngày</span>
           )}
