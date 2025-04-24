@@ -92,7 +92,6 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
     return c.json(createSuccessResponse({ data: result }), 200);
   })
   .patch("/:id", async (c) => {
-    const db = c.get("db");
     const screwRepository = c.get("screwRepository");
     const screwTypeRepository = c.get("screwTypeRepository");
     const screwMaterialRepository = c.get("screwMaterialRepository");
@@ -123,12 +122,10 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
     screw.note = body.note!;
     screw.price = body.price!;
     screw.quantity = body.quantity!;
-    screw.materialId = screwType.id;
-    screw.componentTypeId = screwMaterial.id;
+    screw.materialId = screwMaterial.id;
+    screw.componentTypeId = screwType.id;
 
-    const result = await db.transaction(async (tx) => {
-      return await screwRepository.update(screw);
-    });
+    const result = await screwRepository.update(screw);
 
     if (!result) {
       return c.json(

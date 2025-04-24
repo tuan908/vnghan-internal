@@ -59,13 +59,11 @@ export default class ScrewRepositoryImpl implements ScrewRepository {
   }
 
   async update(dto: InsertScrew) {
-    const screw = await this.findBy({ id: dto.id! });
-    if (!screw) return undefined;
     const [result] = await this.db.transaction(async (tx) => {
       return await tx
         .update(Screw)
-        .set(screw)
-        .where(eq(Screw.id, screw.id!))
+        .set(dto)
+        .where(eq(Screw.id, dto.id!))
         .returning();
     });
     return nullsToUndefined(result);

@@ -16,21 +16,39 @@ import {
   SelectValue,
 } from "@/frontend/components/ui/select";
 import { Textarea } from "@/frontend/components/ui/textarea";
+import json from "@/shared/i18n/locales/vi/vi.json";
 import type { ScrewMaterialDto, ScrewTypeDto } from "@/shared/types";
 import type { ScrewDto } from "@/shared/validations";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Loader2 } from "lucide-react";
-import { type FC, useEffect } from "react";
+import { type FC, memo } from "react";
 import { useFormContext } from "react-hook-form";
 
 type ScrewFormProps = {
   mode: "create" | "edit";
-  onSubmit: (e: React.FormEvent) => void; // Updated type to accept event
+  onSubmit: (e: React.FormEvent) => void;
   isSubmitting: boolean;
   screwTypes: ScrewTypeDto[];
   screwMaterials: ScrewMaterialDto[];
   screw?: ScrewDto;
 };
+
+// Memoized SelectItem components to prevent re-renders
+const TypeSelectItem = memo(({ type }: { type: ScrewTypeDto }) => (
+  <SelectItem key={type.id} value={type.name || ""}>
+    {type.name}
+  </SelectItem>
+));
+TypeSelectItem.displayName = "TypeSelectItem";
+
+const MaterialSelectItem = memo(
+  ({ material }: { material: ScrewMaterialDto }) => (
+    <SelectItem key={material.id} value={material.name || ""}>
+      {material.name}
+    </SelectItem>
+  ),
+);
+MaterialSelectItem.displayName = "MaterialSelectItem";
 
 // Screw form component
 export const ScrewForm: FC<ScrewFormProps> = ({
@@ -42,62 +60,16 @@ export const ScrewForm: FC<ScrewFormProps> = ({
   screw,
 }) => {
   const {
-    register,
-    reset,
     control,
-    setValue,
-    formState: { errors, isValid },
+    register,
+    formState: { errors },
   } = useFormContext<ScrewDto>();
 
-  // Diagnostic logging
-  useEffect(() => {
-    console.group("ScrewForm Initialization");
-    console.log("Mode:", mode);
-    console.log("Screw Data:", screw);
-    console.log("Form Errors:", errors);
-    console.log("Form Valid:", isValid);
-    console.groupEnd();
-  }, [mode, screw, errors, isValid]);
-
-  // Robust form initialization
-  useEffect(() => {
-    if (screw) {
-      try {
-        // Explicitly set each field
-        Object.keys(screw).forEach((key) => {
-          const value = screw[key as keyof ScrewDto];
-
-          // Handle potential undefined or null values
-          setValue(key as keyof ScrewDto, value ?? "", {
-            shouldValidate: true,
-            shouldDirty: true,
-          });
-        });
-
-        // Fallback reset for complete state management
-        reset(screw, {
-          keepErrors: false,
-          keepDirty: false,
-          keepDefaultValues: false,
-        });
-      } catch (error) {
-        console.error("Form Initialization Error:", error);
-      }
-    }
-  }, [screw, reset, setValue]);
-
+  // Simplified form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting Form:", {
-      mode,
-      screw,
-      isValid,
-      errors,
-    });
     onSubmit(e);
   };
-
-  // Memoized rendering of select options to prevent unnecessary re-renders
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
@@ -161,11 +133,11 @@ export const ScrewForm: FC<ScrewFormProps> = ({
           disabled={isSubmitting}
           name="componentType"
           render={({ field }) => (
-            <FormItem key={field.value}>
+            <FormItem>
               <FormLabel>Loại phụ kiện</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value || ""}
                 disabled={field.disabled}
               >
                 <FormControl>
@@ -174,10 +146,8 @@ export const ScrewForm: FC<ScrewFormProps> = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {screwTypes.map((x) => (
-                    <SelectItem key={x.id + "#" + x.name} value={x.name!}>
-                      {x.name}
-                    </SelectItem>
+                  {screwTypes.map((type) => (
+                    <TypeSelectItem key={type.id} type={type} />
                   ))}
                 </SelectContent>
               </Select>
@@ -191,11 +161,11 @@ export const ScrewForm: FC<ScrewFormProps> = ({
           name="material"
           disabled={isSubmitting}
           render={({ field }) => (
-            <FormItem key={field.value}>
+            <FormItem>
               <FormLabel>Chất liệu</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value || ""}
                 disabled={field.disabled}
               >
                 <FormControl>
@@ -204,10 +174,8 @@ export const ScrewForm: FC<ScrewFormProps> = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {screwMaterials.map((x) => (
-                    <SelectItem key={x.id + "#" + x.name} value={x.name!}>
-                      {x.name}
-                    </SelectItem>
+                  {screwMaterials.map((material) => (
+                    <MaterialSelectItem key={material.id} material={material} />
                   ))}
                 </SelectContent>
               </Select>
@@ -246,12 +214,12 @@ export const ScrewForm: FC<ScrewFormProps> = ({
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Đang lưu...
+              <span>{json.common.saving}</span>
             </>
           ) : mode === "edit" ? (
-            "Cập nhật"
+            <span>{json.common.edit}</span>
           ) : (
-            "Lưu"
+            <span>{json.common.save}</span>
           )}
         </Button>
       </DialogFooter>

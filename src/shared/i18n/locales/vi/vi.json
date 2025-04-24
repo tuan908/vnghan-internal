@@ -54,7 +54,8 @@
     "next": "Tiếp theo",
     "previous": "Trước đó",
     "yes": "Có",
-    "no": "Không"
+    "no": "Không",
+    "saving": "Đang lưu..."
   },
   "auth": {
     "login": "Đăng nhập",
