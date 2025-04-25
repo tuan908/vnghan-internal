@@ -1,156 +1,425 @@
 import { getCurrentDate } from "@/shared/utils/date";
+import { CustomerDto, ScrewDto } from "@/shared/validations";
+import { Buffer } from "buffer";
 import { parse as csvParse } from "csv-parse/sync";
-import { and, eq, like } from "drizzle-orm";
-import * as XLSX from "xlsx";
-import { DbSchema } from "../db/schema";
+import { and, eq, inArray } from "drizzle-orm";
+import ExcelJS from "exceljs";
+import {
+  Customer,
+  CustomerPlatform,
+  Platform,
+  Screw,
+  ScrewType,
+} from "../db/schema";
 import type { CustomerModel } from "../models/customer.model";
 import type { Database } from "../types";
 import type {
-  CustomerImportOptions,
-  CustomerImportResult,
-  CustomerValidationError,
-  CustomerValidationResult,
-  CustomerValidationWarning,
+  ImportFileExtension,
+  ImportOptions,
+  ImportResult,
   ImportService,
+  ImportType,
+  ValidationError,
+  ValidationResult,
+  ValidationWarning,
 } from "./interfaces/import-service.interface";
 
 export class ImportServiceImpl implements ImportService {
-  async importCustomers(
+  async import(
+    db: Database,
+    file: Buffer | ReadableStream,
+    fileType: ImportFileExtension,
+    operatorId: number,
+    type: ImportType,
+    options: ImportOptions = {},
+  ) {
+    if (type === "customer")
+      return await this.importCustomers(
+        db,
+        file,
+        fileType,
+        operatorId,
+        options,
+      );
+    if (type === "screw")
+      return await this.importScrews(db, file, fileType, operatorId, options);
+
+    return {
+      success: false,
+      totalProcessed: 0,
+      rowsCreated: 0,
+      rowsUpdated: 0,
+    };
+  }
+
+  private async importCustomers(
     db: Database,
     file: Buffer | ReadableStream,
     fileType: "csv" | "excel",
     operatorId: number,
-    options: CustomerImportOptions = {},
-  ): Promise<CustomerImportResult> {
-    // Parse the file based on type
+    options: ImportOptions = {},
+  ): Promise<ImportResult> {
     const data = await this.parseFile(file, fileType, options);
-
-    // Validate before proceeding
     const validationResult = await this.validateCustomerData(
       file,
       fileType,
       options,
     );
+
     if (!validationResult.valid) {
       throw new Error(
         "Validation failed: " + JSON.stringify(validationResult.errors),
       );
     }
 
-    // Start a transaction
     return await db.transaction(async (tx) => {
-      let customersCreated = 0;
-      let customersUpdated = 0;
+      let rowsCreated = 0;
+      let rowsUpdated = 0;
 
-      // Process in batches
       const batchSize = options.batchSize || 100;
       for (let i = 0; i < data.length; i += batchSize) {
         const batch = data.slice(i, i + batchSize);
 
-        for (const record of batch) {
-          const customerData = this.mapToCustomerModel(record);
+        // Prepare for batch operations
+        const customerNames = batch.map(
+          (record) => this.mapToCustomerModel(record).name,
+        );
 
-          if (options.updateExisting) {
-            // Try to find existing customer by name
-            const [existingCustomer] = await tx
+        // Get existing customers in one query
+        const existingCustomers = options.updateExisting
+          ? await tx
               .select()
-              .from(DbSchema.Customer)
-              .where(like(DbSchema.Customer.name, `%${customerData.name}%`))
-              .limit(1);
+              .from(Customer)
+              .where(
+                inArray(
+                  Customer.name,
+                  customerNames.map((name) => `%${name}%`),
+                ),
+              )
+          : [];
 
-            if (existingCustomer) {
-              // Use onConflictDoUpdate for existing record
-              await tx
-                .insert(DbSchema.Customer)
-                .values({ ...customerData, id: existingCustomer.id })
-                .onConflictDoUpdate({
-                  target: DbSchema.Customer.id,
-                  set: {
-                    ...customerData,
-                    updatedBy: operatorId,
-                    updatedAt: getCurrentDate(),
-                  },
-                });
+        // Create maps for faster lookups
+        const existingCustomerMap = new Map();
+        existingCustomers.forEach((customer) => {
+          // Use the customer name for lookup (simplified for this example)
+          existingCustomerMap.set(customer.name, customer);
+        });
 
-              await tx
-                .update(DbSchema.CustomerPlatform)
-                .set({
-                  platformId: DbSchema.Platform.id,
-                  updatedAt: getCurrentDate(),
-                })
-                .from(DbSchema.CustomerPlatform)
-                .innerJoin(
-                  DbSchema.Platform,
-                  eq(
-                    DbSchema.CustomerPlatform.platformId,
-                    DbSchema.Platform.id,
-                  ),
-                )
-                .where(
-                  and(
-                    eq(
-                      DbSchema.CustomerPlatform.customerId,
-                      existingCustomer.id,
-                    ),
-                    eq(DbSchema.CustomerPlatform.userId, operatorId),
-                    eq(DbSchema.Platform.name, customerData.platform),
-                  ),
-                );
-              customersUpdated++;
-              continue;
+        // Collect all platform names
+        const platformNames = new Set(
+          batch.map((record) => this.mapToCustomerModel(record).platform),
+        );
+
+        // Get existing platforms in one query
+        const existingPlatforms = await tx
+          .select()
+          .from(Platform)
+          .where(inArray(Platform.name, Array.from(platformNames)));
+
+        // Create a map for faster platform lookups
+        const platformMap = new Map();
+        existingPlatforms.forEach((platform) => {
+          platformMap.set(platform.name, platform);
+        });
+
+        // Collect platforms that need to be created
+        const platformsToCreate = Array.from(platformNames)
+          .filter((name) => !platformMap.has(name))
+          .map((name) => ({ name }));
+
+        // Bulk insert new platforms if any
+        let newPlatforms: { id: number; name: string | null }[] = [];
+        if (platformsToCreate.length > 0) {
+          newPlatforms = await tx
+            .insert(Platform)
+            .values(platformsToCreate)
+            .returning({ id: Platform.id, name: Platform.name });
+
+          // Add new platforms to the map
+          newPlatforms.forEach((platform) => {
+            platformMap.set(platform.name, platform);
+          });
+        }
+
+        // Prepare collections for bulk operations
+        const customersToCreate: any[] = [];
+        const customersToUpdate: any[] = [];
+        const customerPlatformsToCreate: any[] = [];
+        const customerPlatformsToUpdate: any[] = [];
+
+        // Process each record to prepare for bulk operations
+        batch.forEach((record) => {
+          const customerData = this.mapToCustomerModel(record);
+          const existingCustomer = Array.from(
+            existingCustomerMap.values(),
+          ).find((c) => c.name.includes(customerData.name));
+
+          if (existingCustomer && options.updateExisting) {
+            // Add to update collection
+            customersToUpdate.push({
+              ...customerData,
+              id: existingCustomer.id,
+              updatedBy: operatorId,
+              updatedAt: getCurrentDate(),
+            });
+
+            // Add platform relation to update
+            const platform = platformMap.get(customerData.platform);
+            if (platform) {
+              customerPlatformsToUpdate.push({
+                customerId: existingCustomer.id,
+                platformId: platform.id,
+                userId: operatorId,
+                updatedAt: getCurrentDate(),
+              });
             }
-          }
 
-          // Insert new customer
-          const [customer] = await tx
-            .insert(DbSchema.Customer)
-            .values({
+            rowsUpdated++;
+          } else {
+            // Add to create collection
+            const newCustomerEntry = {
               ...customerData,
               createdBy: operatorId,
               assignedTo: operatorId,
-            })
-            .returning();
-          const [platform] = await tx
-            .select({
-              id: DbSchema.Platform.id,
-            })
-            .from(DbSchema.Platform)
-            .where(eq(DbSchema.Platform.name, customerData.platform));
-          await tx
-            .insert(DbSchema.CustomerPlatform)
-            .values({
-              customerId: customer?.id!,
-              platformId: platform?.id!,
+            };
+            customersToCreate.push(newCustomerEntry);
+
+            rowsCreated++;
+          }
+        });
+
+        // Bulk create new customers
+        let newCustomers: any[] = [];
+        if (customersToCreate.length > 0) {
+          newCustomers = await tx
+            .insert(Customer)
+            .values(customersToCreate)
+            .returning({ id: Customer.id, name: Customer.name });
+        }
+
+        // Bulk update existing customers
+        if (customersToUpdate.length > 0) {
+          for (const customerToUpdate of customersToUpdate) {
+            await tx
+              .update(Customer)
+              .set(customerToUpdate)
+              .where(eq(Customer.id, customerToUpdate.id));
+          }
+
+          // Bulk update customer platforms
+          for (const cpToUpdate of customerPlatformsToUpdate) {
+            await tx
+              .update(CustomerPlatform)
+              .set({
+                platformId: cpToUpdate.platformId,
+                updatedAt: cpToUpdate.updatedAt,
+              })
+              .where(
+                and(
+                  eq(CustomerPlatform.customerId, cpToUpdate.customerId),
+                  eq(CustomerPlatform.userId, cpToUpdate.userId),
+                ),
+              );
+          }
+        }
+
+        // Prepare customer-platform relations for new customers
+        if (newCustomers.length > 0) {
+          const cpEntries = newCustomers.map((customer) => {
+            const customerData = customersToCreate.find(
+              (c) => c.name === customer.name,
+            );
+            const platform = platformMap.get(customerData.platform);
+
+            return {
+              customerId: customer.id,
+              platformId: platform.id,
               userId: operatorId,
-            })
-            .returning();
-          customersCreated++;
+            };
+          });
+
+          // Bulk insert customer-platform relations
+          if (cpEntries.length > 0) {
+            await tx.insert(CustomerPlatform).values(cpEntries);
+          }
         }
       }
 
       return {
         success: true,
         totalProcessed: data.length,
-        customersCreated,
-        customersUpdated,
+        rowsCreated,
+        rowsUpdated,
       };
     });
   }
 
-  async validateCustomerData(
+  private async importScrews(
+    db: Database,
     file: Buffer | ReadableStream,
     fileType: "csv" | "excel",
-    options: CustomerImportOptions = {},
-  ): Promise<CustomerValidationResult> {
-    const data = await this.parseFile(file, fileType, options);
-    const errors: CustomerValidationError[] = [];
-    const warnings: CustomerValidationWarning[] = [];
+    operatorId: number,
+    options: ImportOptions = {},
+  ): Promise<ImportResult> {
+    const data = await this.parseFile<ScrewDto>(file, fileType, options);
+    const validationResult = await this.validateScrewData(data);
 
-    // Validate each record
+    if (!validationResult.valid) {
+      throw new Error(
+        "Validation failed: " + JSON.stringify(validationResult.errors),
+      );
+    }
+
+    return await db.transaction(async (tx) => {
+      let rowsCreated = 0;
+      let rowsUpdated = 0;
+
+      const batchSize = options.batchSize || 100;
+      for (let i = 0; i < data.length; i += batchSize) {
+        const batch = data.slice(i, i + batchSize);
+
+        // Get all screw names in the current batch
+        const screwNames = batch.map((record) => record.name);
+
+        // Get existing screws in one query
+        const existingScrews = options.updateExisting
+          ? await tx.select().from(Screw).where(inArray(Screw.name, screwNames))
+          : [];
+
+        // Create map for faster lookups
+        const existingScrewMap = new Map();
+        existingScrews.forEach((screw) => {
+          existingScrewMap.set(screw.name, screw);
+        });
+
+        // Collect all component types
+        const componentTypes = new Set(
+          batch.map((record) => record.componentType),
+        );
+
+        // Get existing component types in one query
+        const existingTypes = await tx
+          .select()
+          .from(ScrewType)
+          .where(inArray(ScrewType.name, Array.from(componentTypes)));
+
+        // Create map for faster lookups
+        const typeMap = new Map();
+        existingTypes.forEach((type) => {
+          typeMap.set(type.name, type);
+        });
+
+        // Collect types that need to be created
+        const typesToCreate = Array.from(componentTypes)
+          .filter((name) => !typeMap.has(name))
+          .map((name) => ({ name }));
+
+        // Bulk insert new component types
+        if (typesToCreate.length > 0) {
+          const newTypes = await tx
+            .insert(ScrewType)
+            .values(typesToCreate)
+            .returning({ id: ScrewType.id, name: ScrewType.name });
+
+          newTypes.forEach((type) => {
+            typeMap.set(type.name, type);
+          });
+        }
+
+        // Prepare collections for bulk operations
+        const screwsToCreate: any[] = [];
+        const screwsToUpdate: any[] = [];
+
+        // Process each record
+        batch.forEach((record) => {
+          const screwData = record;
+          const existingScrew = existingScrewMap.get(screwData.name);
+          const componentType = typeMap.get(screwData.componentType);
+
+          if (existingScrew && options.updateExisting) {
+            // Add to update collection
+            screwsToUpdate.push({
+              ...screwData,
+              id: existingScrew.id,
+              componentTypeId: componentType.id,
+              updatedAt: getCurrentDate(),
+            });
+
+            rowsUpdated++;
+          } else {
+            // Add to create collection
+            screwsToCreate.push({
+              ...screwData,
+              componentTypeId: componentType.id,
+              sizeId: 9999,
+              materialId: 9999,
+            });
+
+            rowsCreated++;
+          }
+        });
+
+        // Bulk insert new screws
+        if (screwsToCreate.length > 0) {
+          await tx.insert(Screw).values(screwsToCreate);
+        }
+
+        // Bulk update existing screws
+        if (screwsToUpdate.length > 0) {
+          for (const screwToUpdate of screwsToUpdate) {
+            await tx
+              .update(Screw)
+              .set(screwToUpdate)
+              .where(eq(Screw.id, screwToUpdate.id));
+          }
+        }
+      }
+
+      return {
+        success: true,
+        totalProcessed: data.length,
+        rowsCreated,
+        rowsUpdated,
+      };
+    });
+  }
+
+  async validateScrewData(data: any[]): Promise<ValidationResult> {
+    const errors: ValidationError[] = [];
+
     data.forEach((record, index) => {
-      const rowNum = index + (fileType === "csv" ? 2 : 2); // Adjust for header row
+      const rowNum = index + 2;
 
-      // Check name
+      if (!record.name) {
+        errors.push({
+          row: rowNum,
+          column: "name",
+          message: "Name is required",
+          value: record.name,
+        });
+      }
+    });
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings: [],
+      totalRecords: data.length,
+    };
+  }
+
+  public async validateCustomerData(
+    file: Buffer | ReadableStream,
+    fileType: "csv" | "excel",
+    options: ImportOptions = {},
+  ): Promise<ValidationResult> {
+    const data = await this.parseFile<CustomerDto>(file, fileType, options);
+    const errors: ValidationError[] = [];
+    const warnings: ValidationWarning[] = [];
+
+    data.forEach((record, index) => {
+      const rowNum = index + 2;
+
       if (!record.name) {
         errors.push({
           row: rowNum,
@@ -160,7 +429,6 @@ export class ImportServiceImpl implements ImportService {
         });
       }
 
-      // Add warnings for potential issues
       if (record.phone && !this.isValidPhone(record.phone)) {
         warnings.push({
           row: rowNum,
@@ -179,62 +447,65 @@ export class ImportServiceImpl implements ImportService {
     };
   }
 
-  // Helper methods
-  private async parseFile(
+  private async parseFile<T>(
     file: Buffer | ReadableStream,
     fileType: "csv" | "excel",
-    options: CustomerImportOptions = {},
-  ): Promise<any[]> {
+    options: ImportOptions = {},
+  ): Promise<T[]> {
     let buffer: Buffer;
 
     if (file instanceof ReadableStream) {
-      // Convert stream to buffer
       const chunks: Buffer[] = [];
       const reader = file.getReader();
-
       let result;
       do {
         result = await reader.read();
-        if (result.value) {
-          chunks.push(Buffer.from(result.value));
-        }
+        if (result.value) chunks.push(Buffer.from(result.value));
       } while (!result.done);
-
       buffer = Buffer.concat(chunks);
     } else {
       buffer = file;
     }
 
     if (fileType === "csv") {
-      const records = csvParse(buffer, {
+      return csvParse(buffer, {
         columns: options.headerRow !== false,
         skip_empty_lines: true,
       });
-      return records;
-    } else if (fileType === "excel") {
-      const workbook = XLSX.read(buffer, { type: "buffer" });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName!];
-      const raw = XLSX.utils.sheet_to_json(worksheet!, {
-        defval: "",
-        raw: false,
+    }
+
+    if (fileType === "excel") {
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(buffer as any);
+      const worksheet = workbook.worksheets[0];
+
+      const rows: any[] = [];
+      const headers: string[] = [];
+
+      worksheet?.getRow(1).eachCell((cell, colNumber) => {
+        headers[colNumber - 1] = cell.text.trim();
       });
-      const columnMapping = options.columnMapping ?? {};
 
-      const result = raw.map((row: any) => {
-        const newRow: Record<string, any> = {};
+      worksheet?.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return;
 
-        for (const [excelColumn, value] of Object.entries(row)) {
-          if (columnMapping[excelColumn]) {
-            const fieldName = columnMapping[excelColumn];
-            if (fieldName === "nextMessageTime")
-              newRow[fieldName] = new Date(value as string).toISOString();
-            newRow[fieldName] = value;
+        const rowData: Record<string, any> = {};
+        row.eachCell((cell, colNumber) => {
+          const header = headers[colNumber - 1];
+          if (!header) return;
+          const mappedKey = options.columnMapping?.[header] || header;
+          const value = cell.text.trim();
+
+          if (mappedKey === "nextMessageTime") {
+            rowData[mappedKey] = new Date(value).toISOString();
+          } else {
+            rowData[mappedKey] = value;
           }
-        }
-        return newRow;
+        });
+        rows.push(rowData);
       });
-      return result;
+
+      return rows;
     }
 
     throw new Error("Unsupported file type");
@@ -244,39 +515,28 @@ export class ImportServiceImpl implements ImportService {
     record: any,
     columnMapping?: Record<string, string>,
   ): CustomerModel {
-    if (!columnMapping) {
-      // Default mapping assumes column names match model properties
-      return record as CustomerModel;
-    }
+    if (!columnMapping) return record as CustomerModel;
 
     const customer: any = {};
-
-    // Apply custom column mapping
-    Object.keys(columnMapping).forEach((sourceField) => {
-      const targetField = columnMapping[sourceField];
-      customer[targetField!] = record[sourceField];
-    });
-
+    for (const [sourceField, targetField] of Object.entries(columnMapping)) {
+      customer[targetField] = record[sourceField];
+    }
     return customer as CustomerModel;
   }
 
   private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
   private isValidPhone(phone: string): boolean {
-    // Simple validation - improve based on your requirements
     return /^[+]?[\d\s()-]{7,20}$/.test(phone);
   }
 
   private reverse(obj: Record<string, any>): Record<string, any> {
     const reversed: Record<string, string> = {};
-
     for (const [key, value] of Object.entries(obj)) {
       reversed[value] = key;
     }
-
     return reversed;
   }
 }

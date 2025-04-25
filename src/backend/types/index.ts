@@ -3,8 +3,6 @@ import { CustomerRepositoryImpl } from "../repositories/customer.repository";
 import { PlatformRepositoryImpl } from "../repositories/platform.repository";
 import { UserRepositoryImpl } from "../repositories/user.repository";
 
-export type ImportFileExtension = "csv" | "excel";
-
 export interface Database extends ReturnType<typeof drizzle> {}
 
 export interface ServerEnvironment {

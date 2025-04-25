@@ -1,7 +1,11 @@
-import { DbSchema } from "@/backend/db/schema";
+import { ExcelTemplate, ExcelTemplateHeader } from "@/backend/db/schema";
 import { invalidateCache } from "@/backend/lib/cache";
 import { ImportServiceImpl } from "@/backend/services/import.service";
-import type { CustomerImportOptions } from "@/backend/services/interfaces/import-service.interface";
+import type {
+  ImportFileExtension,
+  ImportOptions,
+  ImportType,
+} from "@/backend/services/interfaces/import-service.interface";
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { eq } from "drizzle-orm";
@@ -11,7 +15,7 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../lib/api-response";
-import type { ImportFileExtension, ServerEnvironment } from "../../types";
+import type { ServerEnvironment } from "../../types";
 
 const importService = new ImportServiceImpl();
 
@@ -29,7 +33,7 @@ const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>().post(
 
     const ValidateSchema = z.object({
       file: z.custom<File>(),
-      type: z.string(),
+      type: z.custom<ImportType>(),
     });
 
     const parseResult = await ValidateSchema.safeParseAsync(reqData);
@@ -87,7 +91,7 @@ const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>().post(
     const updateExisting = formData.get("updateExisting") === "true";
     const batchSize = parseInt(formData.get("batchSize") as string) || 100;
 
-    const options: CustomerImportOptions = {
+    const options: ImportOptions = {
       headerRow: true,
       updateExisting,
       batchSize,
@@ -105,15 +109,15 @@ const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>().post(
 
     const headers = await db
       .select({
-        label: DbSchema.ExcelTemplateHeader.label,
-        name: DbSchema.ExcelTemplateHeader.key,
+        label: ExcelTemplateHeader.label,
+        name: ExcelTemplateHeader.key,
       })
-      .from(DbSchema.ExcelTemplateHeader)
+      .from(ExcelTemplateHeader)
       .innerJoin(
-        DbSchema.ExcelTemplate,
-        eq(DbSchema.ExcelTemplateHeader.templateId, DbSchema.ExcelTemplate.id),
+        ExcelTemplate,
+        eq(ExcelTemplateHeader.templateId, ExcelTemplate.id),
       )
-      .where(eq(DbSchema.ExcelTemplate.name, parseResult.data.type));
+      .where(eq(ExcelTemplate.name, parseResult.data.type));
 
     if (!headers || headers.length == 0) {
       return c.json(
@@ -132,11 +136,14 @@ const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>().post(
       columnMapping[header.label] = header.name;
     }
 
-    const importResult = await importService.importCustomers(
+    const type = parseResult.data.type;
+
+    const importResult = await importService.import(
       db,
       buffer,
       fileType,
       user?.id,
+      type,
       {
         columnMapping,
       },

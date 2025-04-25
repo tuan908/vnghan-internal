@@ -2,11 +2,11 @@ import { DbSchema } from "@/backend/db/schema";
 import { MiddlewareFactory } from "@/backend/middlewares";
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
-import { format, toStringValue } from "@/shared/utils";
+import { toStringValue } from "@/shared/utils";
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
+import ExcelJS from "exceljs";
 import { Hono } from "hono";
-import * as xlsx from "xlsx";
 import { z } from "zod";
 import { createErrorResponse } from "../../lib/api-response";
 import type { ServerEnvironment } from "../../types";
@@ -32,42 +32,40 @@ const cache = MiddlewareFactory.createCacheMiddleware({
   REDIS_TOKEN: process.env.REDIS_TOKEN,
 });
 
-interface TemplateDefinition {
-  type: string;
+// Utility function: generate template with ExcelJS
+const generateExcelTemplate = async ({
+  headers,
+  sheetName,
+}: {
   headers: string[];
-}
+  sheetName: string;
+}): Promise<Buffer> => {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet(sheetName);
 
-// Create template generator function
-const generateTemplate = (template: TemplateDefinition): Buffer => {
-  // Create workbook and worksheet
-  const wb = xlsx.utils.book_new();
-  const ws = xlsx.utils.aoa_to_sheet([template.headers]);
+  // Style and add header row
+  const headerRow = sheet.addRow(headers);
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFEEEEEE" },
+    };
+  });
 
-  // Add styling information
-  const headerStyle = {
-    font: { bold: true },
-    fill: { fgColor: { rgb: "EFEFEF" } },
-  };
+  // Auto-width
+  headers.forEach((_, i) => {
+    sheet.getColumn(i + 1).width = 20;
+  });
 
-  // Add header styling (requires xlsx-style package in production)
-  const range = xlsx.utils.decode_range(ws["!ref"] || "A1");
-  for (let col = range.s.c; col <= range.e.c; col++) {
-    const cell = xlsx.utils.encode_cell({ r: 0, c: col });
-    if (!ws[cell]) continue;
-    ws[cell].s = headerStyle;
-  }
-
-  // Add worksheet to workbook
-  xlsx.utils.book_append_sheet(wb, ws, `${template.type} Template`);
-
-  // Generate buffer
-  return xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+  // Write workbook to buffer
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
 };
 
 const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
-  // Apply rate limiting - 10 requests per minute
   .use("*", rateLimit)
-  // Apply caching - cache templates for 24 hours
   .use("*", cache)
   .get(
     "/",
@@ -82,19 +80,6 @@ const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
         const { type } = c.req.valid("query");
         const db = c.get("db");
 
-        // Validate type parameter
-        if (!type) {
-          return c.json(
-            createErrorResponse({
-              code: ErrorCodes.BAD_REQUEST,
-              message: format(json.error.fieldRequired, "type"),
-              statusCode: 400,
-            }),
-            400,
-          );
-        }
-
-        // Validate type is supported
         if (!["screw", "customer"].includes(type)) {
           return c.json(
             createErrorResponse({
@@ -125,12 +110,12 @@ const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
           );
         }
 
-        const templateHeaders = await db
+        const headers = await db
           .select({ label: DbSchema.ExcelTemplateHeader.label })
           .from(DbSchema.ExcelTemplateHeader)
           .where(eq(DbSchema.ExcelTemplateHeader.templateId, template.id));
 
-        if (!templateHeaders || templateHeaders.length == 0) {
+        if (!headers.length) {
           return c.json(
             createErrorResponse({
               code: ErrorCodes.NOT_FOUND,
@@ -141,13 +126,11 @@ const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
           );
         }
 
-        // Generate template
-        const buffer = generateTemplate({
-          type: toStringValue(template.name!),
-          headers: templateHeaders.map((x) => x.label),
+        const buffer = await generateExcelTemplate({
+          headers: headers.map((h) => h.label),
+          sheetName: toStringValue(template.name!),
         });
 
-        // Set response headers
         c.header(
           "Content-Type",
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -158,7 +141,8 @@ const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
         );
 
         return c.body(buffer);
-      } catch (error) {
+      } catch (err) {
+        console.error("Excel template generation error:", err);
         return c.json(
           createErrorResponse({
             code: ErrorCodes.INTERNAL_SERVER_ERROR,

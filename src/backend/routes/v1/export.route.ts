@@ -10,9 +10,10 @@ import { UserRole } from "@/shared/constants/roles";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import type { Session } from "@/shared/utils/session";
 import dayjs from "dayjs";
+import ExcelJS from "exceljs";
 import { Hono } from "hono";
 import Papa from "papaparse";
-import * as XLSX from "xlsx";
+import { PassThrough, Readable } from "stream";
 import { z } from "zod";
 
 const exportRouterV1 = new Hono<{ Variables: ContextVariableMap }>()
@@ -21,85 +22,7 @@ const exportRouterV1 = new Hono<{ Variables: ContextVariableMap }>()
     const excelTemplateHeaderRepository = c.get(
       "excelTemplateHeaderRepository",
     );
-    const querySchema = z.object({
-      format: z.enum(["csv", "excel"]),
-    });
 
-    const parseResult = querySchema.safeParse(c.req.query());
-
-    if (!parseResult.success) {
-      return c.json(
-        createErrorResponse({
-          code: "BAD_REQUEST",
-          message: "Invalid query parameters",
-          errors: parseResult.error.errors.map((err) => ({
-            code: "INVALID_INPUT",
-            field: err.path.join("."),
-            message: err.message,
-          })), // Zod error mapping
-        }),
-        400,
-      );
-    }
-
-    const { format } = parseResult.data;
-    const user = c.get("user") as Session; // Assuming user session is in context
-
-    let raw: any[] = [];
-    let filename = `export_customers_${formatDateToString()}`;
-
-    if (!user) {
-      return c.json(
-        createErrorResponse({
-          code: ErrorCodes.UNAUTHORIZED,
-          message: json.error.unauthorized,
-        }),
-        401,
-      );
-    }
-    const isAdmin = user.role === UserRole.Admin;
-    raw = await customerRepository.findAll({
-      filter: { operatorId: user.id, isAdmin },
-    }); // Corrected method call
-    filename = `export_customers_${formatDateToString()}`;
-    const dbColumns = await excelTemplateHeaderRepository.findBy({
-      templateName: TemplateTypes.Customer,
-    });
-
-    const data = mapData(dbColumns, raw);
-
-    if (format === "csv") {
-      const csv = Papa.unparse(data);
-      c.header("Content-Type", "text/csv");
-      c.header("Content-Disposition", `attachment; filename=${filename}.csv`);
-      return c.body(csv);
-    } else if (format === "excel") {
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "buffer",
-      });
-
-      c.header(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      );
-      c.header("Content-Disposition", `attachment; filename=${filename}.xlsx`);
-      return c.body(excelBuffer);
-    }
-
-    // Should not reach here due to schema validation, but as a fallback
-    return c.json(
-      createErrorResponse({
-        code: ErrorCodes.BAD_REQUEST,
-        message: json.error.invalidFormat,
-      }),
-      400,
-    );
-  })
-  .get("/screws", async (c) => {
     const querySchema = z.object({
       format: z.enum(["csv", "excel"]),
     });
@@ -115,36 +38,115 @@ const exportRouterV1 = new Hono<{ Variables: ContextVariableMap }>()
             code: ErrorCodes.BAD_REQUEST,
             field: err.path.join("."),
             message: err.message,
-          })), // Zod error mapping
+          })),
         }),
         400,
       );
     }
 
     const { format } = parseResult.data;
-    const screwRepository = c.get("screwRepository"); // Assuming screwRepository is in context
+    const user = c.get("user") as Session;
 
-    let raw: any[] = [];
-    let filename = `export_screws_${formatDateToString()}`;
-
-    // Assuming ScrewRepository has a findAll method
-    // Need to check if screwRepository exists and has findAll
-    if (screwRepository && typeof screwRepository.findAll === "function") {
-      raw = await screwRepository.findAll(); // Corrected method call
-      filename = `export_screws_${formatDateToString()}`;
-    } else {
-      console.error("ScrewRepository or findAll method not available");
+    if (!user) {
       return c.json(
         createErrorResponse({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Screw data source not configured correctly",
+          code: ErrorCodes.UNAUTHORIZED,
+          message: json.error.unauthorized,
         }),
-        500,
+        401,
       );
     }
+
+    const isAdmin = user.role === UserRole.Admin;
+    const raw = await customerRepository.findAll({
+      filter: { operatorId: user.id, isAdmin },
+    });
+
+    const filename = `export_customers_${formatDateToString()}`;
+    const dbColumns = await excelTemplateHeaderRepository.findBy({
+      templateName: TemplateTypes.Customer,
+    });
+    const data = mapData(dbColumns, raw);
+
+    if (format === "csv") {
+      const csv = Papa.unparse(data);
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv",
+          "Content-Disposition": `attachment; filename=${filename}.csv`,
+        },
+      });
+    }
+
+    if (format === "excel") {
+      const stream = new PassThrough();
+      const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream });
+      const worksheet = workbook.addWorksheet("Sheet1");
+
+      if (data.length > 0) {
+        worksheet.columns = Object.keys(data[0]!).map((key) => ({
+          header: key,
+          key,
+          width: 20,
+        }));
+      }
+
+      for (const row of data) {
+        worksheet.addRow(row).commit();
+      }
+
+      workbook.commit().catch(console.error);
+
+      const webStream = Readable.toWeb(stream);
+
+      return new Response(webStream as any, {
+        headers: {
+          "Content-Type":
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": `attachment; filename=${filename}.xlsx`,
+        },
+      });
+    }
+
+    return c.json(
+      createErrorResponse({
+        code: ErrorCodes.BAD_REQUEST,
+        message: json.error.invalidFormat,
+      }),
+      400,
+    );
+  })
+
+  .get("/screws", async (c) => {
+    const screwRepository = c.get("screwRepository");
     const excelTemplateHeaderRepository = c.get(
       "excelTemplateHeaderRepository",
     );
+
+    const querySchema = z.object({
+      format: z.enum(["csv", "excel"]),
+    });
+
+    const parseResult = querySchema.safeParse(c.req.query());
+
+    if (!parseResult.success) {
+      return c.json(
+        createErrorResponse({
+          code: ErrorCodes.BAD_REQUEST,
+          message: json.error.invalidQueryParams,
+          errors: parseResult.error.errors.map((err) => ({
+            code: ErrorCodes.BAD_REQUEST,
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        }),
+        400,
+      );
+    }
+
+    const { format } = parseResult.data;
+    const raw = await screwRepository.findAll();
+    const filename = `export_screws_${formatDateToString()}`;
     const dbColumns = await excelTemplateHeaderRepository.findBy({
       templateName: TemplateTypes.Screw,
     });
@@ -152,27 +154,44 @@ const exportRouterV1 = new Hono<{ Variables: ContextVariableMap }>()
 
     if (format === "csv") {
       const csv = Papa.unparse(data);
-      c.header("Content-Type", "text/csv");
-      c.header("Content-Disposition", `attachment; filename=${filename}.csv`);
-      return c.body(csv);
-    } else if (format === "excel") {
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "buffer",
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv",
+          "Content-Disposition": `attachment; filename=${filename}.csv`,
+        },
       });
-
-      c.header(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      );
-      c.header("Content-Disposition", `attachment; filename=${filename}.xlsx`);
-      return c.body(excelBuffer);
     }
 
-    // Should not reach here due to schema validation, but as a fallback
+    if (format === "excel") {
+      const stream = new PassThrough();
+      const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream });
+      const worksheet = workbook.addWorksheet("Sheet1");
+
+      if (data.length > 0) {
+        worksheet.columns = Object.keys(data[0]!).map((key) => ({
+          header: key,
+          key,
+          width: 20,
+        }));
+      }
+
+      for (const row of data) {
+        worksheet.addRow(row).commit();
+      }
+
+      workbook.commit().catch(console.error);
+
+      const webStream = Readable.toWeb(stream);
+
+      return new Response(webStream as any, {
+        headers: {
+          "Content-Type":
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": `attachment; filename=${filename}.xlsx`,
+        },
+      });
+    }
+
     return c.json(
       createErrorResponse({
         code: ErrorCodes.BAD_REQUEST,
@@ -184,6 +203,7 @@ const exportRouterV1 = new Hono<{ Variables: ContextVariableMap }>()
 
 export default exportRouterV1;
 
+// Helpers
 const mapData = (dbColumns: ExcelTemplateHeaderModel[], data: any[]) => {
   const columnMapping: Record<string, any> = {};
   for (const dbColumn of dbColumns) {
@@ -203,5 +223,5 @@ const mapData = (dbColumns: ExcelTemplateHeaderModel[], data: any[]) => {
 const formatDateToString = (
   formatStr: string = DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS,
 ) => {
-  return dayjs(new Date(), formatStr);
+  return dayjs(new Date()).format(formatStr);
 };

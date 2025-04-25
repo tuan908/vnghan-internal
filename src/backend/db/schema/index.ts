@@ -8,13 +8,19 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+const auditableFields = {
+  createdBy: integer("created_by"),
+  updatedBy: integer("updated_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  isDeleted: boolean("is_deleted").default(false),
+};
+
 export const ScrewMaterial = pgTable("t_screw_material", {
   id: serial("id").primaryKey(),
   name: text("name"),
   note: text("note"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const ScrewUnit = pgTable("t_screw_unit", {
@@ -22,27 +28,21 @@ export const ScrewUnit = pgTable("t_screw_unit", {
   name: text("name"),
   detail: text("detail"),
   note: text("note"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const ScrewType = pgTable("t_screw_type", {
   id: serial("id").primaryKey(),
   name: text("name"),
   note: text("note"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const ScrewSize = pgTable("t_screw_size", {
   id: serial("id").primaryKey(),
   name: text("name"),
   note: text("note"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const Customer = pgTable("t_customer", {
@@ -53,24 +53,16 @@ export const Customer = pgTable("t_customer", {
   nextMessageTime: text("next_message_time"),
   note: text("note"),
   money: text("money"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
   need: text("need").default(""),
-  // ✅ Audit fields
-  createdBy: integer("created_by").references(() => User.id),
-  updatedBy: integer("updated_by").references(() => User.id),
-
   // 🧩 Optional: Ownership / responsibility
   assignedTo: integer("assigned_to").references(() => User.id),
+  ...auditableFields,
 });
 
 export const Platform = pgTable("t_platform", {
   id: serial("id").primaryKey(),
   name: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const CustomerPlatform = pgTable("t_customer_platform", {
@@ -94,9 +86,7 @@ export const CustomerPlatform = pgTable("t_customer_platform", {
   userId: integer("user_id")
     .notNull()
     .references(() => User.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const Screw = pgTable("t_screw", {
@@ -115,9 +105,7 @@ export const Screw = pgTable("t_screw", {
   note: text("note"),
   price: text("price"),
   quantity: text("quantity"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const ScrewQuestion = pgTable("t_screw_question", {
@@ -125,9 +113,7 @@ export const ScrewQuestion = pgTable("t_screw_question", {
   name: text("name"),
   data: jsonb("data"),
   note: text("note"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const ScrewInstruction = pgTable("t_screw_instruction", {
@@ -135,9 +121,7 @@ export const ScrewInstruction = pgTable("t_screw_instruction", {
   name: text("name"),
   data: jsonb("data"),
   note: text("note"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const ScrewImage = pgTable("t_screw_images", {
@@ -145,17 +129,13 @@ export const ScrewImage = pgTable("t_screw_images", {
   url: text("name"),
   note: text("note"),
   screwId: integer("screw_id").references(() => Screw.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const Need = pgTable("t_need", {
   id: serial("id").primaryKey(),
   description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const User = pgTable("t_user", {
@@ -164,9 +144,7 @@ export const User = pgTable("t_user", {
   name: text("name"),
   passwordHash: text("password_hash"),
   role: text("role", { enum: ["001", "002", "003", "004"] }).default("001"), // Viewer, Editor, Owner, Administrator
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const ExcelTemplate = pgTable("t_excel_template", {
@@ -174,9 +152,7 @@ export const ExcelTemplate = pgTable("t_excel_template", {
   name: text("name").notNull(), // e.g. "Customer Import"
   description: text("description"), // optional
   isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 export const ExcelTemplateHeader = pgTable("t_excel_template_header", {
@@ -190,9 +166,7 @@ export const ExcelTemplateHeader = pgTable("t_excel_template_header", {
   order: integer("order").notNull(), // Order in Excel
   exampleValue: text("example_value"), // Optional example
   required: boolean("required").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  isDeleted: boolean("is_deleted").default(false),
+  ...auditableFields,
 });
 
 const DbSchema = {

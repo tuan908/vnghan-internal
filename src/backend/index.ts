@@ -14,7 +14,8 @@ import type {
   UserRepository,
 } from "./repositories/interfaces";
 import { Routes } from "./routes";
-import type { Database, ImportFileExtension, ServerEnvironment } from "./types";
+import type { ImportFileExtension } from "./services/interfaces/import-service.interface";
+import type { Database, ServerEnvironment } from "./types";
 
 // Extend Hono Context types
 declare module "hono" {
@@ -50,6 +51,18 @@ const cache = MiddlewareFactory.createCacheMiddleware({
   REDIS_TOKEN: process.env.REDIS_TOKEN,
 });
 
+const fileCache = MiddlewareFactory.createCacheMiddleware({
+  ttl: 3600, // 1 hour cache
+  maxFileSizeBytes: 10 * 1024 * 1024, // 10MB limit
+  cacheableFileTypes: [
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ],
+  compressFiles: true,
+});
+
 const db = MiddlewareFactory.createDbMiddleware();
 
 const app = new Hono<{ Bindings: ServerEnvironment }>().basePath("/api");
@@ -63,24 +76,14 @@ app.use("*", async (c, next) => {
   return await jwt(c, next);
 });
 
-// app.use("*", async (c, next) => {
-//   if (isAuthRoute(c)) return await next();
-//   if (c.req.path.startsWith("/api/v1/export")) {
-//     const fileCache = MiddlewareFactory.createCacheMiddleware({
-//       ttl: 3600, // 1 hour cache
-//       maxFileSizeBytes: 10 * 1024 * 1024, // 10MB limit
-//       cacheableFileTypes: [
-//         "application/pdf",
-//         "image/jpeg",
-//         "image/png",
-//         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-//       ],
-//       compressFiles: true,
-//     });
-//     return await fileCache(c, next);
-//   }
-//   return await cache(c, next);
-// });
+app.use("*", async (c, next) => {
+  if (isAuthRoute(c)) return await next();
+  if (c.req.path.startsWith("/api/v1/export")) {
+    return await fileCache(c, next);
+  } else {
+    return await cache(c, next);
+  }
+});
 
 // --- Database Middleware ---
 app.use("*", db);

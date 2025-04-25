@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImportFileExtension } from "@/backend/types";
+import type { ImportFileExtension } from "@/backend/services/interfaces/import-service.interface";
 import { Button } from "@/frontend/components/ui/button";
 import {
   DropdownMenu,
