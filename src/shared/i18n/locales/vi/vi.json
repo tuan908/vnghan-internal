@@ -55,7 +55,11 @@
     "previous": "Trước đó",
     "yes": "Có",
     "no": "Không",
-    "saving": "Đang lưu..."
+    "saving": "Đang lưu...",
+    "row": "Dòng",
+    "column": "Cột",
+    "message": "Chi tiết",
+    "value": "Giá trị nhập"
   },
   "auth": {
     "login": "Đăng nhập",

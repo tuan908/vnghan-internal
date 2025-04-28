@@ -49,6 +49,10 @@ export class ImportServiceImpl implements ImportService {
       totalProcessed: 0,
       rowsCreated: 0,
       rowsUpdated: 0,
+      valid: false,
+      errors: [],
+      warnings: [],
+      totalRecords: 0,
     };
   }
 
@@ -67,9 +71,16 @@ export class ImportServiceImpl implements ImportService {
     );
 
     if (!validationResult.valid) {
-      throw new Error(
-        "Validation failed: " + JSON.stringify(validationResult.errors),
-      );
+      return {
+        success: false,
+        totalProcessed: data.length,
+        rowsCreated: 0,
+        rowsUpdated: 0,
+        totalRecords: data.length,
+        valid: validationResult.valid,
+        errors: validationResult.errors,
+        warnings: validationResult.warnings,
+      };
     }
 
     return await db.transaction(async (tx) => {
@@ -250,6 +261,10 @@ export class ImportServiceImpl implements ImportService {
         totalProcessed: data.length,
         rowsCreated,
         rowsUpdated,
+        valid: true,
+        errors: [],
+        warnings: [],
+        totalRecords: data.length,
       };
     });
   }
@@ -265,9 +280,16 @@ export class ImportServiceImpl implements ImportService {
     const validationResult = await this.validateScrewData(data);
 
     if (!validationResult.valid) {
-      throw new Error(
-        "Validation failed: " + JSON.stringify(validationResult.errors),
-      );
+      return {
+        success: false,
+        totalProcessed: data.length,
+        rowsCreated: 0,
+        rowsUpdated: 0,
+        totalRecords: data.length,
+        valid: validationResult.valid,
+        errors: validationResult.errors,
+        warnings: validationResult.warnings,
+      };
     }
 
     return await db.transaction(async (tx) => {
@@ -380,6 +402,10 @@ export class ImportServiceImpl implements ImportService {
         totalProcessed: data.length,
         rowsCreated,
         rowsUpdated,
+        totalRecords: data.length,
+        valid: true,
+        errors: [],
+        warnings: [],
       };
     });
   }

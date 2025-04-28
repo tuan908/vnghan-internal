@@ -4,6 +4,7 @@ import { ImportServiceImpl } from "@/backend/services/import.service";
 import type {
   ImportFileExtension,
   ImportOptions,
+  ImportResult,
   ImportType,
 } from "@/backend/services/interfaces/import-service.interface";
 import { ErrorCodes } from "@/shared/constants";
@@ -148,6 +149,19 @@ const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>().post(
         columnMapping,
       },
     );
+
+    if (!importResult.valid) {
+      return c.json(
+        createErrorResponse<Pick<ImportResult, "errors" | "warnings">>({
+          code: ErrorCodes.BAD_REQUEST,
+          message: json.error.badRequest,
+          details: {
+            errors: importResult.errors,
+            warnings: importResult.warnings,
+          },
+        }),
+      );
+    }
 
     await invalidateCache();
     return c.json(createSuccessResponse(importResult), 200);

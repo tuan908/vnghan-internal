@@ -22,11 +22,11 @@ export function createSuccessResponse<TData>(
 }
 
 // Create an error response
-export function createErrorResponse(
+export function createErrorResponse<T = unknown>(
   error: {
     code: string;
     message: string;
-    details?: unknown;
+    details?: T;
     statusCode?: number;
     errors?: IValidationError[];
   },

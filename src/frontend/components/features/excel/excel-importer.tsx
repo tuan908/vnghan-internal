@@ -5,9 +5,18 @@ import { QUERY_KEY } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { tryCatch } from "@/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { ColumnDef } from "@tanstack/react-table";
 import { AlertCircle, Check, FileSpreadsheet, Upload, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "../../ui/button";
+import { Card, CardContent } from "../../ui/card";
+import { DataTable } from "../../ui/data-table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../ui/dialog";
 import { errorToast, successToast } from "../../ui/toast";
 
 type ExcelImporterProps = {
@@ -25,7 +34,8 @@ export default function ExcelImporter({
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { importExcel, isProcessing } = useImportExcel();
+  const { importExcel, isProcessing, data } = useImportExcel();
+  const [showErrorsOrWarnings, setShowErrorsOrWarnings] = useState(false);
 
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,12 +126,8 @@ export default function ExcelImporter({
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      if (!result.data) {
-        const msg =
-          result.error instanceof Object
-            ? result.error.message
-            : json.error.unknownError;
-        errorToast(msg);
+      if (!result.data?.valid) {
+        setShowErrorsOrWarnings(true);
         setTimeout(() => setUploadProgress(0), 1000);
         return;
       }
@@ -145,28 +151,81 @@ export default function ExcelImporter({
     }
   };
 
+  function handleOpenChange(open: boolean) {
+    if (!open) return;
+    setShowErrorsOrWarnings(false);
+  }
+
+  const columns = useMemo(
+    (): ColumnDef<{
+      row: number;
+      column: string;
+      message: string;
+      value?: any;
+    }>[] => [
+      {
+        accessorKey: "row",
+        header: json.common.row,
+        cell: ({ row }) => row.original.row,
+      },
+      {
+        accessorKey: "column",
+        header: json.common.column,
+        cell: ({ row }) => row.original.column,
+      },
+      {
+        accessorKey: "message",
+        header: json.common.message,
+        cell: ({ row }) => row.original.message,
+      },
+      {
+        accessorKey: "value",
+        header: json.common.value,
+        cell: ({ row }) => row.original.value,
+      },
+    ],
+    [],
+  );
+
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-100">
-      <h3 className="text-lg font-medium mb-4 text-gray-700">
-        {type === "customer" ? "Customer" : "Screw"} Data Importer
-      </h3>
+    <>
+      <Dialog open={showErrorsOrWarnings} onOpenChange={handleOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle></DialogTitle>
+          </DialogHeader>
+          <Card>
+            <CardContent>
+              <DataTable
+                columns={columns}
+                data={[...(data?.errors ?? []), ...(data?.warnings ?? [])]}
+              />
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
 
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".xlsx,.xls"
-        onChange={handleFileChange}
-        className="hidden"
-      />
+      <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-100">
+        <h3 className="text-lg font-medium mb-4 text-gray-700">
+          {type === "customer" ? "Customer" : "Screw"} Data Importer
+        </h3>
 
-      {/* Drag & drop area */}
-      <div
-        onClick={triggerFileInput}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+
+        {/* Drag & drop area */}
+        <div
+          onClick={triggerFileInput}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`
           border-2 border-dashed rounded-lg p-8
           transition-all duration-200 ease-in-out
           flex flex-col items-center justify-center
@@ -179,103 +238,104 @@ export default function ExcelImporter({
                 : "border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100"
           }
         `}
-      >
-        {!file ? (
-          <>
-            <div className="mb-3">
-              <Upload className="w-12 h-12 text-gray-400" />
-            </div>
-            <p className="text-sm font-medium text-gray-600 mb-1">
-              {isDragging
-                ? "Drop your Excel file here"
-                : "Drag & drop your Excel file here"}
-            </p>
-            <p className="text-xs text-gray-500">or click to browse</p>
-            <p className="text-xs text-gray-400 mt-2">
-              Supports .xlsx, .xls (max 10MB)
-              {type === "customer"
-                ? " - Customer data format"
-                : " - Screw data format"}
-            </p>
-          </>
-        ) : (
-          <div className="w-full">
-            <div className="flex items-center mb-3">
-              <FileSpreadsheet className="w-8 h-8 text-green-500 mr-3" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-700 truncate">
-                  {file.name}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {(file.size / 1024).toFixed(1)} KB
-                </p>
+        >
+          {!file ? (
+            <>
+              <div className="mb-3">
+                <Upload className="w-12 h-12 text-gray-400" />
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeFile();
-                }}
-                className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
-                aria-label="Remove file"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {uploadProgress > 0 && (
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                <div
-                  className={`h-1.5 rounded-full ${
-                    uploadProgress === 100 ? "bg-green-500" : "bg-blue-500"
-                  }`}
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                {isDragging
+                  ? "Drop your Excel file here"
+                  : "Drag & drop your Excel file here"}
+              </p>
+              <p className="text-xs text-gray-500">or click to browse</p>
+              <p className="text-xs text-gray-400 mt-2">
+                Supports .xlsx, .xls (max 10MB)
+                {type === "customer"
+                  ? " - Customer data format"
+                  : " - Screw data format"}
+              </p>
+            </>
+          ) : (
+            <div className="w-full">
+              <div className="flex items-center mb-3">
+                <FileSpreadsheet className="w-8 h-8 text-green-500 mr-3" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-700 truncate">
+                    {file.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {(file.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile();
+                  }}
+                  className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+                  aria-label="Remove file"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-            )}
-          </div>
-        )}
-      </div>
 
-      {/* Action buttons */}
-      <div className="flex items-center justify-between">
-        <div className="text-xs text-gray-500 flex items-center">
-          <AlertCircle className="w-3 h-3 mr-1" />
-          Ensure your Excel file follows the required{" "}
-          {type === "customer" ? "customer" : "screw"} data format
-        </div>
-
-        <div className="flex space-x-3">
-          {file && (
-            <Button
-              variant="outline"
-              onClick={removeFile}
-              disabled={isProcessing || uploadProgress > 0}
-              className="text-sm"
-            >
-              Clear
-            </Button>
+              {uploadProgress > 0 && (
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                  <div
+                    className={`h-1.5 rounded-full ${
+                      uploadProgress === 100 ? "bg-green-500" : "bg-blue-500"
+                    }`}
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              )}
+            </div>
           )}
+        </div>
 
-          <Button
-            onClick={handleUpload}
-            disabled={!file || isProcessing || uploadProgress > 0}
-            className={`text-sm ${uploadProgress === 100 ? "bg-green-600 hover:bg-green-700" : ""}`}
-          >
-            {uploadProgress === 100 ? (
-              <Check className="w-4 h-4 mr-1" />
-            ) : isProcessing || uploadProgress > 0 ? (
-              <div className="w-4 h-4 mr-1 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
-            ) : (
-              <Upload className="w-4 h-4 mr-1" />
+        {/* Action buttons */}
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-gray-500 flex items-center">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Ensure your Excel file follows the required{" "}
+            {type === "customer" ? "customer" : "screw"} data format
+          </div>
+
+          <div className="flex space-x-3">
+            {file && (
+              <Button
+                variant="outline"
+                onClick={removeFile}
+                disabled={isProcessing || uploadProgress > 0}
+                className="text-sm"
+              >
+                Clear
+              </Button>
             )}
-            {uploadProgress === 100
-              ? "Imported"
-              : isProcessing || uploadProgress > 0
-                ? "Processing..."
-                : `Import ${type === "customer" ? "Customer" : "Screw"} Data`}
-          </Button>
+
+            <Button
+              onClick={handleUpload}
+              disabled={!file || isProcessing || uploadProgress > 0}
+              className={`text-sm ${uploadProgress === 100 ? "bg-green-600 hover:bg-green-700" : ""}`}
+            >
+              {uploadProgress === 100 ? (
+                <Check className="w-4 h-4 mr-1" />
+              ) : isProcessing || uploadProgress > 0 ? (
+                <div className="w-4 h-4 mr-1 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
+              ) : (
+                <Upload className="w-4 h-4 mr-1" />
+              )}
+              {uploadProgress === 100
+                ? "Imported"
+                : isProcessing || uploadProgress > 0
+                  ? "Processing..."
+                  : `Import ${type === "customer" ? "Customer" : "Screw"} Data`}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -29,7 +29,7 @@ export interface ImportOptions {
   batchSize?: number; // For processing in smaller chunks
 }
 
-export interface ImportResult {
+export interface ImportResult extends ValidationResult {
   success: boolean;
   totalProcessed: number;
   rowsCreated: number;

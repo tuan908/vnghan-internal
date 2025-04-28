@@ -16,7 +16,11 @@ const mutationFn = async ({ file, type }: { file?: File; type: string }) => {
 
 export const useImportExcel = () => {
   const queryClient = useQueryClient();
-  const { mutateAsync: importExcel, isPending: isProcessing } = useMutation({
+  const {
+    mutateAsync: importExcel,
+    isPending: isProcessing,
+    data,
+  } = useMutation({
     mutationKey: ["IMPORT_EXCEL"],
     mutationFn,
     onSuccess: async () => {
@@ -26,5 +30,5 @@ export const useImportExcel = () => {
     },
     onError: (error) => errorToast(error.message),
   });
-  return { importExcel, isProcessing };
+  return { importExcel, isProcessing, data };
 };
