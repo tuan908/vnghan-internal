@@ -76,14 +76,14 @@ app.use("*", async (c, next) => {
   return await jwt(c, next);
 });
 
-app.use("*", async (c, next) => {
-  if (isAuthRoute(c)) return await next();
-  // if (c.req.path.startsWith("/api/v1/export")) {
-  // return await fileCache(c, next);
-  // } else {
-  // return await cache(c, next);
-  // }
-});
+// app.use("*", async (c, next) => {
+//   if (isAuthRoute(c)) return await next();
+//   if (c.req.path.startsWith("/api/v1/export")) {
+//   return await fileCache(c, next);
+//   } else {
+//   return await cache(c, next);
+//   }
+// });
 
 // --- Database Middleware ---
 app.use("*", db);

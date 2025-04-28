@@ -45,7 +45,8 @@ export class ExcelTemplateHeaderRepositoryImpl
         ExcelTemplate,
         eq(ExcelTemplateHeader.templateId, ExcelTemplate.id),
       )
-      .where(and(...conditions, ...defaultConditions));
+      .where(and(...conditions, ...defaultConditions))
+      .orderBy(asc(ExcelTemplateHeader.id));
     return nullsToUndefined(templateHeaders);
   }
 

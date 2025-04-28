@@ -1,10 +1,10 @@
-import { DbSchema } from "@/backend/db/schema";
+import { ExcelTemplate, ExcelTemplateHeader } from "@/backend/db/schema";
 import { MiddlewareFactory } from "@/backend/middlewares";
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { toStringValue } from "@/shared/utils";
 import { zValidator } from "@hono/zod-validator";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import ExcelJS from "exceljs";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -93,11 +93,11 @@ const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
 
         const [template] = await db
           .select({
-            id: DbSchema.ExcelTemplate.id,
-            name: DbSchema.ExcelTemplate.description,
+            id: ExcelTemplate.id,
+            name: ExcelTemplate.description,
           })
-          .from(DbSchema.ExcelTemplate)
-          .where(eq(DbSchema.ExcelTemplate.name, type));
+          .from(ExcelTemplate)
+          .where(eq(ExcelTemplate.name, type));
 
         if (!template) {
           return c.json(
@@ -111,9 +111,10 @@ const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
         }
 
         const headers = await db
-          .select({ label: DbSchema.ExcelTemplateHeader.label })
-          .from(DbSchema.ExcelTemplateHeader)
-          .where(eq(DbSchema.ExcelTemplateHeader.templateId, template.id));
+          .select({ label: ExcelTemplateHeader.label })
+          .from(ExcelTemplateHeader)
+          .where(eq(ExcelTemplateHeader.templateId, template.id))
+          .orderBy(asc(ExcelTemplateHeader.id));
 
         if (!headers.length) {
           return c.json(
