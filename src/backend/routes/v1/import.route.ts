@@ -2,7 +2,6 @@ import { ExcelTemplate, ExcelTemplateHeader } from "@/backend/db/schema";
 import { invalidateCache } from "@/backend/lib/cache";
 import { ImportServiceImpl } from "@/backend/services/import.service";
 import {
-	ValidationError,
 	type ImportFileExtension,
 	type ImportOptions,
 	type ImportType,
@@ -15,6 +14,7 @@ import { z } from "zod";
 import {
 	createErrorResponse,
 	createSuccessResponse,
+	generateRequestId,
 } from "../../lib/api-response";
 import type { ServerEnvironment } from "../../types";
 
@@ -151,13 +151,20 @@ const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>().post(
 		);
 
 		if (!importResult.valid) {
-			return c.json(
-				createErrorResponse<ValidationError>({
-					code: ErrorCodes.BAD_REQUEST,
-					message: json.error.badRequest,
-					validationErrors: importResult.errors,
-				}),
-			);
+			const response = {
+				success: false,
+				status: {
+					code: 400,
+					message: "Error",
+				},
+				requestId: generateRequestId(),
+				timestamp: new Date().toISOString(),
+				error: {
+					errors: importResult.errors,
+				},
+				data: null,
+			};
+			return c.json(response);
 		}
 
 		await invalidateCache();

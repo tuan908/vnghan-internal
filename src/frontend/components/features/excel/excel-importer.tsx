@@ -138,7 +138,7 @@ export default function ExcelImporter({
 
 			if (!result.success) {
 				console.log(result);
-				setImportErrors((result?.error as any)?.validationErrors);
+				setImportErrors(result?.error?.errors! as ValidationErrorDetail[]);
 				setShowErrorsOrWarnings(true);
 				setTimeout(() => setUploadProgress(0), 1000);
 				return;
