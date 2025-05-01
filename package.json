@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "format": "prettier --write . --ignore-unknown",
+    "format": "biome format --write src",
     "start": "next start",
     "db:generate": "drizzle-kit generate --config=./drizzle.config.ts",
     "db:studio": "drizzle-kit studio --config=./drizzle.config.ts",
@@ -63,6 +63,7 @@
     "zod": "^3.24.3"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^22.14.1",
     "@types/react": "^19.1.2",
@@ -79,6 +80,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@biomejs/biome",
       "bcrypt",
       "esbuild",
       "sharp",

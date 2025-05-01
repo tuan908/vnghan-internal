@@ -6,22 +6,22 @@ import { UserRepositoryImpl } from "../repositories/user.repository";
 export interface Database extends ReturnType<typeof drizzle> {}
 
 export interface ServerEnvironment {
-  DATABASE_URL: string;
-  REDIS_URL: string;
-  REDIS_TOKEN: string;
+	DATABASE_URL: string;
+	REDIS_URL: string;
+	REDIS_TOKEN: string;
 }
 
 export interface ContextVariableMap {
-  db: Database;
-  customerRepository: CustomerRepositoryImpl;
-  platformRepository: PlatformRepositoryImpl;
-  userRepository: UserRepositoryImpl;
+	db: Database;
+	customerRepository: CustomerRepositoryImpl;
+	platformRepository: PlatformRepositoryImpl;
+	userRepository: UserRepositoryImpl;
 }
 
 export interface QueryOptions {
-  limit?: number;
-  offset?: number;
-  orderBy?: string;
-  sortDirection?: "asc" | "desc";
-  filter?: Record<string, any>;
+	limit?: number;
+	offset?: number;
+	orderBy?: string;
+	sortDirection?: "asc" | "desc";
+	filter?: Record<string, any>;
 }

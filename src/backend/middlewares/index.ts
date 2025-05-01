@@ -4,8 +4,8 @@ import { createJwtMiddleware } from "./jwt.middleware";
 import { createRateLimitMiddleware } from "./rate-limit.middleware";
 
 export const MiddlewareFactory = {
-  createCacheMiddleware,
-  createDbMiddleware,
-  createJwtMiddleware,
-  createRateLimitMiddleware,
+	createCacheMiddleware,
+	createDbMiddleware,
+	createJwtMiddleware,
+	createRateLimitMiddleware,
 };

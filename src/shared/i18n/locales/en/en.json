@@ -1,103 +1,103 @@
 {
-  "error": {
-    "invalidFile": "Invalid file",
-    "invalidFileType": "Invalid file type",
-    "invalidFileSize": "Invalid file size",
-    "invalidFileExtension": "Invalid file extension",
-    "unknownError": "An unknown error occurred",
-    "internalServerError": "Internal server error",
-    "notFound": "Data not found",
-    "operate": "An error occurred while processing data!",
-    "noValidRows": "Invalid data",
-    "missingEnvironmentVariables": "Missing environment variables",
-    "invalidCredentials": "Invalid username or password",
-    "userAlreadyExists": "User already exists",
-    "fieldRequired": "Please enter {0}",
-    "forbidden": "Incorrect account or password.",
-    "tokenExpired": "Token expired",
-    "badRequest": "Bad request",
-    "invalidFormat": "Invalid format",
-    "unauthorized": "Unauthorized",
-    "accessDenied": "Access denied",
-    "sessionExpired": "Session expired, please login again",
-    "rateLimitExceeded": "Too many requests, please try again later",
-    "duplicateEntry": "This entry already exists",
-    "networkError": "Network connection error",
-    "passwordMismatch": "Passwords do not match",
-    "weakPassword": "Password is too weak",
-    "accountLocked": "Account is locked",
-    "accountNotActivated": "Account is not activated"
-  },
-  "success": {
-    "created": "Created successfully",
-    "updated": "Updated successfully",
-    "deleted": "Deleted successfully",
-    "registered": "Registered successfully",
-    "loggedIn": "Logged in successfully",
-    "passwordChanged": "Password changed successfully",
-    "emailSent": "Email sent successfully",
-    "uploaded": "File uploaded successfully",
-    "downloaded": "File downloaded successfully"
-  },
-  "common": {
-    "loading": "Loading...",
-    "processing": "Processing...",
-    "confirm": "Are you sure?",
-    "cancel": "Cancel",
-    "submit": "Submit",
-    "save": "Save",
-    "delete": "Delete",
-    "edit": "Edit",
-    "view": "View",
-    "back": "Back",
-    "next": "Next",
-    "previous": "Previous",
-    "yes": "Yes",
-    "no": "No"
-  },
-  "auth": {
-    "login": "Login",
-    "logout": "Logout",
-    "register": "Register",
-    "forgotPassword": "Forgot Password",
-    "resetPassword": "Reset Password",
-    "username": "Username",
-    "password": "Password",
-    "confirmPassword": "Confirm Password",
-    "email": "Email",
-    "rememberMe": "Remember Me",
-    "signIn": "Sign In",
-    "signUp": "Sign Up"
-  },
-  "title": { "notification": "Thông báo" },
-  "successOperation": "Thao tác thành công!",
-  "table": {
-    "componentType": "Tên sản phẩm",
-    "price": "Giá tham khảo",
-    "quantity": "Số lượng",
-    "name": "Loại phụ kiện",
-    "note": "Lưu ý",
-    "action": "Hành động"
-  },
-  "form": {
-    "login": {
-      "username": "tên người dùng",
-      "password": "mật khẩu"
-    },
-    "createCustomer": {
-      "name": "tên khách hàng",
-      "phone": "số điện thoại",
-      "address": "địa chỉ",
-      "platform": "nền tảng",
-      "need": "nhu cầu",
-      "money": "số tiền",
-      "nextMessageTime": "thời gian nhắn lại"
-    }
-  },
-  "role": {
-    "viewer": "Người xem",
-    "editor": "Người chỉnh sửa",
-    "owner": "Người sở hữu",
-    "administrator": "Quản lý"
-  }
+	"error": {
+		"invalidFile": "Invalid file",
+		"invalidFileType": "Invalid file type",
+		"invalidFileSize": "Invalid file size",
+		"invalidFileExtension": "Invalid file extension",
+		"unknownError": "An unknown error occurred",
+		"internalServerError": "Internal server error",
+		"notFound": "Data not found",
+		"operate": "An error occurred while processing data!",
+		"noValidRows": "Invalid data",
+		"missingEnvironmentVariables": "Missing environment variables",
+		"invalidCredentials": "Invalid username or password",
+		"userAlreadyExists": "User already exists",
+		"fieldRequired": "Please enter {0}",
+		"forbidden": "Incorrect account or password.",
+		"tokenExpired": "Token expired",
+		"badRequest": "Bad request",
+		"invalidFormat": "Invalid format",
+		"unauthorized": "Unauthorized",
+		"accessDenied": "Access denied",
+		"sessionExpired": "Session expired, please login again",
+		"rateLimitExceeded": "Too many requests, please try again later",
+		"duplicateEntry": "This entry already exists",
+		"networkError": "Network connection error",
+		"passwordMismatch": "Passwords do not match",
+		"weakPassword": "Password is too weak",
+		"accountLocked": "Account is locked",
+		"accountNotActivated": "Account is not activated"
+	},
+	"success": {
+		"created": "Created successfully",
+		"updated": "Updated successfully",
+		"deleted": "Deleted successfully",
+		"registered": "Registered successfully",
+		"loggedIn": "Logged in successfully",
+		"passwordChanged": "Password changed successfully",
+		"emailSent": "Email sent successfully",
+		"uploaded": "File uploaded successfully",
+		"downloaded": "File downloaded successfully"
+	},
+	"common": {
+		"loading": "Loading...",
+		"processing": "Processing...",
+		"confirm": "Are you sure?",
+		"cancel": "Cancel",
+		"submit": "Submit",
+		"save": "Save",
+		"delete": "Delete",
+		"edit": "Edit",
+		"view": "View",
+		"back": "Back",
+		"next": "Next",
+		"previous": "Previous",
+		"yes": "Yes",
+		"no": "No"
+	},
+	"auth": {
+		"login": "Login",
+		"logout": "Logout",
+		"register": "Register",
+		"forgotPassword": "Forgot Password",
+		"resetPassword": "Reset Password",
+		"username": "Username",
+		"password": "Password",
+		"confirmPassword": "Confirm Password",
+		"email": "Email",
+		"rememberMe": "Remember Me",
+		"signIn": "Sign In",
+		"signUp": "Sign Up"
+	},
+	"title": { "notification": "Thông báo" },
+	"successOperation": "Thao tác thành công!",
+	"table": {
+		"componentType": "Tên sản phẩm",
+		"price": "Giá tham khảo",
+		"quantity": "Số lượng",
+		"name": "Loại phụ kiện",
+		"note": "Lưu ý",
+		"action": "Hành động"
+	},
+	"form": {
+		"login": {
+			"username": "tên người dùng",
+			"password": "mật khẩu"
+		},
+		"createCustomer": {
+			"name": "tên khách hàng",
+			"phone": "số điện thoại",
+			"address": "địa chỉ",
+			"platform": "nền tảng",
+			"need": "nhu cầu",
+			"money": "số tiền",
+			"nextMessageTime": "thời gian nhắn lại"
+		}
+	},
+	"role": {
+		"viewer": "Người xem",
+		"editor": "Người chỉnh sửa",
+		"owner": "Người sở hữu",
+		"administrator": "Quản lý"
+	}
 }

@@ -5,18 +5,18 @@ import { redirect } from "next/navigation";
 import { PropsWithChildren } from "react";
 
 export default async function Layout(props: PropsWithChildren) {
-  const sessionPromise = getSession();
+	const sessionPromise = getSession();
 
-  const session = await sessionPromise;
+	const session = await sessionPromise;
 
-  if (!session) {
-    deleteCookie("access_token");
-    redirect("/auth/signin");
-  }
-  return (
-    <>
-      <Navbar sessionPromise={sessionPromise} />
-      {props.children}
-    </>
-  );
+	if (!session) {
+		deleteCookie("access_token");
+		redirect("/auth/signin");
+	}
+	return (
+		<>
+			<Navbar sessionPromise={sessionPromise} />
+			{props.children}
+		</>
+	);
 }

@@ -8,12 +8,12 @@ import type { ScrewTypeRepository } from "./screwtype-repository.interface";
 import type { UserRepository } from "./user-repository.interface";
 
 export type {
-  CustomerRepository,
-  ExcelTemplateHeaderRepository,
-  ExcelTemplateRepository,
-  PlatformRepository,
-  ScrewMaterialRepository,
-  ScrewRepository,
-  ScrewTypeRepository,
-  UserRepository,
+	CustomerRepository,
+	ExcelTemplateHeaderRepository,
+	ExcelTemplateRepository,
+	PlatformRepository,
+	ScrewMaterialRepository,
+	ScrewRepository,
+	ScrewTypeRepository,
+	UserRepository,
 };

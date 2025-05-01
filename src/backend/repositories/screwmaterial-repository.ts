@@ -5,41 +5,41 @@ import { Database } from "../types";
 import type { ScrewMaterialRepository } from "./interfaces/screwmaterial-repository.interface";
 
 export class ScrewMaterialRepositoryImpl implements ScrewMaterialRepository {
-  private db: Database;
+	private db: Database;
 
-  constructor(db: Database) {
-    this.db = db;
-  }
-  async findAll() {
-    const defaultConditions = [eq(ScrewMaterial.isDeleted, false)];
+	constructor(db: Database) {
+		this.db = db;
+	}
+	async findAll() {
+		const defaultConditions = [eq(ScrewMaterial.isDeleted, false)];
 
-    const result = await this.db
-      .select({ id: ScrewMaterial.id, name: ScrewMaterial.name })
-      .from(ScrewMaterial)
-      .where(and(...defaultConditions));
+		const result = await this.db
+			.select({ id: ScrewMaterial.id, name: ScrewMaterial.name })
+			.from(ScrewMaterial)
+			.where(and(...defaultConditions));
 
-    return nullsToUndefined(result);
-  }
+		return nullsToUndefined(result);
+	}
 
-  async findBy(filters: Record<string, any>) {
-    const defaultConditions = [eq(ScrewMaterial.isDeleted, false)];
-    const conditions = [];
+	async findBy(filters: Record<string, any>) {
+		const defaultConditions = [eq(ScrewMaterial.isDeleted, false)];
+		const conditions = [];
 
-    const { id, name } = filters;
+		const { id, name } = filters;
 
-    if (id) {
-      conditions.push(eq(ScrewMaterial.id, id));
-    }
+		if (id) {
+			conditions.push(eq(ScrewMaterial.id, id));
+		}
 
-    if (name) {
-      conditions.push(eq(ScrewMaterial.name, name));
-    }
+		if (name) {
+			conditions.push(eq(ScrewMaterial.name, name));
+		}
 
-    const [material] = await this.db
-      .select({ id: ScrewMaterial.id, name: ScrewMaterial.name })
-      .from(ScrewMaterial)
-      .where(and(...defaultConditions, ...conditions));
+		const [material] = await this.db
+			.select({ id: ScrewMaterial.id, name: ScrewMaterial.name })
+			.from(ScrewMaterial)
+			.where(and(...defaultConditions, ...conditions));
 
-    return nullsToUndefined(material);
-  }
+		return nullsToUndefined(material);
+	}
 }
