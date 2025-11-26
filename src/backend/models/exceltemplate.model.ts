@@ -1,7 +1,7 @@
-import { ExcelTemplate } from "../db/schema";
+import { excelTemplate } from "../db/schema";
 
-export type SelectExcelTemplate = typeof ExcelTemplate.$inferSelect;
-export type InsertExcelTemplate = typeof ExcelTemplate.$inferInsert;
+export type ExcelTemplateRow = typeof excelTemplate.$inferSelect;
+export type NewExcelTemplateRow = typeof excelTemplate.$inferInsert;
 
 export interface ExcelTemplateModel {
 	id: number;

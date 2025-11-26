@@ -2,11 +2,11 @@ import {
 	boolean,
 	integer,
 	jsonb,
-	pgTable,
 	serial,
 	text,
 	timestamp,
 } from "drizzle-orm/pg-core";
+import { pgTableWithAudit } from "../base/helpers";
 
 const auditableFields = {
 	createdBy: integer("created_by"),
@@ -16,36 +16,32 @@ const auditableFields = {
 	isDeleted: boolean("is_deleted").default(false),
 };
 
-export const ScrewMaterial = pgTable("t_screw_material", {
+export const screwMaterial = pgTableWithAudit("screw_material", {
 	id: serial("id").primaryKey(),
 	name: text("name"),
 	note: text("note"),
-	...auditableFields,
 });
 
-export const ScrewUnit = pgTable("t_screw_unit", {
+export const screwUnit = pgTableWithAudit("screw_unit", {
 	id: serial("id").primaryKey(),
 	name: text("name"),
 	detail: text("detail"),
 	note: text("note"),
-	...auditableFields,
 });
 
-export const ScrewType = pgTable("t_screw_type", {
+export const screwType = pgTableWithAudit("screw_type", {
 	id: serial("id").primaryKey(),
 	name: text("name"),
 	note: text("note"),
-	...auditableFields,
 });
 
-export const ScrewSize = pgTable("t_screw_size", {
+export const screwSize = pgTableWithAudit("screw_size", {
 	id: serial("id").primaryKey(),
 	name: text("name"),
 	note: text("note"),
-	...auditableFields,
 });
 
-export const Customer = pgTable("t_customer", {
+export const customer = pgTableWithAudit("customer", {
 	id: serial("id").primaryKey(),
 	name: text("name"),
 	phone: text("phone"),
@@ -55,27 +51,25 @@ export const Customer = pgTable("t_customer", {
 	money: text("money"),
 	need: text("need").default(""),
 	// 🧩 Optional: Ownership / responsibility
-	assignedTo: integer("assigned_to").references(() => User.id),
-	...auditableFields,
+	assignedTo: integer("assigned_to").references(() => user.id),
 });
 
-export const Platform = pgTable("t_platform", {
+export const platform = pgTableWithAudit("platform", {
 	id: serial("id").primaryKey(),
 	name: text("description"),
-	...auditableFields,
 });
 
-export const CustomerPlatform = pgTable("t_customer_platform", {
+export const customerPlatform = pgTableWithAudit("customer_platform", {
 	id: serial("id").primaryKey(),
 	customerId: integer("customer_id")
 		.notNull()
-		.references(() => Customer.id, {
+		.references(() => customer.id, {
 			onDelete: "cascade",
 			onUpdate: "cascade",
 		}),
 	platformId: integer("platform_id")
 		.notNull()
-		.references(() => Platform.id, {
+		.references(() => platform.id, {
 			onDelete: "cascade",
 			onUpdate: "cascade",
 		}),
@@ -85,106 +79,77 @@ export const CustomerPlatform = pgTable("t_customer_platform", {
 
 	userId: integer("user_id")
 		.notNull()
-		.references(() => User.id),
-	...auditableFields,
+		.references(() => user.id),
 });
 
-export const Screw = pgTable("t_screw", {
+export const screw = pgTableWithAudit("screw", {
 	id: serial("id").primaryKey(),
 	name: text("name"),
 	description: text("description"),
 	componentTypeId: integer("type_id")
 		.notNull()
-		.references(() => ScrewType.id),
+		.references(() => screwType.id),
 	sizeId: integer("size_id")
 		.notNull()
-		.references(() => ScrewSize.id),
+		.references(() => screwSize.id),
 	materialId: integer("material_id")
 		.notNull()
-		.references(() => ScrewMaterial.id),
+		.references(() => screwMaterial.id),
 	note: text("note"),
 	price: text("price"),
 	quantity: text("quantity"),
-	...auditableFields,
 });
 
-export const ScrewQuestion = pgTable("t_screw_question", {
+export const screwQuestion = pgTableWithAudit("screw_question", {
 	id: serial("id").primaryKey(),
 	name: text("name"),
 	data: jsonb("data"),
 	note: text("note"),
-	...auditableFields,
 });
 
-export const ScrewInstruction = pgTable("t_screw_instruction", {
+export const screwInstruction = pgTableWithAudit("screw_instruction", {
 	id: serial("id").primaryKey(),
 	name: text("name"),
 	data: jsonb("data"),
 	note: text("note"),
-	...auditableFields,
 });
 
-export const ScrewImage = pgTable("t_screw_images", {
+export const screwImage = pgTableWithAudit("screw_images", {
 	id: serial("id").primaryKey(),
 	url: text("name"),
 	note: text("note"),
-	screwId: integer("screw_id").references(() => Screw.id),
-	...auditableFields,
+	screwId: integer("screw_id").references(() => screw.id),
 });
 
-export const Need = pgTable("t_need", {
+export const need = pgTableWithAudit("need", {
 	id: serial("id").primaryKey(),
 	description: text("description"),
-	...auditableFields,
 });
 
-export const User = pgTable("t_user", {
+export const user = pgTableWithAudit("user", {
 	id: serial("id").primaryKey(),
 	username: text("username"),
 	name: text("name"),
 	passwordHash: text("password_hash"),
 	role: text("role", { enum: ["001", "002", "003", "004"] }).default("001"), // Viewer, Editor, Owner, Administrator
-	...auditableFields,
 });
 
-export const ExcelTemplate = pgTable("t_excel_template", {
+export const excelTemplate = pgTableWithAudit("excel_template", {
 	id: serial("id").primaryKey(),
 	name: text("name").notNull(), // e.g. "Customer Import"
 	description: text("description"), // optional
 	isActive: boolean("is_active").default(true),
-	...auditableFields,
 });
 
-export const ExcelTemplateHeader = pgTable("t_excel_template_header", {
+export const excelTemplateHeader = pgTableWithAudit("excel_template_header", {
 	id: serial("id").primaryKey(),
 	templateId: integer("template_id")
 		.notNull()
-		.references(() => ExcelTemplate.id, { onDelete: "cascade" }),
+		.references(() => excelTemplate.id, { onDelete: "cascade" }),
 
 	label: text("label").notNull(), // Column title in Excel
 	key: text("key").notNull(), // Corresponding field in system
 	order: integer("order").notNull(), // Order in Excel
 	exampleValue: text("example_value"), // Optional example
 	required: boolean("required").default(false),
-	...auditableFields,
 });
-
-const DbSchema = {
-	Customer,
-	CustomerPlatform,
-	Need,
-	Platform,
-	Screw,
-	ScrewImage,
-	ScrewInstruction,
-	ScrewMaterial,
-	ScrewQuestion,
-	ScrewSize,
-	ScrewType,
-	ScrewUnit,
-	User,
-	ExcelTemplate,
-	ExcelTemplateHeader,
-};
-
-export { DbSchema };

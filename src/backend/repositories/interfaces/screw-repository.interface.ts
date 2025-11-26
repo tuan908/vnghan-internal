@@ -1,7 +1,7 @@
 import type {
-	InsertScrew,
+	NewScrewRow,
 	ScrewModel,
-	SelectScrew,
+	ScrewRow,
 } from "@/backend/models/screw.model";
 import type { QueryOptions } from "@/backend/types";
 import type { RecursivelyReplaceNullWithUndefined } from "@/shared/types";
@@ -10,8 +10,8 @@ export interface ScrewRepository {
 	findAll(
 		options?: QueryOptions,
 	): Promise<RecursivelyReplaceNullWithUndefined<ScrewModel>[]>;
-	findBy(filters: Record<string, any>): Promise<SelectScrew | undefined>;
-	create(dto: InsertScrew): Promise<SelectScrew | undefined>;
-	update(dto: InsertScrew): Promise<SelectScrew | undefined>;
-	delete(id: number): Promise<SelectScrew | undefined>;
+	findBy(filters: Record<string, any>): Promise<ScrewRow | undefined>;
+	create(dto: NewScrewRow): Promise<ScrewRow | undefined>;
+	update(dto: NewScrewRow): Promise<ScrewRow | undefined>;
+	delete(id: number): Promise<ScrewRow | undefined>;
 }

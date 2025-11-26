@@ -5,11 +5,11 @@ import { parse as csvParse } from "csv-parse/sync";
 import { and, eq, inArray } from "drizzle-orm";
 import ExcelJS from "exceljs";
 import {
-	Customer,
-	CustomerPlatform,
-	Platform,
-	Screw,
-	ScrewType,
+	customer,
+	customerPlatform,
+	platform,
+	screw,
+	screwType,
 } from "../db/schema";
 import type { CustomerModel } from "../models/customer.model";
 import type { Database } from "../types";
@@ -100,10 +100,10 @@ export class ImportServiceImpl implements ImportService {
 				const existingCustomers = options.updateExisting
 					? await tx
 							.select()
-							.from(Customer)
+							.from(customer)
 							.where(
 								inArray(
-									Customer.name,
+									customer.name,
 									customerNames.map((name) => `%${name}%`),
 								),
 							)
@@ -124,8 +124,8 @@ export class ImportServiceImpl implements ImportService {
 				// Get existing platforms in one query
 				const existingPlatforms = await tx
 					.select()
-					.from(Platform)
-					.where(inArray(Platform.name, Array.from(platformNames)));
+					.from(platform)
+					.where(inArray(platform.name, Array.from(platformNames)));
 
 				// Create a map for faster platform lookups
 				const platformMap = new Map();
@@ -142,9 +142,9 @@ export class ImportServiceImpl implements ImportService {
 				let newPlatforms: { id: number; name: string | null }[] = [];
 				if (platformsToCreate.length > 0) {
 					newPlatforms = await tx
-						.insert(Platform)
+						.insert(platform)
 						.values(platformsToCreate)
-						.returning({ id: Platform.id, name: Platform.name });
+						.returning({ id: platform.id, name: platform.name });
 
 					// Add new platforms to the map
 					newPlatforms.forEach((platform) => {
@@ -203,32 +203,32 @@ export class ImportServiceImpl implements ImportService {
 				let newCustomers: any[] = [];
 				if (customersToCreate.length > 0) {
 					newCustomers = await tx
-						.insert(Customer)
+						.insert(customer)
 						.values(customersToCreate)
-						.returning({ id: Customer.id, name: Customer.name });
+						.returning({ id: customer.id, name: customer.name });
 				}
 
 				// Bulk update existing customers
 				if (customersToUpdate.length > 0) {
 					for (const customerToUpdate of customersToUpdate) {
 						await tx
-							.update(Customer)
+							.update(customer)
 							.set(customerToUpdate)
-							.where(eq(Customer.id, customerToUpdate.id));
+							.where(eq(customer.id, customerToUpdate.id));
 					}
 
 					// Bulk update customer platforms
 					for (const cpToUpdate of customerPlatformsToUpdate) {
 						await tx
-							.update(CustomerPlatform)
+							.update(customerPlatform)
 							.set({
 								platformId: cpToUpdate.platformId,
 								updatedAt: cpToUpdate.updatedAt,
 							})
 							.where(
 								and(
-									eq(CustomerPlatform.customerId, cpToUpdate.customerId),
-									eq(CustomerPlatform.userId, cpToUpdate.userId),
+									eq(customerPlatform.customerId, cpToUpdate.customerId),
+									eq(customerPlatform.userId, cpToUpdate.userId),
 								),
 							);
 					}
@@ -251,7 +251,7 @@ export class ImportServiceImpl implements ImportService {
 
 					// Bulk insert customer-platform relations
 					if (cpEntries.length > 0) {
-						await tx.insert(CustomerPlatform).values(cpEntries);
+						await tx.insert(customerPlatform).values(cpEntries);
 					}
 				}
 			}
@@ -305,7 +305,7 @@ export class ImportServiceImpl implements ImportService {
 
 				// Get existing screws in one query
 				const existingScrews = options.updateExisting
-					? await tx.select().from(Screw).where(inArray(Screw.name, screwNames))
+					? await tx.select().from(screw).where(inArray(screw.name, screwNames))
 					: [];
 
 				// Create map for faster lookups
@@ -322,8 +322,8 @@ export class ImportServiceImpl implements ImportService {
 				// Get existing component types in one query
 				const existingTypes = await tx
 					.select()
-					.from(ScrewType)
-					.where(inArray(ScrewType.name, Array.from(componentTypes)));
+					.from(screwType)
+					.where(inArray(screwType.name, Array.from(componentTypes)));
 
 				// Create map for faster lookups
 				const typeMap = new Map();
@@ -339,9 +339,9 @@ export class ImportServiceImpl implements ImportService {
 				// Bulk insert new component types
 				if (typesToCreate.length > 0) {
 					const newTypes = await tx
-						.insert(ScrewType)
+						.insert(screwType)
 						.values(typesToCreate)
-						.returning({ id: ScrewType.id, name: ScrewType.name });
+						.returning({ id: screwType.id, name: screwType.name });
 
 					newTypes.forEach((type) => {
 						typeMap.set(type.name, type);
@@ -383,16 +383,16 @@ export class ImportServiceImpl implements ImportService {
 
 				// Bulk insert new screws
 				if (screwsToCreate.length > 0) {
-					await tx.insert(Screw).values(screwsToCreate);
+					await tx.insert(screw).values(screwsToCreate);
 				}
 
 				// Bulk update existing screws
 				if (screwsToUpdate.length > 0) {
 					for (const screwToUpdate of screwsToUpdate) {
 						await tx
-							.update(Screw)
+							.update(screw)
 							.set(screwToUpdate)
-							.where(eq(Screw.id, screwToUpdate.id));
+							.where(eq(screw.id, screwToUpdate.id));
 					}
 				}
 			}
@@ -503,10 +503,27 @@ export class ImportServiceImpl implements ImportService {
 		}
 
 		if (fileType === "csv") {
-			return csvParse(buffer, {
-				columns: options.headerRow !== false,
-				skip_empty_lines: true,
-			});
+			if (options.headerRow === false) {
+				// If no header row, csv-parse returns string[][]. We need to map it to T[] where T is an object.
+				const records: string[][] = csvParse(buffer, {
+					columns: false, // Ensure it returns string[][]
+					skip_empty_lines: true,
+				});
+				// Map each string array to an object with numeric keys as strings
+				return records.map((row) => {
+					const obj: Record<string, string> = {};
+					row.forEach((value, index) => {
+						obj[index.toString()] = value;
+					});
+					return obj;
+				}) as T[]; // Cast to T[]
+			} else {
+				// With header row, csv-parse returns Record<string, string>[]
+				return csvParse(buffer, {
+					columns: true, // Ensure it returns Record<string, string>[]
+					skip_empty_lines: true,
+				}) as T[]; // Cast to T[]
+			}
 		}
 
 		if (fileType === "excel") {

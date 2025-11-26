@@ -5,3 +5,12 @@ export const isToday = async (date: Date | string | number) => {
 };
 
 export const getCurrentDate = () => new Date();
+
+export function isValidDate(dateString: string): boolean {
+	// Optional: Add type check if needed
+	if (typeof dateString !== "string") {
+		return false;
+	}
+
+	return dayjs(dateString).isValid();
+}

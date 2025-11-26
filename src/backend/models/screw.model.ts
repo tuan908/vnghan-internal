@@ -1,7 +1,7 @@
-import { Screw } from "../db/schema";
+import { screw } from "../db/schema";
 
-export type InsertScrew = typeof Screw.$inferInsert;
-export type SelectScrew = typeof Screw.$inferInsert;
+export type NewScrewRow = typeof screw.$inferInsert;
+export type ScrewRow = typeof screw.$inferInsert;
 
 export interface ScrewModel {
 	id: number;

@@ -37,13 +37,13 @@ import {
 } from "@/frontend/components/ui/select";
 import { Textarea } from "@/frontend/components/ui/textarea";
 import { useCreateCustomer } from "@/frontend/hooks/useCreateCustomer";
-import { useGetCustomers } from "@/frontend/hooks/useGetCustomers";
-import { useGetPlatforms } from "@/frontend/hooks/useGetPlatforms";
+import { useCustomers } from "@/frontend/hooks/useCustomers";
+import { usePlatforms } from "@/frontend/hooks/usePlatforms";
 import { useSession } from "@/frontend/hooks/useSession";
 import { useAdminConfig } from "@/frontend/providers/AdminConfigProvider";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { RoleUtils } from "@/shared/utils";
-import { clientApiV1 } from "@/shared/utils/hono-client";
+import { honoClientV1 } from "@/shared/utils/hono-client";
 import { type CustomerDto, CustomerSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence } from "framer-motion";
@@ -68,12 +68,12 @@ export default function CustomerForm() {
 	});
 	const [activeDialog, setActiveDialog] = useState<DialogType>(null);
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-	const { platforms } = useGetPlatforms();
-	// const { needs } = useGetNeeds();
-	const { customers } = useGetCustomers();
+	const { platforms } = usePlatforms();
+	// const { needs } = useNeeds();
+	const { customers } = useCustomers();
 	const { createCustomer, isCreatingCustomer } = useCreateCustomer();
 	const { user } = useSession();
-	const downloadUrl = clientApiV1.export.customers.$url().toString();
+	const downloadUrl = honoClientV1.export.customers.$url().toString();
 
 	const { config } = useAdminConfig();
 	const onSubmit = async (data: CustomerDto) => {

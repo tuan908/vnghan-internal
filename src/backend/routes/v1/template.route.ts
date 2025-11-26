@@ -1,12 +1,12 @@
-import { ExcelTemplate, ExcelTemplateHeader } from "@/backend/db/schema";
+import { excelTemplate, excelTemplateHeader } from "@/backend/db/schema";
 import { MiddlewareFactory } from "@/backend/middlewares";
 import { ErrorCodes } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { toStringValue } from "@/shared/utils";
 import { zValidator } from "@hono/zod-validator";
 import { asc, eq } from "drizzle-orm";
-import ExcelJS from "exceljs";
 import { Hono } from "hono";
+import { ContentfulStatusCode } from "hono/utils/http-status";
 import { z } from "zod";
 import { createErrorResponse } from "../../lib/api-response";
 import type { ServerEnvironment } from "../../types";
@@ -39,7 +39,8 @@ const generateExcelTemplate = async ({
 }: {
 	headers: string[];
 	sheetName: string;
-}): Promise<Buffer> => {
+}): Promise<ArrayBuffer> => {
+	const ExcelJS = await import("exceljs");
 	const workbook = new ExcelJS.Workbook();
 	const sheet = workbook.addWorksheet(sheetName);
 
@@ -61,7 +62,7 @@ const generateExcelTemplate = async ({
 
 	// Write workbook to buffer
 	const buffer = await workbook.xlsx.writeBuffer();
-	return Buffer.from(buffer);
+	return buffer;
 };
 
 const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
@@ -93,11 +94,11 @@ const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
 
 				const [template] = await db
 					.select({
-						id: ExcelTemplate.id,
-						name: ExcelTemplate.description,
+						id: excelTemplate.id,
+						name: excelTemplate.description,
 					})
-					.from(ExcelTemplate)
-					.where(eq(ExcelTemplate.name, type));
+					.from(excelTemplate)
+					.where(eq(excelTemplate.name, type));
 
 				if (!template) {
 					return c.json(
@@ -111,10 +112,10 @@ const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
 				}
 
 				const headers = await db
-					.select({ label: ExcelTemplateHeader.label })
-					.from(ExcelTemplateHeader)
-					.where(eq(ExcelTemplateHeader.templateId, template.id))
-					.orderBy(asc(ExcelTemplateHeader.id));
+					.select({ label: excelTemplateHeader.label })
+					.from(excelTemplateHeader)
+					.where(eq(excelTemplateHeader.templateId, template.id))
+					.orderBy(asc(excelTemplateHeader.id));
 
 				if (!headers.length) {
 					return c.json(
@@ -141,7 +142,7 @@ const templateRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
 					`attachment; filename="${type}-template.xlsx"`,
 				);
 
-				return c.body(buffer);
+				return c.body(buffer, 200 as ContentfulStatusCode);
 			} catch (err) {
 				console.error("Excel template generation error:", err);
 				return c.json(

@@ -1,6 +1,6 @@
 import { nullsToUndefined } from "@/shared/utils";
-import { and, asc, eq } from "drizzle-orm";
-import { ExcelTemplate, ExcelTemplateHeader } from "../db/schema";
+import { and, asc, eq, isNull } from "drizzle-orm";
+import { excelTemplate, excelTemplateHeader } from "../db/schema";
 import type { Database, QueryOptions } from "../types";
 import type { ExcelTemplateHeaderRepository } from "./interfaces/exceltemplate-header-repository.interface";
 
@@ -15,66 +15,66 @@ export class ExcelTemplateHeaderRepositoryImpl
 
 	async findBy(filters: Record<string, any>) {
 		const { id, label, templateId, templateName } = filters;
-		const defaultConditions = [eq(ExcelTemplateHeader.isDeleted, false)];
+		const defaultConditions = [isNull(excelTemplateHeader.deletedAt)];
 		const conditions = [];
 
 		if (id) {
-			conditions.push(eq(ExcelTemplateHeader.id, id));
+			conditions.push(eq(excelTemplateHeader.id, id));
 		}
 
 		if (templateId) {
-			conditions.push(eq(ExcelTemplateHeader.templateId, templateId));
+			conditions.push(eq(excelTemplateHeader.templateId, templateId));
 		}
 
 		if (label) {
-			conditions.push(eq(ExcelTemplateHeader.label, label));
+			conditions.push(eq(excelTemplateHeader.label, label));
 		}
 
 		if (templateName) {
-			conditions.push(eq(ExcelTemplate.name, templateName));
+			conditions.push(eq(excelTemplate.name, templateName));
 		}
 
 		const templateHeaders = await this.db
 			.select({
-				id: ExcelTemplateHeader.id,
-				label: ExcelTemplateHeader.label,
-				key: ExcelTemplateHeader.key,
+				id: excelTemplateHeader.id,
+				label: excelTemplateHeader.label,
+				key: excelTemplateHeader.key,
 			})
-			.from(ExcelTemplateHeader)
+			.from(excelTemplateHeader)
 			.innerJoin(
-				ExcelTemplate,
-				eq(ExcelTemplateHeader.templateId, ExcelTemplate.id),
+				excelTemplate,
+				eq(excelTemplateHeader.templateId, excelTemplate.id),
 			)
 			.where(and(...conditions, ...defaultConditions))
-			.orderBy(asc(ExcelTemplateHeader.id));
+			.orderBy(asc(excelTemplateHeader.id));
 		return nullsToUndefined(templateHeaders);
 	}
 
 	async findAll(options: QueryOptions) {
-		const defaultConditions = [eq(ExcelTemplateHeader.isDeleted, false)];
+		const defaultConditions = [isNull(excelTemplateHeader.deletedAt)];
 		const conditions = [];
 
 		if (options.filter) {
 			const { id, templateId } = options.filter;
 
 			if (id) {
-				conditions.push(eq(ExcelTemplateHeader.id, id));
+				conditions.push(eq(excelTemplateHeader.id, id));
 			}
 
 			if (templateId) {
-				conditions.push(eq(ExcelTemplateHeader.templateId, templateId));
+				conditions.push(eq(excelTemplateHeader.templateId, templateId));
 			}
 		}
 
 		const templateHeaders = await this.db
 			.select({
-				id: ExcelTemplateHeader.id,
-				label: ExcelTemplateHeader.label,
-				key: ExcelTemplateHeader.key,
+				id: excelTemplateHeader.id,
+				label: excelTemplateHeader.label,
+				key: excelTemplateHeader.key,
 			})
-			.from(ExcelTemplateHeader)
+			.from(excelTemplateHeader)
 			.where(and(...defaultConditions, ...conditions))
-			.orderBy(asc(ExcelTemplateHeader.id));
+			.orderBy(asc(excelTemplateHeader.id));
 
 		return nullsToUndefined(templateHeaders);
 	}

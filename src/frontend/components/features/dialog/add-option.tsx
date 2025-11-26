@@ -1,8 +1,8 @@
 "use client";
 
 import { useCreateScrew } from "@/frontend/hooks/useCreateScrew";
-import { useGetScrewMaterials } from "@/frontend/hooks/useGetScrewMaterials";
-import { useGetScrewTypes } from "@/frontend/hooks/useGetScrewTypes";
+import { useScrewMaterials } from "@/frontend/hooks/useScrewMaterials";
+import { useScrewTypes } from "@/frontend/hooks/useScrewTypes";
 import {
 	type CreateInstructionDto,
 	createInstructionSchema,
@@ -43,8 +43,8 @@ export function AddOptionDropdown() {
 	const queryClient = useQueryClient();
 	const [activeDialog, setActiveDialog] = useState<DialogType>(null);
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-	const { screwTypes } = useGetScrewTypes();
-	const { screwMaterials } = useGetScrewMaterials();
+	const { screwTypes } = useScrewTypes();
+	const { screwMaterials } = useScrewMaterials();
 
 	// Create form methods
 	const createScrewForm = useForm<ScrewDto>({

@@ -6,7 +6,7 @@ export const config = {
 	matcher: ["/", "/import", "/customers"],
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 	const accessTokenCookie = request.cookies.get("access_token");
 	const LOGIN_ROUTE = "/auth/signin";
 

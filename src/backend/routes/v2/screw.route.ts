@@ -1,4 +1,5 @@
-import { InsertScrew } from "@/backend/models/screw.model";
+import { screw, screwMaterial, screwType } from "@/backend/db/schema";
+import { NewScrewRow } from "@/backend/models/screw.model";
 import { ServerEnvironment } from "@/backend/types";
 import {
 	DEFAULT_MATERIAL_ID,
@@ -11,10 +12,9 @@ import json from "@/shared/i18n/locales/vi/vi.json";
 import { ScrewMaterialDto, ScrewTypeDto } from "@/shared/types";
 import { nullsToUndefined } from "@/shared/utils";
 import { ScrewDto } from "@/shared/validations";
-import { eq, sql } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { env } from "hono/adapter";
-import { DbSchema } from "../../db/schema";
 import {
 	createErrorResponse,
 	createSuccessResponse,
@@ -28,34 +28,34 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
 
 		const totalCountResult = await db
 			.select({ count: sql`count(*)`.mapWith(Number) })
-			.from(DbSchema.Screw)
-			.where(eq(DbSchema.Screw.isDeleted, false));
+			.from(screw)
+			.where(isNull(screw.deletedAt));
 
 		const totalCount = totalCountResult[0]?.count || 0;
 		const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
 		const screws = await db
 			.select({
-				id: DbSchema.Screw.id,
-				name: DbSchema.Screw.name,
-				quantity: DbSchema.Screw.quantity,
-				componentType: DbSchema.ScrewType.name,
-				material: DbSchema.ScrewMaterial.name,
-				category: DbSchema.ScrewType.name,
-				price: DbSchema.Screw.price,
-				note: DbSchema.Screw.note,
+				id: screw.id,
+				name: screw.name,
+				quantity: screw.quantity,
+				componentType: screwType.name,
+				material: screwMaterial.name,
+				category: screwType.name,
+				price: screw.price,
+				note: screw.note,
 			})
-			.from(DbSchema.Screw)
+			.from(screw)
 			.innerJoin(
-				DbSchema.ScrewMaterial,
-				eq(DbSchema.Screw.materialId, DbSchema.ScrewMaterial.id),
+				screwMaterial,
+				eq(screw.materialId, screwMaterial.id),
 			)
 			.innerJoin(
-				DbSchema.ScrewType,
-				eq(DbSchema.Screw.componentTypeId, DbSchema.ScrewType.id),
+				screwType,
+				eq(screw.componentTypeId, screwType.id),
 			)
-			.where(eq(DbSchema.Screw.isDeleted, false))
-			.orderBy(DbSchema.Screw.id)
+			.where(isNull(screw.deletedAt))
+			.orderBy(screw.id)
 			.limit(PAGE_SIZE)
 			.offset(pageNumber * PAGE_SIZE);
 
@@ -78,32 +78,32 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
 		const db = c.get("db");
 		const newScrew = await c.req.json<ScrewDto>();
 
-		const [screwType, screwMaterial] = await Promise.all([
+		const [screwTypeRow, screwMaterialRow] = await Promise.all([
 			db
-				.select({ id: DbSchema.ScrewType.id })
-				.from(DbSchema.ScrewType)
-				.where(eq(DbSchema.ScrewType.name, newScrew.name))
+				.select({ id: screwType.id })
+				.from(screwType)
+				.where(eq(screwType.name, newScrew.name))
 				.then((res) => res[0] || { id: DEFAULT_TYPE_ID }),
 
 			db
-				.select({ id: DbSchema.ScrewMaterial.id })
-				.from(DbSchema.ScrewMaterial)
-				.where(eq(DbSchema.ScrewMaterial.name, newScrew.material))
+				.select({ id: screwMaterial.id })
+				.from(screwMaterial)
+				.where(eq(screwMaterial.name, newScrew.material))
 				.then((res) => res[0] || { id: DEFAULT_MATERIAL_ID }),
 		]);
 
-		const entity: InsertScrew = {
+		const entity: NewScrewRow = {
 			sizeId: DEFAULT_SIZE_ID,
 			description: newScrew.category,
 			name: newScrew.name,
 			note: newScrew.note,
 			price: newScrew.price.toString(),
 			quantity: newScrew.quantity.toString(),
-			componentTypeId: screwType.id,
-			materialId: screwMaterial.id,
+			componentTypeId: screwTypeRow.id,
+			materialId: screwMaterialRow.id,
 		};
 
-		const result = await db.insert(DbSchema.Screw).values(entity).execute();
+		const result = await db.insert(screw).values(entity).execute();
 		return c.json(createSuccessResponse({ data: result }), 200);
 	})
 	.patch("/:id", async (c) => {
@@ -111,13 +111,13 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
 		const db = c.get("db");
 		const body = await c.req.json<ScrewDto>();
 
-		const [screw] = await db
+		const [row] = await db
 			.select()
-			.from(DbSchema.Screw)
-			.where(eq(DbSchema.Screw.id, body.id!))
+			.from(screw)
+			.where(eq(screw.id, body.id!))
 			.limit(1);
 
-		if (!screw) {
+		if (!row) {
 			return c.json(
 				createErrorResponse({
 					code: ErrorCodes.NOT_FOUND,
@@ -128,26 +128,26 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
 			);
 		}
 
-		screw.name = body.name!;
-		screw.note = body.note!;
-		screw.price = body.price!;
-		screw.quantity = body.quantity!;
+		row.name = body.name!;
+		row.note = body.note!;
+		row.price = body.price!;
+		row.quantity = body.quantity!;
 
 		const [material] = await db
 			.select()
-			.from(DbSchema.ScrewMaterial)
-			.where(eq(DbSchema.ScrewMaterial.name, body.material!))
+			.from(screwMaterial)
+			.where(eq(screwMaterial.name, body.material!))
 			.limit(1);
 
 		if (!material) {
 			return;
 		}
-		screw.materialId = material.id;
+		row.materialId = material.id;
 
 		const [result] = await db
-			.update(DbSchema.Screw)
+			.update(screw)
 			.set(screw)
-			.where(eq(DbSchema.Screw.id, screw.id))
+			.where(eq(screw.id, screw.id))
 			.returning();
 
 		if (!result) {
@@ -168,10 +168,10 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
 		const db = c.get("db");
 		const body = await c.req.json();
 
-		const [screw] = await db
+		const [row] = await db
 			.select()
-			.from(DbSchema.Screw)
-			.where(eq(DbSchema.Screw.name, body.name!))
+			.from(screw)
+			.where(eq(screw.name, body.name!))
 			.limit(1);
 
 		if (!screw) {
@@ -186,9 +186,9 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
 		}
 
 		const result = await db
-			.update(DbSchema.Screw)
-			.set({ isDeleted: true })
-			.where(eq(DbSchema.Screw.id, screw.id));
+			.update(screw)
+			.set({ deletedAt: new Date() })
+			.where(eq(screw.id, screw.id));
 
 		if (!result) {
 			return c.json(
@@ -206,8 +206,8 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
 	.get("/types", async (c) => {
 		const db = c.get("db");
 		const response = await db
-			.select({ id: DbSchema.ScrewType.id, name: DbSchema.ScrewType.name })
-			.from(DbSchema.ScrewType);
+			.select({ id: screwType.id, name: screwType.name })
+			.from(screwType);
 		return c.json(
 			createSuccessResponse<ScrewTypeDto[]>(nullsToUndefined(response)),
 			200,
@@ -217,10 +217,10 @@ const screwRouterV2 = new Hono<{ Bindings: ServerEnvironment }>()
 		const db = c.get("db");
 		const response = await db
 			.select({
-				id: DbSchema.ScrewMaterial.id,
-				name: DbSchema.ScrewMaterial.name,
+				id: screwMaterial.id,
+				name: screwMaterial.name,
 			})
-			.from(DbSchema.ScrewMaterial);
+			.from(screwMaterial);
 		return c.json(
 			createSuccessResponse<ScrewMaterialDto[]>(nullsToUndefined(response)),
 			200,

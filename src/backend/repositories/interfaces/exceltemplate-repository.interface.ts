@@ -1,6 +1,6 @@
 import type {
 	ExcelTemplateModel,
-	SelectExcelTemplate,
+	ExcelTemplateRow,
 } from "@/backend/models/exceltemplate.model";
 import type { QueryOptions } from "@/backend/types";
 import type { RecursivelyReplaceNullWithUndefined } from "@/shared/types";
@@ -11,7 +11,5 @@ export interface ExcelTemplateRepository {
 	): Promise<RecursivelyReplaceNullWithUndefined<ExcelTemplateModel>[]>;
 	findBy(
 		filters: Record<string, any>,
-	): Promise<
-		RecursivelyReplaceNullWithUndefined<SelectExcelTemplate> | undefined
-	>;
+	): Promise<RecursivelyReplaceNullWithUndefined<ExcelTemplateRow> | undefined>;
 }

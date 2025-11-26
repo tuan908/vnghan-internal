@@ -1,8 +1,8 @@
-import { clientApiV1 } from "@/shared/utils/hono-client";
+import { honoClientV1 } from "@/shared/utils/hono-client";
 import { useQuery } from "@tanstack/react-query";
 
 const getCustomers = async () => {
-	const response = await clientApiV1.customers.$get();
+	const response = await honoClientV1.customers.$get();
 	const resJson = await response.json();
 	return Array.isArray(resJson?.data)
 		? resJson?.data?.map((x) => ({
@@ -12,7 +12,7 @@ const getCustomers = async () => {
 		: [];
 };
 
-export const useGetCustomers = () => {
+export const useCustomers = () => {
 	const { data: customers, isLoading: isFetchingCustomers } = useQuery({
 		queryKey: ["CUSTOMERS"],
 		queryFn: getCustomers,

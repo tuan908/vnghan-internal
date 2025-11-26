@@ -1,3 +1,4 @@
+import { customer, customerPlatform, platform } from "@/backend/db/schema";
 import { ErrorCodes } from "@/shared/constants";
 import { UserRole } from "@/shared/constants/roles";
 import json from "@/shared/i18n/locales/vi/vi.json";
@@ -5,7 +6,6 @@ import { nullsToUndefined, toStringValue } from "@/shared/utils";
 import { getCurrentDate } from "@/shared/utils/date";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { Customer, CustomerPlatform, DbSchema } from "../../db/schema";
 import {
 	createErrorResponse,
 	createSuccessResponse,
@@ -60,10 +60,10 @@ const customerRouterV1 = new Hono()
 		//   .select({id: DbSchema.Need.id})
 		//   .from(DbSchema.Need)
 		//   .where(eq(DbSchema.Need.description, body.need));
-		const [platform] = await db
-			.select({ id: DbSchema.Platform.id })
-			.from(DbSchema.Platform)
-			.where(eq(DbSchema.Platform.name, body.platform));
+		const [platformRow] = await db
+			.select({ id: platform.id })
+			.from(platform)
+			.where(eq(platform.name, body.platform));
 
 		// if (!need?.id || !platform?.id) {
 		//   return c.json(
@@ -75,7 +75,7 @@ const customerRouterV1 = new Hono()
 		//   );
 		// }
 
-		if (!platform?.id) {
+		if (!platformRow?.id) {
 			return c.json(
 				createErrorResponse({
 					code: ErrorCodes.BAD_REQUEST,
@@ -86,27 +86,27 @@ const customerRouterV1 = new Hono()
 		}
 
 		const result = await db.transaction(async (tx) => {
-			const [customer] = await tx
-				.insert(DbSchema.Customer)
+			const [newCustomerRow] = await tx
+				.insert(customer)
 				.values({
 					...body,
 					createdBy: user.id,
 					updatedBy: user.id,
 					assignedTo: user.id,
 				})
-				.returning({ id: Customer.id });
-			if (!customer) return undefined;
+				.returning({ id: customer.id });
+			if (!newCustomerRow) return undefined;
 
-			const [customerPlatform] = await tx
-				.insert(DbSchema.CustomerPlatform)
+			const [newCustomerPlatformRow] = await tx
+				.insert(customerPlatform)
 				.values({
-					customerId: customer.id,
-					platformId: platform.id,
+					customerId: newCustomerRow.id,
+					platformId: platformRow.id,
 					userId: user.id,
 					updatedAt: getCurrentDate(),
 				})
-				.returning({ id: CustomerPlatform.id });
-			if (!customerPlatform) return undefined;
+				.returning({ id: customerPlatform.id });
+			if (!newCustomerPlatformRow) return undefined;
 
 			return {
 				customer: { id: customer.id },
@@ -170,15 +170,15 @@ const customerRouterV1 = new Hono()
 			);
 		}
 
-		const [customer] = await db.transaction(async (tx) => {
+		const [newCustomerRow] = await db.transaction(async (tx) => {
 			return await tx
-				.update(DbSchema.Customer)
+				.update(customer)
 				.set({ ...body, updatedAt: getCurrentDate() })
-				.where(eq(DbSchema.Customer.id, id))
+				.where(eq(customer.id, id))
 				.returning();
 		});
 
-		if (!customer) {
+		if (!newCustomerRow) {
 			return c.json(
 				createErrorResponse({
 					code: ErrorCodes.INTERNAL_SERVER_ERROR,
@@ -189,9 +189,9 @@ const customerRouterV1 = new Hono()
 			);
 		}
 
-		const [customerPlatform] = await db.transaction(async (tx) => {
+		const [newCustomerPlatformRow] = await db.transaction(async (tx) => {
 			return await tx
-				.update(DbSchema.CustomerPlatform)
+				.update(customerPlatform)
 				.set({
 					// customerId: customer.id,
 					// needId: need.id,
@@ -200,14 +200,14 @@ const customerRouterV1 = new Hono()
 				})
 				.where(
 					and(
-						eq(DbSchema.CustomerPlatform.customerId, customer.id),
-						eq(DbSchema.CustomerPlatform.userId, user.id),
+						eq(customerPlatform.customerId, customer.id),
+						eq(customerPlatform.userId, user.id),
 					),
 				)
 				.returning();
 		});
 
-		if (!customerPlatform) {
+		if (!newCustomerPlatformRow) {
 			return c.json(
 				createErrorResponse({
 					code: ErrorCodes.INTERNAL_SERVER_ERROR,
@@ -232,13 +232,13 @@ const customerRouterV1 = new Hono()
 				}),
 			);
 		}
-		const [customer] = await db
-			.update(DbSchema.Customer)
-			.set({ isDeleted: true, updatedAt: getCurrentDate() })
-			.where(eq(DbSchema.Customer.id, id))
+		const [newCustomerRow] = await db
+			.update(customer)
+			.set({ deletedAt: getCurrentDate(), updatedAt: getCurrentDate() })
+			.where(eq(customer.id, id))
 			.returning();
 
-		if (!customer) {
+		if (!newCustomerRow) {
 			return c.json(
 				createErrorResponse({
 					code: ErrorCodes.INTERNAL_SERVER_ERROR,
@@ -249,18 +249,18 @@ const customerRouterV1 = new Hono()
 			);
 		}
 
-		const [customerPlatform] = await db
-			.update(DbSchema.CustomerPlatform)
-			.set({ isDeleted: true, updatedAt: getCurrentDate() })
+		const [newCustomerPlatformRow] = await db
+			.update(customerPlatform)
+			.set({ deletedAt: getCurrentDate(), updatedAt: getCurrentDate() })
 			.where(
 				and(
-					eq(DbSchema.CustomerPlatform.customerId, id),
-					eq(DbSchema.CustomerPlatform.userId, user.id),
+					eq(customerPlatform.customerId, id),
+					eq(customerPlatform.userId, user.id),
 				),
 			)
 			.returning();
 
-		if (!customerPlatform) {
+		if (!newCustomerPlatformRow) {
 			return c.json(
 				createErrorResponse({
 					code: ErrorCodes.INTERNAL_SERVER_ERROR,

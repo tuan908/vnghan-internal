@@ -1,6 +1,8 @@
+import dayjs from "dayjs";
 import { z } from "zod";
 import json from "../i18n/locales/vi/vi.json";
 import { format } from "../utils";
+import { isValidDate } from "../utils/date";
 
 export const ScrewSchema = z.object({
 	id: z.number().optional(),
@@ -10,7 +12,7 @@ export const ScrewSchema = z.object({
 	material: z.string().min(1, "Vui lòng chọn chất liệu"),
 	category: z.string().optional(),
 	price: z.string().superRefine((value, ctx) => {
-		if (value === "") {
+		if (!value) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
 				message: "Vui lòng nhập giá tham khảo",
@@ -112,7 +114,7 @@ export const CustomerSchema = z.object({
 
 			if (isNaN(parsedNum)) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
+					code: "custom",
 					message: "Hãy nhập 1 số",
 				});
 				return;
@@ -120,23 +122,35 @@ export const CustomerSchema = z.object({
 
 			if (parsedNum <= 0) {
 				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
+					code: "custom",
 					message: "Số tiền phải lớn hơn 0",
 				});
 			}
 		}),
 	nextMessageTime: z
-		.date({
-			invalid_type_error: format(
-				json.error.fieldRequired,
-				json.form.createCustomer.nextMessageTime,
-			),
-			required_error: format(
-				json.error.fieldRequired,
-				json.form.createCustomer.nextMessageTime,
-			),
+		.string()
+		.superRefine((input, ctx) => {
+			if (!input) {
+				ctx.addIssue({
+					code: "custom",
+					message: format(
+						json.error.fieldRequired,
+						json.form.createCustomer.nextMessageTime,
+					),
+				});
+				return;
+			}
+
+			if (!isValidDate(input))
+				ctx.addIssue({
+					code: "custom",
+					message: format(
+						json.error.fieldRequired,
+						json.form.createCustomer.nextMessageTime,
+					),
+				});
 		})
-		.refine((x) => x.toISOString()),
+		.refine((x) => dayjs(x).toISOString()),
 });
 
 export type CustomerDto = z.infer<typeof CustomerSchema>;
@@ -153,7 +167,7 @@ export const SignInSchema = z.object({
 		.string({
 			message: format(json.error.fieldRequired, json.form.login.password),
 		})
-		.min(6, {
+		.min(1, {
 			message: format(json.error.fieldRequired, json.form.login.password),
 		}),
 });

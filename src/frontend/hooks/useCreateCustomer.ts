@@ -1,10 +1,10 @@
-import { clientApiV1 } from "@/shared/utils/hono-client";
+import { honoClientV1 } from "@/shared/utils/hono-client";
 import type { CustomerDto } from "@/shared/validations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { errorToast, successToast } from "../components/ui/toast";
 
 const mutationFn = async (req: CustomerDto) => {
-	const res = await clientApiV1.customers.$post({
+	const res = await honoClientV1.customers.$post({
 		json: req,
 	});
 	const resJson = await res.json();
@@ -18,12 +18,19 @@ export const useCreateCustomer = () => {
 			mutationKey: ["CREATE_CUSTOMER"],
 			mutationFn,
 			onSuccess: async () => {
-				await queryClient.invalidateQueries({
-					queryKey: ["CUSTOMERS"],
-				});
 				successToast();
 			},
 			onError: (error) => errorToast(error.message),
+			async onMutate() {
+				await queryClient.cancelQueries({
+					queryKey: ["CUSTOMERS"],
+				});
+			},
+			async onSettled() {
+				await queryClient.invalidateQueries({
+					queryKey: ["CUSTOMERS"],
+				});
+			},
 		});
 	return { createCustomer, isCreatingCustomer };
 };

@@ -1,12 +1,12 @@
 import { QUERY_KEY } from "@/shared/constants";
-import { clientApiV1 } from "@/shared/utils/hono-client";
+import { honoClientV1 } from "@/shared/utils/hono-client";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-export const useGetScrewTypes = () => {
-	const { data: screwTypes } = useQuery({
-		queryKey: [QUERY_KEY.SCREW_TYPE],
+export const useScrewMaterials = () => {
+	const { data: screwMaterials } = useQuery({
+		queryKey: [QUERY_KEY.SCREW_MATERIAL],
 		queryFn: async () => {
-			const res = await clientApiV1.screws.types.$get();
+			const res = await honoClientV1.screws.materials.$get();
 			const resJson = await res.json();
 
 			if (!resJson?.data) {
@@ -17,5 +17,5 @@ export const useGetScrewTypes = () => {
 		placeholderData: keepPreviousData,
 	});
 
-	return { screwTypes: screwTypes ?? [] };
+	return { screwMaterials: screwMaterials ?? [] };
 };

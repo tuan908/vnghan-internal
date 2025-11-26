@@ -1,8 +1,8 @@
-import { clientApiV1 } from "@/shared/utils/hono-client";
+import { honoClientV1 } from "@/shared/utils/hono-client";
 import { useQuery } from "@tanstack/react-query";
 
 const queryFn = async () => {
-	const res = await clientApiV1.users.$get();
+	const res = await honoClientV1.users.$get();
 	const resJson = await res.json();
 	return resJson?.data;
 };

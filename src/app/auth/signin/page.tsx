@@ -1,6 +1,7 @@
 "use client";
 
 import { procesingLogin } from "@/app/actions";
+import { isSuccessResponse } from "@/backend/lib/api-response"; // Ensure this is at the top
 import { Button } from "@/frontend/components/ui/button";
 import {
 	Form,
@@ -11,16 +12,21 @@ import {
 	FormMessage,
 } from "@/frontend/components/ui/form";
 import { Input } from "@/frontend/components/ui/input";
-import { useSignIn } from "@/frontend/hooks/useSignIn";
+import {
+	LoginErrorResponse,
+	LoginSuccessResponse,
+	useSignIn,
+} from "@/frontend/hooks/useSignIn";
 import { SignInFormValues, SignInSchema } from "@/shared/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 export default function SignInPage() {
 	const router = useRouter();
-	const form = useForm<SignInFormValues>({
+	const form = useForm<z.infer<typeof SignInSchema>>({
 		resolver: zodResolver(SignInSchema),
 		defaultValues: {
 			username: "",
@@ -31,13 +37,24 @@ export default function SignInPage() {
 	const { signIn, isPendingSignIn } = useSignIn();
 
 	const onSubmit = async (data: SignInFormValues) => {
-		const result = await signIn(data);
-		if (!result?.success) {
-			form.setError("root", { message: result?.error?.message });
+		const result: LoginSuccessResponse | LoginErrorResponse =
+			await signIn(data);
+
+		if (isSuccessResponse<any>(result)) {
+			if (!result.data.token) {
+				form.setError("root", { message: "Login failed: No token received." });
+				return;
+			}
+			await procesingLogin(result.data.token);
+		} else {
+			form.setError("root", {
+				message:
+					result.error?.message || "Login failed: An unknown error occurred.",
+			});
 			return;
 		}
-		await procesingLogin(result?.data?.token!);
 	};
+	console.log(form.formState.errors);
 
 	return (
 		<div className="flex items-center justify-center min-h-screen bg-gray-100">

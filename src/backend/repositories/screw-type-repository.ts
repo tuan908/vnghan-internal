@@ -1,7 +1,7 @@
 import { ScrewTypeDto } from "@/shared/types";
 import { nullsToUndefined } from "@/shared/utils";
-import { and, eq } from "drizzle-orm";
-import { ScrewType } from "../db/schema";
+import { and, eq, isNull } from "drizzle-orm";
+import { screwType } from "../db/schema";
 import { Database } from "../types";
 import type { ScrewTypeRepository } from "./interfaces/screwtype-repository.interface";
 
@@ -12,10 +12,10 @@ export class ScrewTypeRepositoryImpl implements ScrewTypeRepository {
 		this.db = db;
 	}
 	async findAll(): Promise<ScrewTypeDto[]> {
-		const defaultConditions = [eq(ScrewType.isDeleted, false)];
+		const defaultConditions = [isNull(screwType.deletedAt)];
 		const result = await this.db
-			.select({ id: ScrewType.id, name: ScrewType.name })
-			.from(ScrewType)
+			.select({ id: screwType.id, name: screwType.name })
+			.from(screwType)
 			.where(and(...defaultConditions));
 		return nullsToUndefined(result);
 	}
@@ -23,22 +23,22 @@ export class ScrewTypeRepositoryImpl implements ScrewTypeRepository {
 	async findBy(
 		filters: Record<string, any>,
 	): Promise<ScrewTypeDto | undefined> {
-		const defaultConditions = [eq(ScrewType.isDeleted, false)];
+		const defaultConditions = [isNull(screwType.deletedAt)];
 		const conditions = [];
 
 		const { id, name } = filters;
 
 		if (id) {
-			conditions.push(eq(ScrewType.id, id));
+			conditions.push(eq(screwType.id, id));
 		}
 
 		if (name) {
-			conditions.push(eq(ScrewType.name, name));
+			conditions.push(eq(screwType.name, name));
 		}
 
 		const [material] = await this.db
-			.select({ id: ScrewType.id, name: ScrewType.name })
-			.from(ScrewType)
+			.select({ id: screwType.id, name: screwType.name })
+			.from(screwType)
 			.where(and(...defaultConditions, ...conditions));
 
 		return nullsToUndefined(material);

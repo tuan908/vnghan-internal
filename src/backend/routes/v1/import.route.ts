@@ -1,4 +1,4 @@
-import { ExcelTemplate, ExcelTemplateHeader } from "@/backend/db/schema";
+import { excelTemplate, excelTemplateHeader } from "@/backend/db/schema";
 import { invalidateCache } from "@/backend/lib/cache";
 import { ImportServiceImpl } from "@/backend/services/import.service";
 import {
@@ -110,15 +110,15 @@ const importRouterV1 = new Hono<{ Bindings: ServerEnvironment }>().post(
 
 		const headers = await db
 			.select({
-				label: ExcelTemplateHeader.label,
-				name: ExcelTemplateHeader.key,
+				label: excelTemplateHeader.label,
+				name: excelTemplateHeader.key,
 			})
-			.from(ExcelTemplateHeader)
+			.from(excelTemplateHeader)
 			.innerJoin(
-				ExcelTemplate,
-				eq(ExcelTemplateHeader.templateId, ExcelTemplate.id),
+				excelTemplate,
+				eq(excelTemplateHeader.templateId, excelTemplate.id),
 			)
-			.where(eq(ExcelTemplate.name, parseResult.data.type));
+			.where(eq(excelTemplate.name, parseResult.data.type));
 
 		if (!headers || headers.length == 0) {
 			return c.json(

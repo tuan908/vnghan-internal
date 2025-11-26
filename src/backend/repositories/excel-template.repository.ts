@@ -1,4 +1,4 @@
-import { ExcelTemplate } from "@/backend/db/schema";
+import { excelTemplate } from "@/backend/db/schema";
 import { RecursivelyReplaceNullWithUndefined } from "@/shared/types";
 import { nullsToUndefined } from "@/shared/utils";
 import { and, eq } from "drizzle-orm";
@@ -16,13 +16,13 @@ export class ExcelTemplateRepositoryImpl implements ExcelTemplateRepository {
 		options: QueryOptions,
 	): Promise<RecursivelyReplaceNullWithUndefined<ExcelTemplateModel>[]> {
 		const defaultConditions = [
-			eq(ExcelTemplate.isActive, true),
-			eq(ExcelTemplate.isDeleted, false),
+			eq(excelTemplate.isActive, true),
+			eq(excelTemplate.isDeleted, false),
 		];
 
 		const templates = await this.db
-			.select({ id: ExcelTemplate.id, label: ExcelTemplate.name })
-			.from(ExcelTemplate)
+			.select({ id: excelTemplate.id, label: excelTemplate.name })
+			.from(excelTemplate)
 			.where(and(...defaultConditions));
 
 		return nullsToUndefined(templates);
@@ -31,22 +31,22 @@ export class ExcelTemplateRepositoryImpl implements ExcelTemplateRepository {
 	async findBy(filters: Record<string, any>) {
 		const { id, name } = filters;
 		const defaultConditions = [
-			eq(ExcelTemplate.isDeleted, false),
-			eq(ExcelTemplate.isActive, true),
+			eq(excelTemplate.isDeleted, false),
+			eq(excelTemplate.isActive, true),
 		];
 		const conditions = [];
 
 		if (id) {
-			conditions.push(eq(ExcelTemplate.id, id));
+			conditions.push(eq(excelTemplate.id, id));
 		}
 
 		if (name) {
-			conditions.push(eq(ExcelTemplate.name, name));
+			conditions.push(eq(excelTemplate.name, name));
 		}
 
 		const [template] = await this.db
 			.select()
-			.from(ExcelTemplate)
+			.from(excelTemplate)
 			.where(and(...conditions, ...defaultConditions));
 		return nullsToUndefined(template);
 	}

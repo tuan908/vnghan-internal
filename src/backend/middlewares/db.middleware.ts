@@ -1,14 +1,14 @@
 import { neon, Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import type { MiddlewareHandler } from "hono";
-import { DbSchema } from "../db/schema";
+import * as DbSchema from "../db/schema";
 import { CustomerRepositoryImpl } from "../repositories/customer.repository";
-import { ExcelTemplateHeaderRepositoryImpl } from "../repositories/exceltemplate-header.repository";
-import { ExcelTemplateRepositoryImpl } from "../repositories/exceltemplate.repository";
+import { ExcelTemplateHeaderRepositoryImpl } from "../repositories/excel-template-header.repository";
+import { ExcelTemplateRepositoryImpl } from "../repositories/excel-template.repository";
 import { PlatformRepositoryImpl } from "../repositories/platform.repository";
+import { ScrewMaterialRepositoryImpl } from "../repositories/screw-material-repository";
+import { ScrewTypeRepositoryImpl } from "../repositories/screw-type-repository";
 import ScrewRepositoryImpl from "../repositories/screw.repository";
-import { ScrewMaterialRepositoryImpl } from "../repositories/screwmaterial-repository";
-import { ScrewTypeRepositoryImpl } from "../repositories/screwtype-repository";
 import { UserRepositoryImpl } from "../repositories/user.repository";
 import type { ContextVariableMap, ServerEnvironment } from "../types";
 

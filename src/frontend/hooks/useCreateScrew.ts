@@ -1,5 +1,5 @@
 import { QUERY_KEY } from "@/shared/constants";
-import { clientApiV1 } from "@/shared/utils/hono-client";
+import { honoClientV1 } from "@/shared/utils/hono-client";
 import { ScrewDto } from "@/shared/validations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { errorToast, successToast } from "../components/ui/toast";
@@ -9,7 +9,7 @@ export const useCreateScrew = () => {
 	const { mutateAsync: createScrew, isPending: isCreatingScrew } = useMutation({
 		mutationKey: ["CREATE_SCREW"],
 		mutationFn: async (req: ScrewDto) => {
-			const res = await clientApiV1.screws.$post({
+			const res = await honoClientV1.screws.$post({
 				json: req,
 			});
 			const resJson = await res.json();

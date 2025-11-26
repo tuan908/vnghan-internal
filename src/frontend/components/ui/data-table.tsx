@@ -41,6 +41,7 @@ type DataTableProps<TData> = {
 	setGlobalFilter: OnChangeFn<string>;
 	getRowClassName: (row: Row<TData>) => string;
 	onDoubleClickRow?: () => void;
+	loading?: boolean;
 }>;
 
 export function DataTable<TData>({
@@ -58,11 +59,11 @@ export function DataTable<TData>({
 	setGlobalFilter,
 	getRowClassName,
 	onDoubleClickRow,
+	loading,
 }: DataTableProps<TData>) {
 	const table = useReactTable({
 		columns,
 		data,
-		rowCount: data.length,
 		state: {
 			sorting,
 			columnFilters,
@@ -151,45 +152,63 @@ export function DataTable<TData>({
 						))}
 					</thead>
 					<tbody>
-						{virtualizer.getVirtualItems().map((virtualRow, index) => {
-							const row = rows[virtualRow.index]!;
-							return (
-								<tr
-									className={cn(
-										"border-b hover:bg-slate-100",
-										!getRowClassName || getRowClassName(row) === ""
-											? `odd:bg-white even:bg-slate-50`
-											: getRowClassName(row),
-									)}
-									key={row.id}
-									data-state={row.getIsSelected() && "selected"}
-									onDoubleClick={onDoubleClickRow}
-									style={{
-										height: `${virtualRow.size}px`,
-										transform: `translateY(${
-											virtualRow.start - index * virtualRow.size
-										}px)`,
-									}}
-								>
-									{row.getVisibleCells().map((cell) => {
-										return (
-											<td
-												key={cell.id}
-												className={cn(
-													"z-0 px-2 min-w-0 md:max-w-16 text-sm border-r",
-													CSS_TEXT_ELLIPSIS,
-												)}
-											>
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
-												)}
-											</td>
-										);
-									})}
+						{loading ? (
+							Array.from({ length: virtualizer.getVirtualItems().length || 10 }).map((_, rowIndex) => (
+								<tr key={`skeleton-${rowIndex}`} className="border-b">
+									{table.getAllColumns().map((column) => (
+										<td key={`skeleton-${rowIndex}-${column.id}`} className="px-2 py-3">
+											<div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+										</td>
+									))}
 								</tr>
-							);
-						})}
+							))
+						) : rows.length === 0 ? (
+							<tr>
+								<td colSpan={columns.length} className="text-center py-4">
+									No results.
+								</td>
+							</tr>
+						) : (
+							virtualizer.getVirtualItems().map((virtualRow, index) => {
+								const row = rows[virtualRow.index]!;
+								return (
+									<tr
+										className={cn(
+											"border-b hover:bg-slate-100",
+											!getRowClassName || getRowClassName(row) === ""
+												? `odd:bg-white even:bg-slate-50`
+												: getRowClassName(row),
+										)}
+										key={row.id}
+										data-state={row.getIsSelected() && "selected"}
+										onDoubleClick={onDoubleClickRow}
+										style={{
+											height: `${virtualRow.size}px`,
+											transform: `translateY(${
+												virtualRow.start - index * virtualRow.size
+											}px)`,
+										}}
+									>
+										{row.getVisibleCells().map((cell) => {
+											return (
+												<td
+													key={cell.id}
+													className={cn(
+														"z-0 px-2 min-w-0 md:max-w-16 text-sm border-r",
+														CSS_TEXT_ELLIPSIS,
+													)}
+												>
+													{flexRender(
+														cell.column.columnDef.cell,
+														cell.getContext(),
+													)}
+												</td>
+											);
+										})}
+									</tr>
+								);
+							})
+						)}
 					</tbody>
 				</table>
 			</div>

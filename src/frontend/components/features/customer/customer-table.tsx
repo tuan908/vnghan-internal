@@ -1,7 +1,7 @@
 import { PlatformDto } from "@/backend/models/platform.model";
 import { useDeleteCustomer } from "@/frontend/hooks/useDeleteCustomer";
-import { useEditCustomer } from "@/frontend/hooks/useEditCustomer";
 import { useIntlFormatter } from "@/frontend/hooks/useIntlFormatter";
+import { useUpdateCustomer } from "@/frontend/hooks/useUpdateCustomer";
 import type { AdminConfig } from "@/frontend/providers/AdminConfigProvider";
 import { DATETIME_FORMAT_DD_MM_YYYY_HH_MM_SS_WITH_SLASH } from "@/shared/constants";
 import json from "@/shared/i18n/locales/vi/vi.json";
@@ -78,7 +78,7 @@ export function CustomerTable({
 			nextMessageTime: new Date(),
 		},
 	});
-	const { editCustomer, isEditingCustomer } = useEditCustomer();
+	const { editCustomer, isEditingCustomer } = useUpdateCustomer();
 	const { deleteCustomer, isDeletingCustomer } = useDeleteCustomer();
 	const { formatCurrency, formatByTemplate } = useIntlFormatter();
 

@@ -21,11 +21,11 @@ import {
 	FormMessage,
 } from "@/frontend/components/ui/form";
 import { useDeleteScrew } from "@/frontend/hooks/useDeleteScrew";
-import { useEditScrew } from "@/frontend/hooks/useEditScrew";
-import { useGetScrewMaterials } from "@/frontend/hooks/useGetScrewMaterials";
-import { useGetScrews } from "@/frontend/hooks/useGetScrews";
-import { useGetScrewTypes } from "@/frontend/hooks/useGetScrewTypes";
 import { useIntlFormatter } from "@/frontend/hooks/useIntlFormatter";
+import { useScrewMaterials } from "@/frontend/hooks/useScrewMaterials";
+import { useScrews } from "@/frontend/hooks/useScrews";
+import { useScrewTypes } from "@/frontend/hooks/useScrewTypes";
+import { useUpdateScrew } from "@/frontend/hooks/useUpdateScrew";
 import json from "@/shared/i18n/locales/vi/vi.json";
 import { ScrewMaterialDto, ScrewTypeDto } from "@/shared/types";
 import { cn } from "@/shared/utils";
@@ -65,9 +65,9 @@ type DialogType = "edit" | "delete" | null;
 
 export default function HomeContent() {
 	// Data fetching hooks
-	const { screwTypes } = useGetScrewTypes();
-	const { screwMaterials } = useGetScrewMaterials();
-	const { screws: rows } = useGetScrews();
+	const { screwTypes } = useScrewTypes();
+	const { screwMaterials } = useScrewMaterials();
+	const { screws: rows } = useScrews();
 	const { formatCurrency } = useIntlFormatter();
 
 	// Table state
@@ -104,7 +104,7 @@ export default function HomeContent() {
 
 	// API mutation hooks
 	const { deleteScrew, isDeleting } = useDeleteScrew();
-	const { editScrew, isEditing } = useEditScrew();
+	const { editScrew, isEditing } = useUpdateScrew();
 
 	// Effect to track form changes
 	useEffect(() => {

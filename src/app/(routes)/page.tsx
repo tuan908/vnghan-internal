@@ -1,10 +1,10 @@
 import HomeContent from "@/frontend/components/features/home/home-content";
-import { clientApiV1 } from "@/shared/utils/hono-client";
+import { honoClientV1 } from "@/shared/utils/hono-client";
 import { AddOptionDropdown } from "../../frontend/components/features/dialog/add-option";
 import { ExportOptionDropdown } from "../../frontend/components/features/excel/export-option";
 
 export default function Home() {
-	const downloadUrl = clientApiV1.export.screws.$url().toString();
+	const downloadUrl = honoClientV1.export.screws.$url().toString();
 
 	return (
 		<main className="flex w-24/25 m-auto flex-col">

@@ -1,7 +1,7 @@
-import { Customer, CustomerPlatform, Platform } from "@/backend/db/schema";
+import { customer, customerPlatform, platform } from "@/backend/db/schema";
 import { nullsToUndefined } from "@/shared/utils";
-import { and, desc, eq } from "drizzle-orm";
-import { SelectCustomer } from "../models/customer.model";
+import { and, desc, eq, isNull } from "drizzle-orm";
+import { NewCustomerRow } from "../models/customer.model";
 import type { Database, QueryOptions } from "../types";
 import type { CustomerRepository } from "./interfaces/customer-repository.interface";
 
@@ -15,27 +15,27 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 	async findBy(filters: Record<string, any>) {
 		const { id, name, assignedTo, isAdmin } = filters;
 
-		const defaultConditions = [eq(Customer.isDeleted, false)];
+		const defaultConditions = [isNull(customer.deletedAt)];
 		const conditions = [];
 		if (id) {
-			conditions.push(eq(Customer.id, id));
+			conditions.push(eq(customer.id, id));
 		}
 
 		if (name) {
-			conditions.push(eq(Customer.name, name));
+			conditions.push(eq(customer.name, name));
 		}
 
 		if (assignedTo && !isAdmin) {
-			conditions.push(eq(Customer.assignedTo, assignedTo));
+			conditions.push(eq(customer.assignedTo, assignedTo));
 		}
 
-		const [customer] = await this.db
+		const [row] = await this.db
 			.select()
-			.from(Customer)
+			.from(customer)
 			.where(and(...conditions, ...defaultConditions));
-		return nullsToUndefined(customer);
+		return nullsToUndefined(row);
 	}
-	create(entity: SelectCustomer): Promise<{
+	create(entity: NewCustomerRow): Promise<{
 		id: number;
 		name: string | undefined;
 		phone: string | undefined;
@@ -55,7 +55,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 	}
 	update(
 		id: number,
-		entity: SelectCustomer,
+		entity: NewCustomerRow,
 	): Promise<
 		| {
 				id: number;
@@ -82,32 +82,32 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 	}
 
 	async findAll(options: QueryOptions) {
-		const defaultConditions = [eq(Customer.isDeleted, false)];
+		const defaultConditions = [isNull(customer.deletedAt)];
 		const conditions = [];
 		if (options.filter) {
 			const { isAdmin, operatorId } = options.filter;
 			if (!isAdmin) {
-				conditions.push(eq(Customer.assignedTo, operatorId));
+				conditions.push(eq(customer.assignedTo, operatorId));
 			}
 		}
 
 		const customers = await this.db
 			.select({
-				id: Customer.id,
-				name: Customer.name,
-				phone: Customer.phone,
-				address: Customer.address,
-				nextMessageTime: Customer.nextMessageTime,
-				need: Customer.need,
-				platform: Platform.name,
-				money: Customer.money,
-				note: Customer.note,
+				id: customer.id,
+				name: customer.name,
+				phone: customer.phone,
+				address: customer.address,
+				nextMessageTime: customer.nextMessageTime,
+				need: customer.need,
+				platform: platform.name,
+				money: customer.money,
+				note: customer.note,
 			})
-			.from(Customer)
-			.innerJoin(CustomerPlatform, eq(Customer.id, CustomerPlatform.customerId))
-			.innerJoin(Platform, eq(CustomerPlatform.platformId, Platform.id))
+			.from(customer)
+			.innerJoin(customerPlatform, eq(customer.id, customerPlatform.customerId))
+			.innerJoin(platform, eq(customerPlatform.platformId, platform.id))
 			.where(and(...defaultConditions, ...conditions))
-			.orderBy(desc(Customer.updatedAt));
+			.orderBy(desc(customer.updatedAt));
 		return nullsToUndefined(customers);
 	}
 }

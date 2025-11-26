@@ -1,4 +1,4 @@
-import { User } from "../db/schema";
+import { user } from "../db/schema";
 
-export type SelectUser = typeof User.$inferSelect;
-export type InsertUser = typeof User.$inferInsert;
+export type UserRow = typeof user.$inferSelect;
+export type NewUserRow = typeof user.$inferInsert;

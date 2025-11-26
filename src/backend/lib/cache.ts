@@ -28,6 +28,8 @@ export interface CacheEntry {
 	isFile?: boolean;
 	fileData?: string; // Base64 encoded file data
 	compressed?: boolean;
+	tags?: string[];
+	resourceTagging?: boolean;
 }
 
 // Cache store interface
@@ -37,6 +39,15 @@ export interface CacheStore {
 	delete(key: string): Promise<void>;
 	clear(pattern?: string): Promise<void>;
 	ping(): Promise<boolean>; // New method to check connection health
+	addTagToKey(tag: string, key: string): Promise<void>;
+	getKeysByTag(tag: string): Promise<string[]>;
+	invalidateByTag(tag: string): Promise<number>;
+	setWithTags(
+		key: string,
+		value: CacheEntry,
+		ttl: number,
+		tags: string[],
+	): Promise<void>;
 }
 
 // Connection pool to manage Redis connections
@@ -134,6 +145,58 @@ export class RedisCacheStore implements CacheStore {
 	// Get the underlying Redis client
 	getClient(): Redis {
 		return this.redis;
+	}
+
+	/**
+	 * Add a tag to a cache key
+	 */
+	async addTagToKey(tag: string, key: string): Promise<void> {
+		const tagSetKey = `${this.namespace}:tags:${tag}`;
+		await this.redis.sadd(tagSetKey, key);
+	}
+
+	/**
+	 * Get all cache keys with a specific tag
+	 */
+	async getKeysByTag(tag: string): Promise<string[]> {
+		const tagSetKey = `${this.namespace}:tags:${tag}`;
+		return await this.redis.smembers(tagSetKey);
+	}
+
+	/**
+	 * Invalidate all cache entries with a specific tag
+	 */
+	async invalidateByTag(tag: string): Promise<number> {
+		const keys = await this.getKeysByTag(tag);
+		if (keys.length === 0) return 0;
+
+		// Delete all the cache entries
+		await Promise.all(keys.map((key) => this.redis.del(key)));
+
+		// Clean up the tag set
+		const tagSetKey = `${this.namespace}:tags:${tag}`;
+		await this.redis.del(tagSetKey);
+
+		return keys.length;
+	}
+
+	/**
+	 * Enhanced set method that supports tags
+	 */
+	async setWithTags(
+		key: string,
+		value: CacheEntry,
+		ttl: number,
+		tags: string[],
+	): Promise<void> {
+		// First set the cache entry
+		await this.set(key, value, ttl);
+
+		// Then add the key to each tag's set
+		await Promise.all(tags.map((tag) => this.addTagToKey(tag, key)));
+
+		// Store the tags with the entry for reference
+		value.tags = tags;
 	}
 }
 

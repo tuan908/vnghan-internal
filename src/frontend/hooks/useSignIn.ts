@@ -1,13 +1,19 @@
-import { clientApiV1 } from "@/shared/utils/hono-client";
+import type { ApiError, ApiResponse } from "@/backend/lib/api-response";
+import { honoClientV1 } from "@/shared/utils/hono-client";
 import type { SignInFormValues } from "@/shared/validations";
 import { useMutation } from "@tanstack/react-query";
 
-const mutationFn = async (req: SignInFormValues) => {
-	const response = await clientApiV1.auth.login.$post({
+export type LoginSuccessResponse = ApiResponse<{ token: string }>;
+export type LoginErrorResponse = ApiResponse<ApiError>;
+
+const mutationFn = async (
+	req: SignInFormValues,
+): Promise<LoginSuccessResponse | LoginErrorResponse> => {
+	const response = await honoClientV1.auth.login.$post({
 		json: req,
 	});
 	const resJson = await response.json();
-	return resJson;
+	return resJson as LoginSuccessResponse | LoginErrorResponse;
 };
 
 export const useSignIn = () => {
@@ -15,9 +21,13 @@ export const useSignIn = () => {
 		mutateAsync: signIn,
 		data,
 		isPending: isPendingSignIn,
-	} = useMutation({
+	} = useMutation<
+		LoginSuccessResponse | LoginErrorResponse,
+		Error,
+		SignInFormValues
+	>({
 		mutationKey: ["auth"],
 		mutationFn,
 	});
-	return { signIn, isPendingSignIn };
+	return { signIn, isPendingSignIn, data };
 };

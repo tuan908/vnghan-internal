@@ -7,7 +7,7 @@
 //   return resJson?.data ?? [];
 // };
 
-// export const useGetNeeds = () => {
+// export const useNeeds = () => {
 //   const { data: needs, isLoading: isFetchingNeeds } = useQuery({
 //     queryKey: ["NEEDS"],
 //     queryFn: getNeeds,

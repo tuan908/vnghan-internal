@@ -1,4 +1,4 @@
-import { clientApiV1 } from "@/shared/utils/hono-client";
+import { honoClientV1 } from "@/shared/utils/hono-client";
 import type { CustomerDto } from "@/shared/validations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { errorToast, successToast } from "../components/ui/toast";
@@ -9,7 +9,7 @@ export const useDeleteCustomer = () => {
 		useMutation({
 			mutationKey: ["DELETE_CUSTOMER"],
 			mutationFn: async (req: CustomerDto) => {
-				const res = await clientApiV1.customers[":id"].$delete(
+				const res = await honoClientV1.customers[":id"].$delete(
 					{
 						param: {
 							id: req.id!?.toString(),

@@ -1,5 +1,5 @@
-import { DbSchema } from "@/backend/db/schema";
-import type { InsertScrew } from "@/backend/models/screw.model";
+import { screw, screwMaterial, screwType } from "@/backend/db/schema";
+import type { NewScrewRow } from "@/backend/models/screw.model";
 import {
 	DEFAULT_MATERIAL_ID,
 	DEFAULT_SIZE_ID,
@@ -11,7 +11,7 @@ import { ScrewMaterialDto, ScrewTypeDto } from "@/shared/types";
 import { nullsToUndefined, tryCatch } from "@/shared/utils";
 import { getCurrentDate } from "@/shared/utils/date";
 import type { ScrewDto } from "@/shared/validations";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { Hono } from "hono";
 import {
 	createErrorResponse,
@@ -25,26 +25,26 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
 
 		const screws = await db
 			.select({
-				id: DbSchema.Screw.id,
-				name: DbSchema.Screw.name,
-				quantity: DbSchema.Screw.quantity,
-				componentType: DbSchema.ScrewType.name,
-				material: DbSchema.ScrewMaterial.name,
-				category: DbSchema.ScrewType.name,
-				price: DbSchema.Screw.price,
-				note: DbSchema.Screw.note,
+				id: screw.id,
+				name: screw.name,
+				quantity: screw.quantity,
+				componentType: screwType.name,
+				material: screwMaterial.name,
+				category: screwType.name,
+				price: screw.price,
+				note: screw.note,
 			})
-			.from(DbSchema.Screw)
+			.from(screw)
 			.innerJoin(
-				DbSchema.ScrewMaterial,
-				eq(DbSchema.Screw.materialId, DbSchema.ScrewMaterial.id),
+				screwMaterial,
+				eq(screw.materialId, screwMaterial.id),
 			)
 			.innerJoin(
-				DbSchema.ScrewType,
-				eq(DbSchema.Screw.componentTypeId, DbSchema.ScrewType.id),
+				screwType,
+				eq(screw.componentTypeId, screwType.id),
 			)
-			.where(eq(DbSchema.Screw.isDeleted, false))
-			.orderBy(DbSchema.Screw.id);
+			.where(isNull(screw.deletedAt))
+			.orderBy(screw.id);
 
 		return c.json(createSuccessResponse(screws), 200);
 	})
@@ -64,7 +64,7 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
 			}),
 		]);
 
-		const entity: InsertScrew = {
+		const newRow: NewScrewRow = {
 			sizeId: DEFAULT_SIZE_ID,
 			description: newScrew.category,
 			name: newScrew.name,
@@ -75,11 +75,10 @@ const screwRouterV1 = new Hono<{ Bindings: ServerEnvironment }>()
 			materialId: screwMaterial ? screwMaterial.id : DEFAULT_MATERIAL_ID,
 			createdAt: getCurrentDate(),
 			updatedAt: getCurrentDate(),
-			isDeleted: false,
 		};
 
 		const { data: result, error: insertError } = await tryCatch(
-			screwRepository.create(entity),
+			screwRepository.create(newRow),
 		);
 		if (insertError)
 			return c.json(

@@ -92,7 +92,7 @@ export function getFieldErrors(error: ApiResponse): Record<string, string> {
  */
 export function isSuccessResponse<TData>(
 	response: ApiResponse<TData>,
-): response is ApiResponse<TData> & { data: TData } {
+): response is ApiResponse<TData> & Required<Pick<ApiResponse<TData>, "data">> {
 	return response.success === true && response.data !== undefined;
 }
 

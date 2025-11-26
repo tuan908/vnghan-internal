@@ -1,11 +1,11 @@
 import type { RecursivelyReplaceNullWithUndefined } from "@/shared/types";
-import { Platform } from "../db/schema";
+import { platform } from "../db/schema";
 
-export type SelectPlatform = RecursivelyReplaceNullWithUndefined<
-	typeof Platform.$inferSelect
+export type PlatformRow = RecursivelyReplaceNullWithUndefined<
+	typeof platform.$inferSelect
 >;
-export type PlatformCustomer = RecursivelyReplaceNullWithUndefined<
-	typeof Platform.$inferInsert
+export type PlatformCustomerRow = RecursivelyReplaceNullWithUndefined<
+	typeof platform.$inferInsert
 >;
 
 export interface PlatformDto {

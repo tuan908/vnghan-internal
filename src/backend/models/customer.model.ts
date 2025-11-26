@@ -1,5 +1,5 @@
 import { RecursivelyReplaceNullWithUndefined } from "@/shared/types";
-import { Customer } from "../db/schema";
+import { customer } from "../db/schema";
 
 export interface CustomerModel {
 	name: string;
@@ -11,11 +11,11 @@ export interface CustomerModel {
 	nextMessageTime: string;
 }
 
-export interface SelectCustomer
-	extends RecursivelyReplaceNullWithUndefined<typeof Customer.$inferSelect> {}
+export interface CustomerRow
+	extends RecursivelyReplaceNullWithUndefined<typeof customer.$inferSelect> {}
 
-export type InsertCustomer = RecursivelyReplaceNullWithUndefined<
-	typeof Customer.$inferInsert
+export type NewCustomerRow = RecursivelyReplaceNullWithUndefined<
+	typeof customer.$inferInsert
 >;
 
 export type RawCustomer = RecursivelyReplaceNullWithUndefined<{

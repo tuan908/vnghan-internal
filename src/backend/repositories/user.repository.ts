@@ -1,8 +1,8 @@
-import { User } from "@/backend/db/schema";
+import { user } from "@/backend/db/schema";
 import { nullsToUndefined } from "@/shared/utils";
 import { getCurrentDate } from "@/shared/utils/date";
-import { and, eq } from "drizzle-orm";
-import type { InsertUser } from "../models/user.model";
+import { and, eq, isNull } from "drizzle-orm";
+import type { NewUserRow } from "../models/user.model";
 import type { Database } from "../types";
 import type { UserRepository } from "./interfaces/user-repository.interface";
 
@@ -15,38 +15,32 @@ export class UserRepositoryImpl implements UserRepository {
 
 	async findBy(filters: Record<string, any>) {
 		const { id, username } = filters;
-		const defaultConditions = [eq(User.isDeleted, false)];
+		const defaultConditions = [isNull(user.deletedAt)];
 		const conditions = [];
 
 		if (id) {
-			conditions.push(eq(User.id, id));
+			conditions.push(eq(user.id, id));
 		}
 
 		if (username) {
-			conditions.push(eq(User.username, username));
+			conditions.push(eq(user.username, username));
 		}
 
-		const [user] = await this.db
+		const [row] = await this.db
 			.select()
-			.from(User)
+			.from(user)
 			.where(and(...conditions, ...defaultConditions));
-		return nullsToUndefined(user);
+		return nullsToUndefined(row);
 	}
 
-	async create(dto: InsertUser) {
-		const user = await this.findBy({
-			username: dto.username,
-		});
-
-		if (!user) return undefined;
-
+	async create(dto: NewUserRow) {
 		const [newUser] = await this.db.transaction(async (tx) => {
 			const insertValue = {
 				...dto,
 				createdAt: getCurrentDate(),
 				updatedAt: getCurrentDate(),
 			};
-			return await tx.insert(User).values(insertValue).returning();
+			return await tx.insert(user).values(insertValue).returning();
 		});
 
 		return newUser;
