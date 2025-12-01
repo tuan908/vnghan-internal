@@ -1,6 +1,6 @@
 import { ScrewMaterialDto, ScrewTypeDto } from "@/core/types";
 import type { ScrewDto } from "@/core/validations";
-import type React from "react";
+import React from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { ScrewDeleteDialog } from "./screw-delete-dialog";
 import { ScrewEditDialog } from "./screw-edit-dialog";
@@ -21,7 +21,7 @@ interface ScrewDialogsProps {
 	onDeleteScrew: () => Promise<void>;
 }
 
-export function ScrewDialogs({
+export const ScrewDialogs = React.memo(function ScrewDialogs({
 	activeDialog,
 	currentItem,
 	screwTypes,
@@ -57,4 +57,4 @@ export function ScrewDialogs({
 			/>
 		</>
 	);
-}
+});

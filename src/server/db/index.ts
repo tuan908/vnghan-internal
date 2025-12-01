@@ -11,14 +11,18 @@ function createDb() {
 
 	const pool = new Pool({
 		connectionString,
-		max: 10, // Vercel serverless: keep this modest
-		idleTimeoutMillis: 30_000,
+		max: 4, // Reduced for serverless (fewer concurrent functions)
+		min: 0, // Allow complete scaling to zero
+		idleTimeoutMillis: 10000, // Faster cleanup than default 30s
+		connectionTimeoutMillis: 2000, // Fail fast instead of default 60s
+		allowExitOnIdle: true, // Allow pool to exit when idle
 	});
 
 	return drizzle({
 		client: pool,
 		schema,
 		logger: process.env.NODE_ENV === "development",
+		casing: "snake_case",
 	});
 }
 

@@ -3,11 +3,11 @@ import { QUERY_KEY } from "@/core/constants";
 import { ScrewDto } from "@/core/validations";
 import { api } from "@/server/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { inventoryQueryKeys } from "./queries";
 
 export const useCreateScrew = () => {
 	const queryClient = useQueryClient();
-	const { mutateAsync: createScrew, isPending: isCreatingScrew } = useMutation({
-		mutationKey: ["CREATE_SCREW"],
+	const { mutate: createScrew, isPending: isCreatingScrew } = useMutation({
 		mutationFn: async (req: ScrewDto) => {
 			const res = await api.inventory.screw.$post({
 				json: req,
@@ -22,27 +22,24 @@ export const useCreateScrew = () => {
 			successToast();
 		},
 		onError: (error) => errorToast(error.message),
+		onSettled: () => {
+			queryClient.invalidateQueries({
+				queryKey: inventoryQueryKeys.screwListInfinite(),
+			});
+		},
 	});
 	return { createScrew, isCreatingScrew };
 };
 
 export const useDeleteScrew = () => {
 	const queryClient = useQueryClient();
-	const { mutateAsync: deleteScrew, isPending: isDeleting } = useMutation({
-		mutationKey: ["DELETE_SCREW"],
-		mutationFn: async (req: ScrewDto) => {
-			const res = await api.inventory.screw[":id"].$delete(
-				{
-					param: {
-						id: req.id!?.toString(),
-					},
+	const { mutate: deleteScrew, isPending: isDeleting } = useMutation({
+		mutationFn: async (id: number) => {
+			const res = await api.inventory.screw[":id"].$delete({
+				param: {
+					id: id.toString(),
 				},
-				{
-					init: {
-						body: JSON.stringify(req),
-					},
-				},
-			);
+			});
 			const resJson = await res.json();
 			return resJson?.data;
 		},
@@ -53,14 +50,18 @@ export const useDeleteScrew = () => {
 			successToast();
 		},
 		onError: (error) => errorToast(error.message),
+		onSettled: () => {
+			queryClient.invalidateQueries({
+				queryKey: inventoryQueryKeys.screwListInfinite(),
+			});
+		},
 	});
 	return { deleteScrew, isDeleting };
 };
 
 export const useUpdateScrew = () => {
 	const queryClient = useQueryClient();
-	const { mutateAsync: editScrew, isPending: isEditing } = useMutation({
-		mutationKey: ["EDIT_SCREW"],
+	const { mutate: updateScrew, isPending: isEditing } = useMutation({
 		mutationFn: async (req: ScrewDto) => {
 			const res = await api.inventory.screw[":id"].$patch(
 				{
@@ -78,12 +79,14 @@ export const useUpdateScrew = () => {
 			return resJson?.data;
 		},
 		onSuccess: async () => {
-			await queryClient.invalidateQueries({
-				queryKey: [QUERY_KEY.SCREW],
-			});
 			successToast();
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({
+				queryKey: inventoryQueryKeys.screwListInfinite(),
+			});
 		},
 		onError: (error) => errorToast(error.message),
 	});
-	return { editScrew, isEditing };
+	return { updateScrew, isEditing };
 };

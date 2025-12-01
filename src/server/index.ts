@@ -2,6 +2,7 @@ import { ErrorCodes } from "@/core/constants";
 import json from "@/core/i18n/locales/en/en.json";
 import type { Session } from "@/core/utils/session";
 import { type Context, Hono } from "hono";
+import { compress } from "hono/compress";
 import { logger } from "hono/logger";
 import type { DB } from "./db";
 import { createErrorResponse } from "./lib/api-response";
@@ -31,6 +32,9 @@ const jwt = createJwtMiddleware({
 });
 
 const app = new Hono<{ Bindings: ServerEnvironment }>().basePath("/api");
+
+// --- Global Compression ---
+app.use("*", compress({ encoding: "gzip" }));
 
 // --- Global Logging ---
 app.use("*", logger());

@@ -31,6 +31,48 @@ const customerRouter = new Hono()
 		});
 		return c.json(createSuccessResponse(customers), 200);
 	})
+	.get("/listInfinite", async (c) => {
+		const session = c.get("session");
+		const { limit, cursor } = c.req.query();
+		const limitNum = limit ? parseInt(limit) : 20;
+
+		if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+			return c.json(
+				createErrorResponse({
+					code: ErrorCodes.BAD_REQUEST,
+					message: "Limit must be between 1 and 100",
+				}),
+				400,
+			);
+		}
+
+		const result = await customerRepository.listByOperatorIdInfinite(
+			session.id,
+			limitNum,
+			cursor,
+		);
+
+		const customers = result.data.map((customer) => ({
+			id: customer.id,
+			address: toStringValue(customer.address),
+			money: toStringValue(customer.money),
+			name: toStringValue(customer.name),
+			need: toStringValue(customer.need),
+			phone: toStringValue(customer.phone),
+			platform: toStringValue(customer.platform),
+			nextMessageTime: toStringValue(customer.nextMessageTime),
+			note: toStringValue(customer.note),
+		}));
+
+		return c.json(
+			createSuccessResponse({
+				data: customers,
+				nextCursor: result.nextCursor,
+				hasNextPage: result.hasNextPage,
+			}),
+			200,
+		);
+	})
 	.get("/:id", async (c) => {
 		const id = parseInt(c.req.param("id"));
 		if (isNaN(id)) {

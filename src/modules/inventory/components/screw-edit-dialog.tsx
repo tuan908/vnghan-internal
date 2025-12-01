@@ -2,6 +2,7 @@ import { Button } from "@/core/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -76,6 +77,7 @@ export function ScrewEditDialog({
 			>
 				<DialogHeader>
 					<DialogTitle>Chỉnh sửa</DialogTitle>
+					<DialogDescription>Chỉnh sửa thông tin sản phẩm</DialogDescription>
 				</DialogHeader>
 				<Form {...editScrewForm}>
 					<form onSubmit={onSubmit} className="flex flex-col gap-y-4">
@@ -219,7 +221,12 @@ export function ScrewEditDialog({
 						/>
 
 						<DialogFooter className="mt-4">
-							<Button type="button" variant="outline" disabled={isEditing}>
+							<Button
+								type="button"
+								variant="outline"
+								disabled={isEditing}
+								onClick={onClose}
+							>
 								Hủy
 							</Button>
 							<Button type="submit" disabled={isEditing}>

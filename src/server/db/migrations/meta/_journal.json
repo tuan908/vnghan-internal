@@ -43,6 +43,13 @@
 			"when": 1764558697306,
 			"tag": "0005_hesitant_chat",
 			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1764585169171,
+			"tag": "0006_white_warhawk",
+			"breakpoints": true
 		}
 	]
 }

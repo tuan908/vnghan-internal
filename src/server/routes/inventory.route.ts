@@ -23,6 +23,56 @@ const inventoryRouter = new Hono()
 		const screws = await screwRepository.list();
 		return c.json(createSuccessResponse(screws), 200);
 	})
+	.get("/screw/listPaginated", async (c) => {
+		const limit = parseInt(c.req.query("limit") || "50");
+		const offset = parseInt(c.req.query("offset") || "0");
+
+		// Validate pagination parameters
+		if (limit < 1 || limit > 1000) {
+			return c.json(
+				createErrorResponse({
+					code: ErrorCodes.BAD_REQUEST,
+					message: "Limit must be between 1 and 1000",
+					statusCode: 400,
+				}),
+				400,
+			);
+		}
+
+		if (offset < 0) {
+			return c.json(
+				createErrorResponse({
+					code: ErrorCodes.BAD_REQUEST,
+					message: "Offset must be non-negative",
+					statusCode: 400,
+				}),
+				400,
+			);
+		}
+
+		const result = await screwRepository.listPaginated(limit, offset);
+		return c.json(createSuccessResponse(result), 200);
+	})
+	.get("/screw/listInfinite", async (c) => {
+		const limit = parseInt(c.req.query("limit") || "50");
+		const cursor = c.req.query("cursor");
+
+		// Validate pagination parameters
+		if (limit < 1 || limit > 100) {
+			// Smaller limit for infinite queries
+			return c.json(
+				createErrorResponse({
+					code: ErrorCodes.BAD_REQUEST,
+					message: "Limit must be between 1 and 100",
+					statusCode: 400,
+				}),
+				400,
+			);
+		}
+
+		const result = await screwRepository.listInfinite(limit, cursor);
+		return c.json(createSuccessResponse(result), 200);
+	})
 	.post("/screw", async (c) => {
 		const newScrew = await c.req.json<ScrewDto>();
 
