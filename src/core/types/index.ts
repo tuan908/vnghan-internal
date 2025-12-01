@@ -1,3 +1,6 @@
+import { RankingInfo } from "@tanstack/match-sorter-utils";
+import { FilterFn } from "@tanstack/react-table";
+
 export interface ApiResponse<T = unknown> {
 	success: boolean;
 	status: {
@@ -117,4 +120,13 @@ export interface ScrewTypeDto {
 
 export interface ImportResult {
 	rowsCount: number;
+}
+
+declare module "@tanstack/react-table" {
+	interface FilterFns {
+		fuzzy: FilterFn<unknown>;
+	}
+	interface FilterMeta {
+		itemRank: RankingInfo;
+	}
 }

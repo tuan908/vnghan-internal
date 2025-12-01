@@ -5,9 +5,9 @@ import { cn, convertRole, RoleUtils } from "@/core/utils";
 import type { Session } from "@/core/utils/session";
 import { AdminConfigPanel } from "@/modules/admin/components/admin-config-panel";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import { deleteCookie } from "cookies-next";
 import { LogOut, Settings, UserCircle } from "lucide-react";
@@ -15,8 +15,8 @@ import Link from "next/link";
 import { redirect, usePathname, useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useState } from "react";
 import {
-    DropdownMenuItemWithIcon,
-    DropdownMenuSeparator,
+	DropdownMenuItemWithIcon,
+	DropdownMenuSeparator,
 } from "../../ui/dropdown-menu";
 
 const ROUTES = [

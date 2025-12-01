@@ -1,84 +1,46 @@
 "use client";
 
-import { Button } from "@/core/components/ui/button";
-import { DataTable, fuzzySort } from "@/core/components/ui/data-table";
+import { DataTable } from "@/core/components/ui/data-table";
 import DebouncedInput from "@/core/components/ui/debounced-input";
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/core/components/ui/dialog";
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/core/components/ui/form";
-import { Input } from "@/core/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/core/components/ui/select";
-import { Textarea } from "@/core/components/ui/textarea";
-import json from "@/core/i18n/locales/vi/vi.json";
-import { ScrewMaterialDto, ScrewTypeDto } from "@/core/types";
-import { cn } from "@/core/utils";
-import { formatCurrency } from "@/core/utils/currency";
+import { useTableState } from "@/core/lib/hooks/useTableState";
 import { ScrewDto, ScrewSchema } from "@/core/validations";
 import {
-    useDeleteScrew,
-    useUpdateScrew,
+	useDeleteScrew,
+	useUpdateScrew,
 } from "@/modules/inventory/api/mutations";
 import {
-    useScrewMaterialsQuery,
-    useScrewsQuery,
-    useScrewTypesQuery,
+	useScrewMaterialsQuery,
+	useScrewsQuery,
+	useScrewTypesQuery,
 } from "@/modules/inventory/api/queries";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { RankingInfo } from "@tanstack/match-sorter-utils";
-import {
-    ColumnDef,
-    ColumnFiltersState,
-    FilterFn,
-    SortingState,
-    VisibilityState,
-} from "@tanstack/react-table";
-import { Loader2, Pencil, Search, Trash2 } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-
-declare module "@tanstack/react-table" {
-	interface FilterFns {
-		fuzzy: FilterFn<unknown>;
-	}
-	interface FilterMeta {
-		itemRank: RankingInfo;
-	}
-}
+import { ScrewDialogs } from "./screw-dialogs";
+import { useScrewTableColumns } from "./screw-table-columns";
 
 type DialogType = "edit" | "delete" | null;
 
 export default function HomeContent() {
 	// Data fetching hooks
-	const { screws: rows } = useScrewsQuery();
+	const { screws: rows, isLoading: isLoadingScrews } = useScrewsQuery();
 	const { screwTypes } = useScrewTypesQuery();
 	const { screwMaterials } = useScrewMaterialsQuery();
 
-	// Table state
-	const [globalFilter, setGlobalFilter] = useState("");
-	const [sorting, setSorting] = useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-	const [rowSelection, setRowSelection] = useState({});
+	// Table state using custom hook
+	const {
+		globalFilter,
+		sorting,
+		columnFilters,
+		columnVisibility,
+		rowSelection,
+		setGlobalFilter,
+		setSorting,
+		setColumnFilters,
+		setColumnVisibility,
+		setRowSelection,
+	} = useTableState();
 
 	// Dialog state
 	const [activeDialog, setActiveDialog] = useState<DialogType>(null);
@@ -189,77 +151,11 @@ export default function HomeContent() {
 		}
 	}, [currentItem, deleteScrew, handleCloseDialog]);
 
-	// Memoized table columns definition
-	const columns = useMemo<ColumnDef<ScrewDto>[]>(
-		() => [
-			{
-				accessorKey: "id",
-				header: "ID",
-				cell: ({ row }) => <>{row.original.id}</>,
-				enableColumnFilter: false,
-				size: 75,
-			},
-			{
-				accessorKey: "componentType",
-				header: json.table.componentType,
-				cell: ({ row }) => <> {row.original.componentType}</>,
-				filterFn: "includesString",
-				size: 150,
-			},
-			{
-				accessorKey: "price",
-				header: json.table.price,
-				cell: ({ row }) => (
-					<div className={cn("text-right flex gap-x-2 justify-end")}>
-						<span>{formatCurrency(row.original.price)}</span>
-						<span className="text-gray-500 pointer-events-none">VND</span>
-					</div>
-				),
-				filterFn: "includesString",
-				size: 150,
-			},
-			{
-				accessorKey: "quantity",
-				header: json.table.quantity,
-				cell: ({ row }) => <>{row.original.quantity}</>,
-				filterFn: "includesString",
-				size: 150,
-			},
-			{
-				accessorKey: "name",
-				header: json.table.name,
-				cell: ({ row }) => <>{row.original.name}</>,
-				sortUndefined: "last",
-				sortDescFirst: false,
-				filterFn: "fuzzy",
-				sortingFn: fuzzySort,
-				size: 150,
-			},
-			{
-				accessorKey: "note",
-				header: json.table.note,
-				cell: ({ row }) => <>{row.original.note}</>,
-				filterFn: "includesString",
-				size: 200,
-			},
-			{
-				id: "actions",
-				header: json.table.action,
-				cell: ({ row }) => (
-					<div className={cn("flex gap-x-6 justify-center items-center")}>
-						<button onClick={() => handleEditClick(row.original)}>
-							<Pencil className="h-5 w-5 text-blue-400 hover:text-blue-300" />
-						</button>
-						<button onClick={() => handleDeleteClick(row.original)}>
-							<Trash2 className="h-5 w-5 text-red-400 hover:text-red-300" />
-						</button>
-					</div>
-				),
-				size: 100,
-			},
-		],
-		[formatCurrency, handleDeleteClick, handleEditClick],
-	);
+	// Use the separated table columns hook
+	const columns = useScrewTableColumns({
+		onUpdate: handleEditClick,
+		onDelete: handleDeleteClick,
+	});
 
 	return (
 		<>
@@ -292,259 +188,23 @@ export default function HomeContent() {
 					globalFilter={globalFilter}
 					setGlobalFilter={setGlobalFilter}
 					onDoubleClickRow={() => setActiveDialog("edit")}
+					loading={isLoadingScrews}
 				/>
 			</div>
 
-			{/* Edit Dialog */}
-			{activeDialog === "edit" && (
-				<Dialog
-					open={activeDialog === "edit"}
-					onOpenChange={(open) => {
-						if (!open) handleCloseDialog();
-					}}
-				>
-					<DialogContent
-						className="sm:max-w-3xl overflow-hidden"
-						onEscapeKeyDown={(e) => {
-							if (hasUnsavedChanges) {
-								e.preventDefault();
-								handleCloseDialog();
-							}
-						}}
-						onInteractOutside={(e) => {
-							if (hasUnsavedChanges) {
-								e.preventDefault();
-							}
-						}}
-					>
-						<DialogHeader>
-							<DialogTitle>Chỉnh sửa</DialogTitle>
-						</DialogHeader>
-						<Form {...editScrewForm}>
-							<form
-								onSubmit={handleEditSubmit}
-								className="flex flex-col gap-y-4"
-							>
-								{currentItem && (
-									<input type="hidden" {...editScrewForm.register("id")} />
-								)}
-
-								<FormField
-									control={editScrewForm.control}
-									name="name"
-									disabled={isEditing}
-									render={({ field }) => (
-										<FormItem className="flex flex-col gap-y-2">
-											<FormLabel>Tên sản phẩm</FormLabel>
-											<FormControl>
-												<Input placeholder="Nhập tên sản phẩm" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<FormField
-										control={editScrewForm.control}
-										name="quantity"
-										disabled={isEditing}
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Số lượng</FormLabel>
-												<FormControl>
-													<Input placeholder="Nhập số lượng" {...field} />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={editScrewForm.control}
-										name="price"
-										disabled={isEditing}
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Giá tham khảo</FormLabel>
-												<FormControl>
-													<div className="relative flex items-center">
-														<Input
-															placeholder="Nhập giá tiền tham khảo"
-															{...field}
-														/>
-														<div className="absolute right-3 text-gray-500 pointer-events-none">
-															VND
-														</div>
-													</div>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</div>
-
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<FormField
-										control={editScrewForm.control}
-										disabled={isEditing}
-										name="componentType"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Loại phụ kiện</FormLabel>
-												<Select
-													onValueChange={field.onChange}
-													value={field.value || ""}
-													disabled={field.disabled}
-												>
-													<FormControl>
-														<SelectTrigger className="w-full">
-															<SelectValue placeholder="Chọn loại phụ kiện" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{screwTypes.map((type) => (
-															<TypeSelectItem key={type.id} type={type} />
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={editScrewForm.control}
-										name="material"
-										disabled={isEditing}
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Chất liệu</FormLabel>
-												<Select
-													onValueChange={field.onChange}
-													value={field.value || ""}
-													disabled={field.disabled}
-												>
-													<FormControl>
-														<SelectTrigger className="w-full">
-															<SelectValue placeholder="Chọn chất liệu" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{screwMaterials.map((material) => (
-															<MaterialSelectItem
-																key={material.id}
-																material={material}
-															/>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</div>
-
-								<FormField
-									control={editScrewForm.control}
-									name="note"
-									disabled={isEditing}
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Lưu ý</FormLabel>
-											<FormControl>
-												<Textarea
-													className="resize-none min-h-24"
-													placeholder="Nhập lưu ý (nếu có)"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<DialogFooter className="mt-4">
-									<DialogClose asChild>
-										<Button
-											type="button"
-											variant="outline"
-											disabled={isEditing}
-										>
-											Hủy
-										</Button>
-									</DialogClose>
-									<Button type="submit" disabled={isEditing}>
-										{isEditing ? (
-											<>
-												<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-												<span>{json.common.saving}</span>
-											</>
-										) : (
-											<span>{json.common.edit}</span>
-										)}
-									</Button>
-								</DialogFooter>
-							</form>
-						</Form>
-					</DialogContent>
-				</Dialog>
-			)}
-
-			{/* Delete Dialog */}
-			{activeDialog === "delete" && (
-				<Dialog
-					open={activeDialog === "delete"}
-					onOpenChange={(open) => {
-						if (!open) handleCloseDialog();
-					}}
-				>
-					<DialogContent className="sm:max-w-md">
-						<DialogHeader>
-							<DialogTitle>Xác nhận xóa</DialogTitle>
-							<DialogDescription>
-								Bạn có chắc chắn muốn xóa sản phẩm &quot;{currentItem?.name}
-								&quot;?
-							</DialogDescription>
-						</DialogHeader>
-						<DialogFooter>
-							<Button
-								type="button"
-								variant="outline"
-								onClick={handleCloseDialog}
-								disabled={isDeleting}
-							>
-								Hủy
-							</Button>
-							<Button
-								type="button"
-								variant="destructive"
-								onClick={handleDeleteScrew}
-								disabled={isDeleting}
-							>
-								Xóa
-							</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
-			)}
+			<ScrewDialogs
+				activeDialog={activeDialog}
+				currentItem={currentItem}
+				screwTypes={screwTypes}
+				screwMaterials={screwMaterials}
+				editScrewForm={editScrewForm}
+				isEditing={isEditing}
+				isDeleting={isDeleting}
+				hasUnsavedChanges={hasUnsavedChanges}
+				onCloseDialog={handleCloseDialog}
+				onEditSubmit={handleEditSubmit}
+				onDeleteScrew={handleDeleteScrew}
+			/>
 		</>
 	);
 }
-
-// Memoized SelectItem components to prevent re-renders
-const TypeSelectItem = memo(({ type }: { type: ScrewTypeDto }) => (
-	<SelectItem key={type.id} value={type.name || ""}>
-		{type.name}
-	</SelectItem>
-));
-TypeSelectItem.displayName = "TypeSelectItem";
-
-const MaterialSelectItem = memo(
-	({ material }: { material: ScrewMaterialDto }) => (
-		<SelectItem key={material.id} value={material.name || ""}>
-			{material.name}
-		</SelectItem>
-	),
-);
-MaterialSelectItem.displayName = "MaterialSelectItem";

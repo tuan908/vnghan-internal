@@ -72,7 +72,7 @@ export default function CustomerForm() {
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 	const { platforms } = usePlatforms();
 	// const { needs } = useNeeds();
-	const { customers } = useCustomersQuery();
+	const { customers, isLoading: isLoadingCustomers } = useCustomersQuery();
 	const createCustomerMutation = useCreateCustomerMutation();
 	const { mutateAsync: createCustomer, isPending: isCreatingCustomer } =
 		createCustomerMutation;
@@ -118,9 +118,10 @@ export default function CustomerForm() {
 				platforms={transformedPlatforms}
 				config={config}
 				isAdmin={isAdmin}
+				loading={isLoadingCustomers}
 			/>
 		);
-	}, [customers, platforms, user, config]);
+	}, [customers, platforms, user, config, isLoadingCustomers]);
 
 	return (
 		<>

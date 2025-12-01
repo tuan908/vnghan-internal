@@ -83,6 +83,6 @@ export const useScrewTypesQuery = () => {
 };
 
 export const useScrewsQuery = () => {
-	const { data } = useQuery(inventoryQueryOptions.screw.list);
-	return { screws: data ?? [] };
+	const { data, isLoading } = useQuery(inventoryQueryOptions.screw.list);
+	return { screws: data ?? [], isLoading };
 };

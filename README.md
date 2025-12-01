@@ -113,6 +113,7 @@ vnghan-internal-fe/
 - `pnpm build` - Build for production
 - `pnpm start` - Start production server
 - `pnpm lint` - Run ESLint
+- `pnpm format` - Format code with Biome
 - `pnpm test` - Run tests (if available)
 
 ### Code Quality
@@ -121,6 +122,17 @@ The project uses:
 - **Biome** for linting and formatting
 - **TypeScript** for type safety
 - **ESLint** for additional code quality checks
+
+### Pre-commit Hooks
+
+Git hooks are automatically set up with **Husky** to ensure code quality before commits:
+
+The pre-commit hook runs the following checks:
+1. **TypeScript Type Checking** - Verifies all types are correct
+2. **Build Check** - Ensures the application builds successfully
+3. **Code Formatting** - Automatically formats code with Biome
+
+If any check fails, the commit is blocked. Hooks are set up automatically after `pnpm install` via the `prepare` script.
 
 ## API Documentation
 

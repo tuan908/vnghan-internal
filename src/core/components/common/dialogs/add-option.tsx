@@ -3,17 +3,17 @@
 import { ScrewDto, ScrewSchema } from "@/core/validations";
 import { useCreateScrew } from "@/modules/inventory/api/mutations";
 import {
-    useScrewMaterialsQuery,
-    useScrewTypesQuery,
+	useScrewMaterialsQuery,
+	useScrewTypesQuery,
 } from "@/modules/inventory/api/queries";
 import { InstructionForm } from "@/modules/inventory/components/instruction";
 import { QuestionForm } from "@/modules/inventory/components/question";
 import { ScrewForm } from "@/modules/inventory/components/screw";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import { FileText, HelpCircle, Plus, Settings } from "lucide-react";
 import * as React from "react";
@@ -21,6 +21,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "../../ui/button";
 import { DropdownMenuItemWithIcon } from "../../ui/dropdown-menu";
 import { ManagedDialog } from "./managed-dialog";
+
 type DialogType = "screw" | "instruction" | "question" | null;
 
 export function AddOptionDropdown() {

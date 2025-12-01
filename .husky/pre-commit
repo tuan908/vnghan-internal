@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+
+# Exit on any error
+set -e
+
+# Function to handle cleanup on exit
+cleanup() {
+    echo "🧹 Pre-commit checks completed.\n"
+}
+
+# Set up trap for cleanup
+trap cleanup EXIT
+
+echo "🔍 Running pre-commit checks...\n"
+
+echo "📋 Checking TypeScript types..."
+# Use TypeScript compiler for type checking
+pnpm exec tsc --noEmit 2>&1 || {
+    echo "❌ TypeScript check failed. Fix the errors and try again."
+    exit 1
+}
+echo "✅ TypeScript check passed.\n"
+
+echo "🏗️ Running build check..."
+pnpm build 2>&1 || {
+    echo "❌ Build failed. Fix the errors and try again."
+    exit 1
+}
+echo "✅ Build check passed.\n"
+
+echo "🎨 Checking code formatting..."
+# Format the code (this will modify files if needed)
+pnpm format
+echo "✅ Code formatting applied.\n"
+
+echo "✨ All pre-commit checks passed!"
