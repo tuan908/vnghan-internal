@@ -1,6 +1,6 @@
-import { Toaster } from "@/frontend/components/ui/sonner";
-import { AdminConfigProvider } from "@/frontend/providers/AdminConfigProvider";
-import { ReactQueryProvider } from "@/shared/providers";
+import { Toaster } from "@/core/components/ui/sonner";
+import { ReactQueryProvider } from "@/core/providers";
+import { AdminConfigProvider } from "@/modules/admin/lib/providers/AdminConfigProvider";
 import type { Metadata } from "next";
 import "./globals.css";
 

@@ -1,0 +1,109 @@
+{
+	"error": {
+		"invalidFile": "File không hợp lệ",
+		"invalidFileType": "Loại file không hợp lệ",
+		"invalidFileSize": "Kích thước file không hợp lệ",
+		"invalidFileExtension": "Phần mở rộng file không hợp lệ",
+		"unknownError": "Đã xảy ra lỗi không xác định",
+		"internalServerError": "Lỗi máy chủ",
+		"notFound": "Không tìm thấy dữ liệu",
+		"operate": "Có lỗi xảy ra khi thao tác dữ liệu!",
+		"noValidRows": "Dữ liệu không hợp lệ",
+		"missingEnvironmentVariables": "Thiếu biến môi trường",
+		"invalidCredentials": "Tên đăng nhập hoặc mật khẩu không đúng",
+		"userAlreadyExists": "Người dùng đã tồn tại",
+		"fieldRequired": "Hãy nhập {0}",
+		"forbidden": "Không có quyền truy cập.",
+		"tokenExpired": "Token hết hiệu lực",
+		"badRequest": "Yêu cầu không hợp lệ",
+		"invalidFormat": "Định dạng không hợp lệ",
+		"unauthorized": "Không được phép truy cập",
+		"accessDenied": "Từ chối truy cập",
+		"sessionExpired": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại",
+		"rateLimitExceeded": "Quá nhiều yêu cầu, vui lòng thử lại sau",
+		"duplicateEntry": "Mục này đã tồn tại",
+		"networkError": "Lỗi kết nối mạng",
+		"passwordMismatch": "Mật khẩu không khớp",
+		"weakPassword": "Mật khẩu quá yếu",
+		"accountLocked": "Tài khoản đã bị khóa",
+		"accountNotActivated": "Tài khoản chưa được kích hoạt",
+		"invalidQueryParams": "Tham số truy vấn không hợp lệ hoặc bị thiếu"
+	},
+	"success": {
+		"created": "Tạo mới thành công",
+		"updated": "Cập nhật thành công",
+		"deleted": "Xóa thành công",
+		"registered": "Đăng ký thành công",
+		"loggedIn": "Đăng nhập thành công",
+		"passwordChanged": "Đổi mật khẩu thành công",
+		"emailSent": "Email đã được gửi thành công",
+		"uploaded": "Tải lên file thành công",
+		"downloaded": "Tải xuống file thành công"
+	},
+	"common": {
+		"loading": "Đang tải...",
+		"processing": "Đang xử lý...",
+		"confirm": "Bạn có chắc chắn?",
+		"cancel": "Hủy",
+		"submit": "Gửi",
+		"save": "Lưu",
+		"delete": "Xóa",
+		"edit": "Sửa",
+		"view": "Xem",
+		"back": "Quay lại",
+		"next": "Tiếp theo",
+		"previous": "Trước đó",
+		"yes": "Có",
+		"no": "Không",
+		"saving": "Đang lưu...",
+		"row": "Dòng",
+		"column": "Cột",
+		"message": "Chi tiết",
+		"value": "Giá trị nhập"
+	},
+	"auth": {
+		"login": "Đăng nhập",
+		"logout": "Đăng xuất",
+		"register": "Đăng ký",
+		"forgotPassword": "Quên mật khẩu",
+		"resetPassword": "Đặt lại mật khẩu",
+		"username": "Tên đăng nhập",
+		"password": "Mật khẩu",
+		"confirmPassword": "Xác nhận mật khẩu",
+		"email": "Email",
+		"rememberMe": "Ghi nhớ đăng nhập",
+		"signIn": "Đăng nhập",
+		"signUp": "Đăng ký"
+	},
+	"title": { "notification": "Thông báo" },
+	"successOperation": "Thao tác thành công!",
+	"table": {
+		"componentType": "Tên sản phẩm",
+		"price": "Giá tham khảo",
+		"quantity": "Số lượng",
+		"name": "Loại phụ kiện",
+		"note": "Lưu ý",
+		"action": "Hành động"
+	},
+	"form": {
+		"login": {
+			"username": "tên người dùng",
+			"password": "mật khẩu"
+		},
+		"createCustomer": {
+			"name": "Tên khách hàng",
+			"phone": "Số điện thoại",
+			"address": "Địa chỉ",
+			"platform": "Nền tảng",
+			"need": "Nhu cầu",
+			"money": "Số tiền",
+			"nextMessageTime": "Thời gian nhắn lại"
+		}
+	},
+	"role": {
+		"viewer": "Người xem",
+		"editor": "Người chỉnh sửa",
+		"owner": "Người sở hữu",
+		"administrator": "Quản lý"
+	}
+}

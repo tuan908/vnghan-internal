@@ -1,23 +1,23 @@
 "use client";
 
 import { procesingLogin } from "@/app/actions";
-import { isSuccessResponse } from "@/backend/lib/api-response"; // Ensure this is at the top
-import { Button } from "@/frontend/components/ui/button";
+import { Button } from "@/core/components/ui/button";
 import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/frontend/components/ui/form";
-import { Input } from "@/frontend/components/ui/input";
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/core/components/ui/form";
+import { Input } from "@/core/components/ui/input";
+import { SignInFormValues, SignInSchema } from "@/core/validations";
 import {
-	LoginErrorResponse,
-	LoginSuccessResponse,
-	useSignIn,
-} from "@/frontend/hooks/useSignIn";
-import { SignInFormValues, SignInSchema } from "@/shared/validations";
+    LoginErrorResponse,
+    LoginSuccessResponse,
+    useSignIn,
+} from "@/modules/auth/hooks/useSignIn";
+import { isSuccessResponse } from "@/server/lib/api-response"; // Ensure this is at the top
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";

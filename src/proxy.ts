@@ -1,6 +1,6 @@
-import { decrypt, Session } from "@/shared/utils/session";
+import { decrypt, Session } from "@/core/utils/session";
 import { NextResponse, type NextRequest } from "next/server";
-import { tryCatch } from "./shared/utils";
+import { tryCatch } from "./core/utils";
 
 export const config = {
 	matcher: ["/", "/import", "/customers"],
