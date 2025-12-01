@@ -1,4 +1,7 @@
-import { Autocomplete, AutocompleteOption } from "@/core/components/ui/autocomplete";
+import {
+	Autocomplete,
+	AutocompleteOption,
+} from "@/core/components/ui/autocomplete";
 import { Button } from "@/core/components/ui/button";
 import {
 	Dialog,
@@ -140,12 +143,16 @@ export function ScrewEditDialog({
 								disabled={isEditing}
 								name="componentType"
 								render={({ field }) => {
-									const typeOptions: AutocompleteOption[] = screwTypes.map((type) => ({
-										value: type.name || "",
-										label: type.name || "",
-										data: type,
-									}));
-									const selectedType = typeOptions.find((opt) => opt.value === field.value);
+									const typeOptions: AutocompleteOption[] = screwTypes.map(
+										(type) => ({
+											value: type.name || "",
+											label: type.name || "",
+											data: type,
+										}),
+									);
+									const selectedType = typeOptions.find(
+										(opt) => opt.value === field.value,
+									);
 
 									return (
 										<FormItem>
@@ -170,12 +177,15 @@ export function ScrewEditDialog({
 								name="material"
 								disabled={isEditing}
 								render={({ field }) => {
-									const materialOptions: AutocompleteOption[] = screwMaterials.map((material) => ({
-										value: material.name || "",
-										label: material.name || "",
-										data: material,
-									}));
-									const selectedMaterial = materialOptions.find((opt) => opt.value === field.value);
+									const materialOptions: AutocompleteOption[] =
+										screwMaterials.map((material) => ({
+											value: material.name || "",
+											label: material.name || "",
+											data: material,
+										}));
+									const selectedMaterial = materialOptions.find(
+										(opt) => opt.value === field.value,
+									);
 
 									return (
 										<FormItem>

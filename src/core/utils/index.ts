@@ -43,7 +43,9 @@ export async function tryCatch<T, E = Error>(
 }
 
 export const getUrl = () => {
-	return process.env.NEXT_PUBLIC_VERCEL_URL!;
+	const url = process.env.NEXT_PUBLIC_VERCEL_URL ?? "";
+	if (!url) throw new Error("Invalid base url: " + url);
+	return url;
 };
 
 export function format(str: string, ...args: any[]): string {
@@ -156,4 +158,37 @@ export async function downloadFileWithSaveDialog(
 		console.error("Download failed:", error);
 		alert("Failed to download the template. Please try again.");
 	}
+}
+
+// Add autocomplete mapper utilities
+import type { AutocompleteOption } from "@/core/components/ui/autocomplete";
+
+/**
+ * Maps an array of objects to AutocompleteOption array
+ * @param items - Array of objects to map
+ * @param valueProp - Property to use for option value (defaults to 'name')
+ * @param labelProp - Property to use for option label (defaults to 'name')
+ * @returns Array of AutocompleteOption
+ */
+export function mapToAutocompleteOptions<T>(
+	items: T[],
+	valueProp: keyof T = "name" as keyof T,
+	labelProp: keyof T = "name" as keyof T,
+): AutocompleteOption<T>[] {
+	return items.map((item) => ({
+		value: String(item[valueProp]) || "",
+		label: String(item[labelProp]) || "",
+		data: item,
+	}));
+}
+
+/**
+ * Maps a string array to AutocompleteOption array
+ * @param array - Array of strings
+ * @returns Array of AutocompleteOption with value and label as the string
+ */
+export function mapStringArrayToOptions(
+	array: string[],
+): AutocompleteOption<string>[] {
+	return array.map((item) => ({ value: item, label: item }));
 }

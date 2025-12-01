@@ -12,11 +12,7 @@ import {
 } from "@/core/components/ui/form";
 import { Input } from "@/core/components/ui/input";
 import { SignInFormValues, SignInSchema } from "@/core/validations";
-import {
-	LoginErrorResponse,
-	LoginSuccessResponse,
-	useSignIn,
-} from "@/modules/auth/hooks/useSignIn";
+import { useSignIn } from "@/modules/auth/hooks/useSignIn";
 import { isSuccessResponse } from "@/server/lib/api-response"; // Ensure this is at the top
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -34,13 +30,12 @@ export default function SignInPage() {
 		},
 	});
 
-	const { signIn, isPendingSignIn } = useSignIn();
+	const { signIn, isPendingSignIn, data: result } = useSignIn();
 
 	const onSubmit = async (data: SignInFormValues) => {
-		const result: LoginSuccessResponse | LoginErrorResponse =
-			await signIn(data);
+		await signIn(data);
 
-		if (isSuccessResponse<any>(result)) {
+		if (isSuccessResponse<any>(result!)) {
 			if (!result.data.token) {
 				form.setError("root", { message: "Login failed: No token received." });
 				return;
@@ -49,7 +44,7 @@ export default function SignInPage() {
 		} else {
 			form.setError("root", {
 				message:
-					result.error?.message || "Login failed: An unknown error occurred.",
+					result!?.error?.message || "Login failed: An unknown error occurred.",
 			});
 			return;
 		}
