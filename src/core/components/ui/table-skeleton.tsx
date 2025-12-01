@@ -130,4 +130,3 @@ const LoadingSkeleton = React.memo(() => {
 LoadingSkeleton.displayName = "LoadingSkeleton";
 
 export { LoadingSkeleton };
-

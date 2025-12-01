@@ -391,7 +391,9 @@ const HomeContentContent = React.memo(function HomeContentContent() {
 					{isLoadingMore ? (
 						<div className="flex items-center space-x-2">
 							<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-							<span className="text-sm text-gray-500">Loading more screws...</span>
+							<span className="text-sm text-gray-500">
+								Loading more screws...
+							</span>
 						</div>
 					) : (
 						<div className="text-sm text-gray-400">Scroll for more</div>
