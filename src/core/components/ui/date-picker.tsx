@@ -10,7 +10,7 @@ import {
 	PopoverTrigger,
 } from "@/core/components/ui/popover";
 import { DATE_FORMAT_DD_MM_YYYY_WITH_SLASH } from "@/core/constants";
-import { cn } from "@/core/utils";
+import { cn } from "@/core/utils/cn";
 import dayjs from "dayjs";
 
 interface DayPickerProps {

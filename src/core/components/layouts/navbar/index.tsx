@@ -1,7 +1,8 @@
 "use client";
 
 import { UserRoles } from "@/core/constants";
-import { cn, convertRole, RoleUtils } from "@/core/utils";
+import { convertRole, RoleUtils } from "@/core/utils";
+import { cn } from "@/core/utils/cn";
 import type { Session } from "@/core/utils/session";
 import { AdminConfigPanel } from "@/modules/admin/components/admin-config-panel";
 import {

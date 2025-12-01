@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "next build --turbo",
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "lint": "next lint",
     "format": "biome format --write ./src",
     "start": "next start",

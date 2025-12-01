@@ -1,3 +1,4 @@
+import { Autocomplete, AutocompleteOption } from "@/core/components/ui/autocomplete";
 import { Button } from "@/core/components/ui/button";
 import {
 	Dialog,
@@ -16,12 +17,6 @@ import {
 	FormMessage,
 } from "@/core/components/ui/form";
 import { Input } from "@/core/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectTrigger,
-	SelectValue,
-} from "@/core/components/ui/select";
 import { Textarea } from "@/core/components/ui/textarea";
 import json from "@/core/i18n/locales/vi/vi.json";
 import { ScrewMaterialDto, ScrewTypeDto } from "@/core/types";
@@ -29,7 +24,6 @@ import type { ScrewDto } from "@/core/validations";
 import { Loader2 } from "lucide-react";
 import type React from "react";
 import type { UseFormReturn } from "react-hook-form";
-import { MaterialSelectItem, TypeSelectItem } from "./screw-select-items";
 
 interface ScrewEditDialogProps {
 	isOpen: boolean;
@@ -145,59 +139,60 @@ export function ScrewEditDialog({
 								control={editScrewForm.control}
 								disabled={isEditing}
 								name="componentType"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Loại phụ kiện</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											value={field.value || ""}
-											disabled={field.disabled}
-										>
+								render={({ field }) => {
+									const typeOptions: AutocompleteOption[] = screwTypes.map((type) => ({
+										value: type.name || "",
+										label: type.name || "",
+										data: type,
+									}));
+									const selectedType = typeOptions.find((opt) => opt.value === field.value);
+
+									return (
+										<FormItem>
+											<FormLabel>Loại phụ kiện</FormLabel>
 											<FormControl>
-												<SelectTrigger className="w-full">
-													<SelectValue placeholder="Chọn loại phụ kiện" />
-												</SelectTrigger>
+												<Autocomplete
+													options={typeOptions}
+													value={selectedType}
+													onChange={(option) => field.onChange(option?.value)}
+													placeholder="Tìm kiếm loại phụ kiện..."
+													disabled={field.disabled}
+												/>
 											</FormControl>
-											<SelectContent>
-												{screwTypes.map((type) => (
-													<TypeSelectItem key={type.id} type={type} />
-												))}
-											</SelectContent>
-										</Select>
-										<FormMessage />
-									</FormItem>
-								)}
+											<FormMessage />
+										</FormItem>
+									);
+								}}
 							/>
 
 							<FormField
 								control={editScrewForm.control}
 								name="material"
 								disabled={isEditing}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Chất liệu</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											value={field.value || ""}
-											disabled={field.disabled}
-										>
+								render={({ field }) => {
+									const materialOptions: AutocompleteOption[] = screwMaterials.map((material) => ({
+										value: material.name || "",
+										label: material.name || "",
+										data: material,
+									}));
+									const selectedMaterial = materialOptions.find((opt) => opt.value === field.value);
+
+									return (
+										<FormItem>
+											<FormLabel>Chất liệu</FormLabel>
 											<FormControl>
-												<SelectTrigger className="w-full">
-													<SelectValue placeholder="Chọn chất liệu" />
-												</SelectTrigger>
+												<Autocomplete
+													options={materialOptions}
+													value={selectedMaterial}
+													onChange={(option) => field.onChange(option?.value)}
+													placeholder="Tìm kiếm chất liệu..."
+													disabled={field.disabled}
+												/>
 											</FormControl>
-											<SelectContent>
-												{screwMaterials.map((material) => (
-													<MaterialSelectItem
-														key={material.id}
-														material={material}
-													/>
-												))}
-											</SelectContent>
-										</Select>
-										<FormMessage />
-									</FormItem>
-								)}
+											<FormMessage />
+										</FormItem>
+									);
+								}}
 							/>
 						</div>
 

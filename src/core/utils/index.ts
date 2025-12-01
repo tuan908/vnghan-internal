@@ -1,13 +1,7 @@
 import json from "@/core/i18n/locales/vi/vi.json";
 import type { RecursivelyReplaceNullWithUndefined } from "@/core/types";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 import { UserRoles } from "../constants";
 import { UserRole } from "../constants/roles";
-
-export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
 
 export function nullsToUndefined<T>(
 	obj: T,

@@ -4,7 +4,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 import * as React from "react";
 
-import { cn } from "@/core/utils";
+import { cn } from "@/core/utils/cn";
 
 function Dialog({
 	...props
@@ -131,5 +131,6 @@ export {
 	DialogOverlay,
 	DialogPortal,
 	DialogTitle,
-	DialogTrigger,
+	DialogTrigger
 };
+

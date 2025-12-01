@@ -1,6 +1,6 @@
 import { fuzzySort } from "@/core/components/ui/data-table";
 import json from "@/core/i18n/locales/vi/vi.json";
-import { cn } from "@/core/utils";
+import { cn } from "@/core/utils/cn";
 import { formatCurrency } from "@/core/utils/currency";
 import { ScrewDto } from "@/core/validations";
 import type { ColumnDef } from "@tanstack/react-table";

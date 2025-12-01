@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/core/utils";
+import { cn } from "@/core/utils/cn";
 import { useEffect, useState } from "react";
 import {
 	Select,

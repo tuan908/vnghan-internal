@@ -2,7 +2,7 @@ import { DataTable, fuzzySort } from "@/core/components/ui/data-table";
 import { DATETIME_FORMAT_DD_MM_YYYY_HH_MM_SS_WITH_SLASH } from "@/core/constants";
 import json from "@/core/i18n/locales/vi/vi.json";
 import { useTableState } from "@/core/lib/hooks/useTableState";
-import { cn } from "@/core/utils";
+import { cn } from "@/core/utils/cn";
 import { formatCurrency } from "@/core/utils/currency";
 import { formatPhone } from "@/core/utils/phone-number";
 import { type CustomerDto, CustomerSchema } from "@/core/validations";

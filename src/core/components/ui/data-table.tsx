@@ -1,7 +1,7 @@
 "use client";
 
 import { CSS_TEXT_ELLIPSIS } from "@/core/constants";
-import { cn } from "@/core/utils";
+import { cn } from "@/core/utils/cn";
 import { compareItems, rankItem } from "@tanstack/match-sorter-utils";
 import {
 	type ColumnFiltersState,
