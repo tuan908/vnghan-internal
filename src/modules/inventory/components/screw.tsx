@@ -1,3 +1,4 @@
+import { Autocomplete } from "@/core/components/ui/autocomplete";
 import { Button } from "@/core/components/ui/button";
 import { DialogFooter } from "@/core/components/ui/dialog";
 import {
@@ -8,20 +9,14 @@ import {
 	FormMessage,
 } from "@/core/components/ui/form";
 import { Input } from "@/core/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/core/components/ui/select";
 import { Textarea } from "@/core/components/ui/textarea";
 import json from "@/core/i18n/locales/vi/vi.json";
 import type { ScrewMaterialDto, ScrewTypeDto } from "@/core/types";
+import { mapToAutocompleteOptions } from "@/core/utils";
 import type { ScrewDto } from "@/core/validations";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Loader2 } from "lucide-react";
-import { type FC, memo } from "react";
+import { type FC } from "react";
 import { useFormContext } from "react-hook-form";
 
 type ScrewFormProps = {
@@ -32,23 +27,6 @@ type ScrewFormProps = {
 	screwMaterials: ScrewMaterialDto[];
 	screw?: ScrewDto;
 };
-
-// Memoized SelectItem components to prevent re-renders
-const TypeSelectItem = memo(({ type }: { type: ScrewTypeDto }) => (
-	<SelectItem key={type.id} value={type.name || ""}>
-		{type.name}
-	</SelectItem>
-));
-TypeSelectItem.displayName = "TypeSelectItem";
-
-const MaterialSelectItem = memo(
-	({ material }: { material: ScrewMaterialDto }) => (
-		<SelectItem key={material.id} value={material.name || ""}>
-			{material.name}
-		</SelectItem>
-	),
-);
-MaterialSelectItem.displayName = "MaterialSelectItem";
 
 // Screw form component
 export const ScrewForm: FC<ScrewFormProps> = ({
@@ -132,56 +110,60 @@ export const ScrewForm: FC<ScrewFormProps> = ({
 					control={control}
 					disabled={isSubmitting}
 					name="componentType"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Loại phụ kiện</FormLabel>
-							<Select
-								onValueChange={field.onChange}
-								value={field.value || ""}
-								disabled={field.disabled}
-							>
+					render={({ field }) => {
+						const screwTypeOptions = mapToAutocompleteOptions(
+							screwTypes,
+							"name",
+						);
+						const selectedOption = screwTypeOptions.find(
+							(opt) => opt.value === field.value,
+						);
+						return (
+							<FormItem>
+								<FormLabel>Loại phụ kiện</FormLabel>
 								<FormControl>
-									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Chọn loại phụ kiện" />
-									</SelectTrigger>
+									<Autocomplete
+										options={screwTypeOptions}
+										value={selectedOption || null}
+										onChange={(option) => field.onChange(option?.value || "")}
+										placeholder="Chọn loại phụ kiện"
+										disabled={field.disabled}
+									/>
 								</FormControl>
-								<SelectContent>
-									{screwTypes.map((type) => (
-										<TypeSelectItem key={type.id} type={type} />
-									))}
-								</SelectContent>
-							</Select>
-							<FormMessage />
-						</FormItem>
-					)}
+								<FormMessage />
+							</FormItem>
+						);
+					}}
 				/>
 
 				<FormField
 					control={control}
 					name="material"
 					disabled={isSubmitting}
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Chất liệu</FormLabel>
-							<Select
-								onValueChange={field.onChange}
-								value={field.value || ""}
-								disabled={field.disabled}
-							>
+					render={({ field }) => {
+						const screwMaterialOptions = mapToAutocompleteOptions(
+							screwMaterials,
+							"name",
+						);
+						const selectedMaterialOption = screwMaterialOptions.find(
+							(opt) => opt.value === field.value,
+						);
+						return (
+							<FormItem>
+								<FormLabel>Chất liệu</FormLabel>
 								<FormControl>
-									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Chọn chất liệu" />
-									</SelectTrigger>
+									<Autocomplete
+										options={screwMaterialOptions}
+										value={selectedMaterialOption || null}
+										onChange={(option) => field.onChange(option?.value || "")}
+										placeholder="Chọn chất liệu"
+										disabled={field.disabled}
+									/>
 								</FormControl>
-								<SelectContent>
-									{screwMaterials.map((material) => (
-										<MaterialSelectItem key={material.id} material={material} />
-									))}
-								</SelectContent>
-							</Select>
-							<FormMessage />
-						</FormItem>
-					)}
+								<FormMessage />
+							</FormItem>
+						);
+					}}
 				/>
 			</div>
 

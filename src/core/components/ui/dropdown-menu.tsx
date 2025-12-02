@@ -254,7 +254,7 @@ export {
 	DropdownMenuSub,
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
-	DropdownMenuTrigger
+	DropdownMenuTrigger,
 };
 
 // Dropdown menu item with icon

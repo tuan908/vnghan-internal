@@ -1,3 +1,4 @@
+import { Autocomplete } from "@/core/components/ui/autocomplete";
 import { Button } from "@/core/components/ui/button";
 import { DateTimePicker } from "@/core/components/ui/datetime-picker";
 import {
@@ -17,17 +18,9 @@ import {
 	FormMessage,
 } from "@/core/components/ui/form";
 import { Input } from "@/core/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectLabel,
-	SelectTrigger,
-	SelectValue,
-} from "@/core/components/ui/select";
 import { Textarea } from "@/core/components/ui/textarea";
 import json from "@/core/i18n/locales/vi/vi.json";
+import { mapToAutocompleteOptions } from "@/core/utils";
 import type { CustomerDto } from "@/core/validations";
 import { PlatformDto } from "@/server/models/platform.model";
 import type React from "react";
@@ -162,32 +155,32 @@ export function CustomerDialogs({
 									control={updateCustomerForm.control}
 									name="platform"
 									disabled={isUpdating}
-									render={({ field }) => (
-										<FormItem className="flex flex-col gap-y-2">
-											<FormLabel>Nền tảng</FormLabel>
-											<Select
-												onValueChange={field.onChange}
-												value={field.value}
-											>
+									render={({ field }) => {
+										const platformOptions = mapToAutocompleteOptions(
+											platforms,
+											"name",
+										);
+										const selectedOption = platformOptions.find(
+											(opt) => opt.value === field.value,
+										);
+										return (
+											<FormItem className="flex flex-col gap-y-2">
+												<FormLabel>Nền tảng</FormLabel>
 												<FormControl>
-													<SelectTrigger className="w-full">
-														<SelectValue placeholder="Chọn nền tảng" />
-													</SelectTrigger>
+													<Autocomplete
+														options={platformOptions}
+														value={selectedOption || null}
+														onChange={(option) =>
+															field.onChange(option?.value || "")
+														}
+														placeholder="Chọn nền tảng"
+														disabled={field.disabled}
+													/>
 												</FormControl>
 												<FormMessage />
-												<SelectContent>
-													<SelectGroup>
-														<SelectLabel>Nền tảng</SelectLabel>
-														{(platforms ?? []).map((x, i) => (
-															<SelectItem key={`${x}#${i}`} value={x?.name!}>
-																{x?.name!}
-															</SelectItem>
-														))}
-													</SelectGroup>
-												</SelectContent>
-											</Select>
-										</FormItem>
-									)}
+											</FormItem>
+										);
+									}}
 								/>
 
 								<FormField
