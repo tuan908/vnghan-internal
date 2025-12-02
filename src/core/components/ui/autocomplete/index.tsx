@@ -100,7 +100,7 @@ export function Autocomplete<T = unknown>({
 		onChange?.(option);
 		setInputValue(option.label);
 		setIsOpen(false);
-		setIsFocused(false)
+		setIsFocused(false);
 		inputRef.current?.blur();
 	};
 
