@@ -5,7 +5,7 @@ import {
 	TabsTrigger,
 } from "@/core/components/ui/tabs";
 import { Settings, Users } from "lucide-react";
-import { ImportSection } from "./import-section";
+import { ImportSection } from "../../../../modules/import/components/import-section";
 
 interface PageTabsProps {
 	importType: "screw" | "customer";

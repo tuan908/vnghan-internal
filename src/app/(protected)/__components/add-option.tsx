@@ -1,5 +1,11 @@
 "use client";
 
+import { ManagedDialog } from "@/core/components/common/dialogs/managed-dialog";
+import { Button } from "@/core/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent, DropdownMenuItemWithIcon, DropdownMenuTrigger
+} from "@/core/components/ui/dropdown-menu";
 import { ScrewDto, ScrewSchema } from "@/core/validations";
 import { useCreateScrew } from "@/modules/inventory/api/mutations";
 import {
@@ -10,17 +16,9 @@ import { InstructionForm } from "@/modules/inventory/components/instruction";
 import { QuestionForm } from "@/modules/inventory/components/question";
 import { ScrewForm } from "@/modules/inventory/components/screw";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
 import { FileText, HelpCircle, Plus, Settings } from "lucide-react";
 import * as React from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { Button } from "../../ui/button";
-import { DropdownMenuItemWithIcon } from "../../ui/dropdown-menu";
-import { ManagedDialog } from "./managed-dialog";
 
 type DialogType = "screw" | "instruction" | "question" | null;
 
@@ -58,7 +56,7 @@ export function AddOptionDropdown() {
 						Thêm mới
 					</Button>
 				</DropdownMenuTrigger>
-				<DropdownMenuContent className="w-56">
+				<DropdownMenuContent className="w-56 z-1051">
 					<DropdownMenuItemWithIcon
 						icon={Settings}
 						label="Linh kiện"

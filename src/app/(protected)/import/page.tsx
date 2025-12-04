@@ -1,9 +1,9 @@
 "use client";
 
-import { PageNavigation } from "@/modules/import/components/page-navigation";
-import { PageTabs } from "@/modules/import/components/page-tabs";
 import { useTemplateDownload } from "@/modules/import/hooks/use-template-download";
 import { useState } from "react";
+import { PageNavigation } from "./__components/page-navigation";
+import { PageTabs } from "./__components/page-tabs";
 
 export default function ImportPage() {
 	const [importType, setImportType] = useState<"screw" | "customer">("screw");

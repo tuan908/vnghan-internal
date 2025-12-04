@@ -8,7 +8,7 @@ export const useCreateCustomerMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async (req: CustomerDto) => {
-			const res = await api.customer.$post({
+			const res = await api.customers.$post({
 				json: req,
 			});
 			const resJson = await res.json();
@@ -28,7 +28,7 @@ export const useUpdateCustomerMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async (req: CustomerDto) => {
-			const res = await api.customer[":id"].$put(
+			const res = await api.customers[":id"].$put(
 				{
 					param: { id: String(req.id!) },
 				},
@@ -55,7 +55,7 @@ export const useDeleteCustomerMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async (id: number) => {
-			const res = await api.customer[":id"].$delete({
+			const res = await api.customers[":id"].$delete({
 				param: {
 					id: id.toString(),
 				},
