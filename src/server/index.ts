@@ -62,9 +62,9 @@ app.onError(async (err, c) => {
 const route = app
 	.route("/auth", authRouter)
 	.route("/inventory", inventoryRouter)
-	.route("/customer", customerRouter)
+	.route("/customers", customerRouter)
 	.route("/import", importRouter)
-	.route("/user", userRouter)
+	.route("/users", userRouter)
 	.route("/export", exportRouter);
 
 export default app;

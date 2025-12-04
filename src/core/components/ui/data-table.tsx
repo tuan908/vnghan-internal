@@ -98,7 +98,7 @@ export function DataTable<TData>({
 	return (
 		<div ref={parentRef} className="w-full">
 			<div className="h-96 md:h-156 overflow-y-auto">
-				<table className="w-full border-none border-collapse relative z-10">
+				<table className="w-full border-none border-collapse relative z-0">
 					<thead className="relative">
 						{table.getHeaderGroups().map((headerGroup) => (
 							<tr key={headerGroup.id}>
@@ -108,7 +108,7 @@ export function DataTable<TData>({
 											scope="col"
 											key={header.id}
 											colSpan={header.colSpan}
-											className="sticky top-0 z-9999 bg-slate-100 border-none p-2 text-center border-r"
+											className="sticky top-0 z-50 bg-slate-100 border-none p-2 text-center border-r"
 											style={{
 												width: `${header.getSize() / 16}rem`,
 											}}

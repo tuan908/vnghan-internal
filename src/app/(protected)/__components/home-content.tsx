@@ -15,9 +15,9 @@ import {
 } from "@/modules/inventory/api/queries";
 import { Search } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { PureDataTable } from "./inventory-datatable";
-import { ScrewDialogs } from "./screw-dialogs";
-import { useScrewTableColumns } from "./screw-table-columns";
+import { PureDataTable } from "../../../modules/inventory/components/inventory-datatable";
+import { ScrewDialogs } from "../../../modules/inventory/components/screw-dialogs";
+import { useScrewTableColumns } from "../../../modules/inventory/components/screw-table-columns";
 
 const HomeContent = React.memo(function HomeContent() {
 	const [activeDialog, setActiveDialog] = React.useState<

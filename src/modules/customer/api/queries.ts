@@ -16,7 +16,7 @@ export const useCustomersQuery = () => {
 	const result = useQuery({
 		queryKey: customerQueryKeys.list(),
 		queryFn: async () => {
-			const response = await api.customer.list.$get();
+			const response = await api.customers.$get();
 			const resJson = await response.json();
 			return resJson;
 		},
@@ -29,7 +29,7 @@ export const useCustomersQuery = () => {
 export const customerInfiniteQueryOptions = infiniteQueryOptions({
 	queryKey: customerQueryKeys.infinite(),
 	queryFn: async ({ pageParam = null }: { pageParam: string | null }) => {
-		const response = await api.customer.listInfinite.$get({
+		const response = await api.customers.listInfinite.$get({
 			query: {
 				limit: "15", // Optimal page size for customer infinite scroll
 				...(pageParam && { cursor: pageParam }),

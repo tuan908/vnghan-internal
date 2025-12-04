@@ -37,13 +37,13 @@ import {
 	useCustomersQuery,
 } from "@/modules/customer/api";
 import { CustomerTable } from "@/modules/customer/components/customer-table";
-import { ExportOptionDropdown } from "@/modules/import/components/export-option";
 import { api } from "@/server/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence } from "framer-motion";
 import { Plus, User } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
+import { ExportOptionDropdown } from "../__components/export-option";
 
 type DialogType = "user" | "instruction" | "question" | null;
 

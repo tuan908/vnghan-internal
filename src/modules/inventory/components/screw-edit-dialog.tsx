@@ -195,7 +195,6 @@ export const ScrewEditDialog = React.memo(function ScrewEditDialog({
 													}
 													placeholder="Tìm kiếm loại phụ kiện..."
 													disabled={field.disabled}
-													clearable={false}
 												/>
 											</FormControl>
 											<FormMessage />

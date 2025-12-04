@@ -14,7 +14,7 @@ import { customerRepository } from "../repositories/customer.repository";
 import { platformRepository } from "../repositories/platform.repository";
 
 const customerRouter = new Hono()
-	.get("/list", async (c) => {
+	.get("/", async (c) => {
 		const session = c.get("session");
 		const customerList = await customerRepository.listByOperatorId(session.id);
 		const customers = customerList.map((customer) => {
@@ -286,7 +286,7 @@ const customerRouter = new Hono()
 
 		return c.json(createSuccessResponse({ message: "Customer deleted" }));
 	})
-	.get("/platform/list", async (c) => {
+	.get("/platforms", async (c) => {
 		const platforms = await platformRepository.list();
 		return c.json(createSuccessResponse(platforms));
 	});

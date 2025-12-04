@@ -1,13 +1,12 @@
 import { cn } from "@/core/utils/cn";
+import * as React from "react";
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
+	DialogHeader,
 	DialogTitle,
-} from "@radix-ui/react-dialog";
-import { AnimatePresence } from "framer-motion";
-import * as React from "react";
-import { DialogHeader } from "../../ui/dialog";
+} from "../../ui/dialog";
 
 type ManagedDialogProps<T> = {
 	open: boolean;
@@ -33,7 +32,7 @@ export function ManagedDialog<T>({
 	const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
 
 	return (
-		<AnimatePresence>
+		<>
 			{open && (
 				<Dialog open={open} onOpenChange={onOpenChange}>
 					<DialogContent
@@ -59,6 +58,6 @@ export function ManagedDialog<T>({
 					</DialogContent>
 				</Dialog>
 			)}
-		</AnimatePresence>
+		</>
 	);
 }

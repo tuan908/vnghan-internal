@@ -1,7 +1,7 @@
-import { AddOptionDropdown } from "@/core/components/common/dialogs/add-option";
-import { ExportOptionDropdown } from "@/modules/import/components/export-option";
-import HomeContent from "@/modules/inventory/components/home-content";
 import { api } from "@/server/client";
+import { AddOptionDropdown } from "./__components/add-option";
+import { ExportOptionDropdown } from "./__components/export-option";
+import HomeContent from "./__components/home-content";
 
 export default function Home() {
 	const downloadUrl = api.export.screws.$url().toString();

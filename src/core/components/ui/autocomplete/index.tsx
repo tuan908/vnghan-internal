@@ -58,7 +58,7 @@ export function Autocomplete<T = unknown>({
 	// Filter options
 	const filteredOptions = React.useMemo(() => {
 		const search = inputValue.toLowerCase().trim();
-		if (!search) return options;
+		if (!search || search === value?.label.toLowerCase()) return options;
 		return options.filter((opt) => opt.label.toLowerCase().includes(search));
 	}, [options, inputValue]);
 
@@ -100,6 +100,7 @@ export function Autocomplete<T = unknown>({
 		onChange?.(option);
 		setInputValue(option.label);
 		setIsOpen(false);
+		setIsFocused(false);
 		inputRef.current?.blur();
 	};
 

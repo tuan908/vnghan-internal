@@ -2,7 +2,7 @@ import { api } from "@/server/client";
 import { useQuery } from "@tanstack/react-query";
 
 const queryFn = async () => {
-	const res = await api.user.$get();
+	const res = await api.users.$get();
 	const resJson = await res.json();
 	return resJson?.data;
 };
