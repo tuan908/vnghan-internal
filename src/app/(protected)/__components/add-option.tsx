@@ -4,7 +4,9 @@ import { ManagedDialog } from "@/core/components/common/dialogs/managed-dialog";
 import { Button } from "@/core/components/ui/button";
 import {
 	DropdownMenu,
-	DropdownMenuContent, DropdownMenuItemWithIcon, DropdownMenuTrigger
+	DropdownMenuContent,
+	DropdownMenuItemWithIcon,
+	DropdownMenuTrigger,
 } from "@/core/components/ui/dropdown-menu";
 import { ScrewDto, ScrewSchema } from "@/core/validations";
 import { useCreateScrew } from "@/modules/inventory/api/mutations";
